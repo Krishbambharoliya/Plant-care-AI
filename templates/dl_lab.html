@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<title>Deep Learning CNN Lab - PlantCare</title>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column gap-4">
+    <!-- Back to Hub Header -->
+    <div class="glass-panel p-4 d-flex justify-content-between align-items-center" style="background: rgba(16, 185, 129, 0.02);">
+        <div>
+            <h2 class="fw-bold m-0" style="color: var(--primary);">Deep Learning CNN Lab</h2>
+            <p class="text-muted small m-0 mt-1">Simulated training graphs, epoch metrics, and loss validation curves</p>
+        </div>
+        <a href="{% url 'analytics_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Lab Hub</span>
+        </a>
+    </div>
+
+    <!-- DL model configuration specs -->
+    <div class="glass-panel p-4">
+        <h5 class="fw-bold mb-3" style="color: var(--primary);">Neural Network Architecture (Unit 6.2 & 6.3)</h5>
+        <div class="row g-3 small text-muted">
+            <div class="col-md-4 border-end" style="border-color: var(--border-card) !important;">
+                <strong class="d-block mb-1 text-white">Convolutional Layer (CNN)</strong>
+                Kernel Size: 3x3 | Filters: 32/64 | Max Pooling: 2x2 | Dropout: 0.25
+            </div>
+            <div class="col-md-4 border-end" style="border-color: var(--border-card) !important;">
+                <strong class="d-block mb-1 text-white">Activation Functions</strong>
+                Layers: ReLU (Rectified Linear Unit) | Classifier Output: Softmax / Sigmoid
+            </div>
+            <div class="col-md-4">
+                <strong class="d-block mb-1 text-white">Transfer Learning (MobileNetV2)</strong>
+                Pre-trained weights: ImageNet | Target: Leaf classification (100 crop classes)
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualizations and Epochs -->
+    <div class="row g-4">
+        <!-- Interactive Curve Chart -->
+        <div class="col-lg-7">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-3">Model Accuracy & Loss Validation Curves</h5>
+                <div style="background: #111; border-radius: 12px; overflow: hidden;">
+                    {{ plotly_div|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Logs Table -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-3">Epoch Training Logs</h5>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-striped table-hover small text-center m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>Epoch</th>
+                                <th>Loss</th>
+                                <th>Accuracy</th>
+                                <th>Val Loss</th>
+                                <th>Val Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in epoch_logs %}
+                            <tr style="border-bottom: 1px solid var(--border-card);">
+                                <td class="fw-bold">{{ log.epoch }}</td>
+                                <td class="text-danger">{{ log.loss }}</td>
+                                <td class="text-success fw-bold">{{ log.accuracy }}</td>
+                                <td class="text-danger">{{ log.val_loss }}</td>
+                                <td class="text-success fw-bold">{{ log.val_accuracy }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

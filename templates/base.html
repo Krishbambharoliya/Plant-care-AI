@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" class="{% if current_theme == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ t.app.title }}{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/typeahead.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom HSL CSS styling -->
+    <style>
+        :root {
+            --font-family: 'Outfit', -apple-system, sans-serif;
+            --bg-app: #f9fafb; /* Neutral light gray */
+            --bg-sidebar: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --border-card: rgba(17, 24, 39, 0.08); /* Neutral border */
+            --text-primary: #111827; /* Neutral dark */
+            --text-secondary: #4b5563; /* Neutral gray */
+            --primary: #111827; /* Black */
+            --primary-hover: #1f2937; /* Dark gray */
+            --primary-glow: rgba(17, 24, 39, 0.08);
+            --danger: #ff3366;
+            --danger-bg: #ffe6eb;
+            --success: #111827; /* Black */
+            --success-bg: rgba(17, 24, 39, 0.05);
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --border-radius: 16px;
+            --transition: all 0.25s ease;
+        }
+
+        html.dark {
+            --bg-app: #0c0c0e;
+            --bg-sidebar: #141416;
+            --bg-card: rgba(20, 20, 22, 0.85);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            
+            --primary: #ffffff; /* White */
+            --primary-hover: #f3f4f6; /* Light gray */
+            --primary-glow: rgba(255, 255, 255, 0.1);
+            --success: #ffffff; /* White */
+            --success-bg: rgba(255, 255, 255, 0.1);
+            --danger: #ff204e;
+            --danger-bg: rgba(255, 32, 78, 0.1);
+        }
+
+        /* Global overrides for Bootstrap success buttons */
+        .btn-success {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        html.dark .btn-success {
+            color: #111827 !important;
+        }
+        .btn-outline-success {
+            color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            background-color: transparent !important;
+        }
+        .btn-outline-success:hover {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        html.dark .btn-outline-success:hover {
+            color: #111827 !important;
+        }
+
+        html.dark .text-dark {
+            color: var(--text-primary) !important;
+        }
+        html.dark .text-muted {
+            color: var(--text-secondary) !important;
+        }
+        html.dark .table {
+            color: var(--text-primary) !important;
+            border-color: var(--border-card) !important;
+        }
+        html.dark .table th, html.dark .table td {
+            color: var(--text-primary) !important;
+            background-color: transparent !important;
+            border-color: var(--border-card) !important;
+        }
+        html.dark .table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+        html.dark .nav-tabs .nav-link:not(.active) {
+            color: var(--text-secondary) !important;
+            border-color: transparent !important;
+        }
+        html.dark .nav-tabs {
+            border-bottom: 2px solid var(--border-card) !important;
+        }
+        html.dark input::placeholder, html.dark textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4) !important;
+        }
+        html.dark .form-control {
+            color: var(--text-primary) !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+        html.dark .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        /* Custom Pagination styling */
+        .pagination .page-link {
+            color: var(--primary) !important;
+            background-color: transparent !important;
+            border-color: var(--border-card) !important;
+            box-shadow: none !important;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        html.dark .pagination .page-item.active .page-link {
+            color: #111827 !important;
+        }
+        .pagination .page-link:hover {
+            background-color: var(--primary-glow) !important;
+            border-color: var(--primary) !important;
+            color: var(--primary) !important;
+        }
+
+        /* Unified Language Selection Bar styling */
+        .lang-toggle-bar {
+            display: inline-flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-card);
+            padding: 4px;
+            border-radius: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--border-card);
+            background: var(--primary-glow);
+        }
+
+        .lang-btn.active {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        html.dark .lang-btn.active {
+            background-color: #ffffff !important;
+            border-color: #ffffff !important;
+            color: #111827 !important;
+        }
+
+        .lang-btn.active:hover,
+        .lang-btn.active:focus,
+        .lang-btn.active:active {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+
+        html.dark .lang-btn.active:hover,
+        html.dark .lang-btn.active:focus,
+        html.dark .lang-btn.active:active {
+            background-color: #f3f4f6 !important;
+            border-color: #f3f4f6 !important;
+            color: #111827 !important;
+        }
+
+        html.dark .lang-btn:not(.active) {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        html.dark .lang-btn:not(.active):hover {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-card);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            transition: var(--transition);
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary);
+        }
+
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .nav-link-custom:hover {
+            background-color: rgba(17, 24, 39, 0.05);
+            color: #111827;
+        }
+        html.dark .nav-link-custom:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .nav-link-custom.active {
+            background: #111827 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(17, 24, 39, 0.15);
+        }
+        html.dark .nav-link-custom.active {
+            background: #ffffff !important;
+            color: #111827 !important;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-custom-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            transition: var(--transition);
+        }
+        html.dark .btn-custom-primary {
+            color: #111827 !important;
+        }
+
+        .btn-custom-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px var(--primary-glow);
+            color: #ffffff;
+        }
+        html.dark .btn-custom-primary:hover {
+            color: #111827 !important;
+        }
+
+        .form-control, .form-select {
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-card);
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 12px;
+            transition: var(--transition);
+        }
+
+        .form-select option {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+        /* Extra high-contrast overrides for browser options */
+        html.dark select, html.dark select option, html.dark .form-select option {
+            background-color: #1f2937 !important;
+            color: #ffffff !important;
+        }
+        html.light select, html.light select option, html.light .form-select option {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255,255,255,0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            color: var(--text-primary);
+        }
+
+        .badge-custom {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-custom-success {
+            background-color: var(--success-bg);
+            color: #065f46;
+        }
+
+        .badge-custom-danger {
+            background-color: var(--danger-bg);
+            color: #991b1b;
+        }
+
+        .badge-custom-warning {
+            background-color: var(--warning-bg);
+            color: #92400e;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 20px 10px;
+            }
+            .sidebar span, .sidebar .user-card-detail, .sidebar .bottom-controls {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 80px;
+                padding: 20px;
+            }
+        }
+        /* Sidebar collapse toggle */
+        .sidebar.collapsed {
+            width: 80px;
+            padding: 20px 10px;
+        }
+        .sidebar.collapsed .sidebar-label,
+        .sidebar.collapsed .brand-logo-text,
+        .sidebar.collapsed .bottom-controls {
+            display: none !important;
+        }
+        .sidebar.collapsed .brand-header-container {
+            justify-content: center !important;
+            margin-bottom: 0 !important;
+        }
+        .sidebar.collapsed .user-card-detail {
+            justify-content: center !important;
+            padding: 8px !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .sidebar.collapsed .user-detail-text {
+            display: none !important;
+        }
+        
+        /* Custom avatar coloring: White in dark theme, Black in bright/light theme */
+        .user-avatar-circle {
+            background-color: #111827; /* Dark black/gray */
+            color: #ffffff; /* White letter */
+            transition: var(--transition);
+        }
+        html.dark .user-avatar-circle {
+            background-color: #ffffff; /* White background */
+            color: #111827; /* Dark letter */
+        }
+        .sidebar.collapsed .nav-link-custom {
+            justify-content: center;
+            padding: 12px;
+        }
+        .sidebar.collapsed .nav-link-custom span {
+            display: none;
+        }
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px;
+        }
+        .sidebar-toggle-btn {
+            background: none;
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .sidebar-toggle-btn:hover {
+            background-color: rgba(17, 24, 39, 0.05);
+            border-color: #111827;
+            color: #111827;
+        }
+        html.dark .sidebar-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+        .brand-logo-svg {
+            stroke: #111827;
+            transition: var(--transition);
+        }
+        html.dark .brand-logo-svg {
+            stroke: #ffffff;
+        }
+        .brand-logo-img {
+            transition: var(--transition);
+            filter: brightness(0.5) contrast(1.5);
+        }
+        html.dark .brand-logo-img {
+            filter: invert(1) brightness(4) contrast(2);
+        }
+        .brand-text {
+            color: #111827 !important;
+            transition: var(--transition);
+        }
+        html.dark .brand-text {
+            color: #ffffff !important;
+        }
+        .collapsed-only-logout {
+            display: none !important;
+        }
+        .sidebar.collapsed .collapsed-only-logout {
+            display: flex !important;
+            color: var(--danger);
+        }
+        .sidebar.collapsed .collapsed-only-logout:hover {
+            background-color: var(--danger-bg);
+        }
+
+        /* Custom Dropdown Stacking & Hover Contrast */
+        .dropdown-menu {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-card) !important;
+        }
+        .dropdown-item {
+            color: var(--text-primary) !important;
+            transition: var(--transition);
+        }
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        html.dark .dropdown-item:hover, html.dark .dropdown-item:focus {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    {% if request.user.is_authenticated %}
+    <!-- Sidebar navigation -->
+    <aside class="sidebar">
+        <!-- Brand Header & Toggle Button -->
+        <div class="d-flex align-items-center justify-content-between mb-2 w-100 brand-header-container">
+            <div class="d-flex align-items-center gap-2 brand-logo-text">
+                <img src="/media/logo.png" alt="PlantCare Logo" class="brand-logo-img" width="52" height="52" style="border-radius: 8px; object-fit: cover;">
+                <h4 class="m-0 fw-bold brand-text">PlantCare</h4>
+            </div>
+            <!-- Sidebar Toggle Button -->
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle sidebar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <!-- User Information Card -->
+        <div class="glass-panel p-3 user-card-detail d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.04);">
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold user-avatar-circle" style="width: 36px; height: 36px; flex-shrink: 0;">
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+            <div class="overflow-hidden user-detail-text">
+                <div class="fw-bold text-truncate" style="font-size: 0.9rem;">{{ request.user.username }}</div>
+                <div class="text-muted text-truncate" style="font-size: 0.75rem;">{{ request.user.farm_name|default:"My Farm" }}</div>
+            </div>
+        </div>
+
+        <!-- Menu items -->
+        <nav class="d-flex flex-column gap-2 flex-grow-1">
+            <a href="{% url 'dashboard' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                <span>{{ t.nav.dashboard }}</span>
+            </a>
+            <a href="{% url 'scan_upload' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'scan_upload' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <span>{{ t.nav.scan }}</span>
+            </a>
+            <a href="{% url 'weather_advisor' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'weather_advisor' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M6.34 17.66l-1.41 1.41"></path><path d="M19.07 4.93l-1.41 1.41"></path><path d="M22 22H2"></path><path d="M16 14a4 4 0 1 0-8 0H16z"></path></svg>
+                <span>{{ t.nav.weather }}</span>
+            </a>
+            
+            <a href="{% url 'profile_settings' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>{{ t.nav.profile }}</span>
+            </a>
+        </nav>
+
+        <!-- Compact logout (visible only when collapsed) -->
+        <a href="{% url 'logout' %}" class="nav-link-custom collapsed-only-logout mb-3" title="{{ t.nav.logout|default:'Logout' }}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>{{ t.nav.logout }}</span>
+        </a>
+
+        <!-- Preference switches & logout -->
+        <div class="d-flex flex-column gap-3 bottom-controls">
+            <div class="d-flex flex-column gap-2 align-items-center w-100">
+                <!-- Language selection bar -->
+                <div class="lang-toggle-bar w-100 justify-content-center">
+                    <form action="{% url 'toggle_preference' %}" method="post" class="m-0 flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="en">
+                        <button type="submit" class="lang-btn {% if current_language == 'en' %}active{% endif %} w-100 py-2 px-1 text-center" style="font-size: 0.8rem; border-radius: 8px;">English</button>
+                    </form>
+                    <form action="{% url 'toggle_preference' %}" method="post" class="m-0 flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="hi">
+                        <button type="submit" class="lang-btn {% if current_language == 'hi' %}active{% endif %} w-100 py-2 px-1 text-center" style="font-size: 0.8rem; border-radius: 8px;">हिन्दी</button>
+                    </form>
+                    <form action="{% url 'toggle_preference' %}" method="post" class="m-0 flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="gu">
+                        <button type="submit" class="lang-btn {% if current_language == 'gu' %}active{% endif %} w-100 py-2 px-1 text-center" style="font-size: 0.8rem; border-radius: 8px;">ગુજરાતી</button>
+                    </form>
+                </div>
+
+                <!-- Theme toggle form -->
+                <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="theme_preference" value="{% if current_theme == 'light' %}dark{% else %}light{% endif %}">
+                    <button type="submit" class="btn btn-outline-secondary p-2 d-flex align-items-center justify-content-center" style="border-radius: 10px; width: 38px; height: 38px;">
+                        {% if current_theme == 'light' %}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        {% else %}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Logout Link -->
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; font-weight: 600; padding: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>{{ t.nav.logout }}</span>
+            </a>
+        </div>
+    </aside>
+    {% endif %}
+
+    <!-- Wrapper content -->
+    <main class="{% if request.user.is_authenticated %}main-content{% else %}container-fluid{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar collapse toggle
+        (function() {
+            const sidebar = document.querySelector('.sidebar');
+            const btn = document.getElementById('sidebarToggleBtn');
+            if (!sidebar || !btn) return;
+            if (localStorage.getItem('sidebar_collapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+            }
+            btn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+            });
+        })();
+    </script>
+</body>
+</html>

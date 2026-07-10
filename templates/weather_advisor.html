@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script>
+function lookupWeatherCityGPS() {
+    const cityInput = document.getElementById('weatherCityInput');
+    const latInput = document.getElementById('weatherLatInput');
+    const lonInput = document.getElementById('weatherLonInput');
+    
+    if (!cityInput || !cityInput.value) {
+        alert("Please enter a City Name first.");
+        return;
+    }
+    
+    const city = cityInput.value;
+    const apiKey = "be7bfd5d33099d1342756e8161d6449d";
+    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                latInput.value = parseFloat(data[0].lat).toFixed(6);
+                lonInput.value = parseFloat(data[0].lon).toFixed(6);
+                alert(`GPS Coordinates for ${city} successfully resolved: ${latInput.value}, ${lonInput.value}. You can now search by coordinates or search directly by submitting the city form.`);
+            } else {
+                alert(`Could not find coordinates for city "${city}". Please check spelling.`);
+            }
+        })
+        .catch(err => {
+            alert("Error calling geocoding API. Please try again later.");
+        });
+}
+
+{% if trigger_browser_geolocation %}
+// Auto trigger browser geolocation fallback if no profile city or GPS exists
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            window.location.href = "{% url 'weather_advisor' %}?lat=" + lat + "&lon=" + lon;
+        },
+        function(err) {
+            console.error("Browser Geolocation permission denied or failed.");
+        }
+    );
+}
+{% endif %}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4 fade-in-up">
+    <!-- Header title -->
+    <div>
+        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.weather.title }}</h1>
+        <p class="text-muted m-0">Analyze current micro-climates and predict crop suitability indexes</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger text-center" role="alert" style="border-radius: 10px;">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Dual Option Location Search Panel -->
+    <div class="glass-panel p-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            {{ t.weather.searchPanelTitle }}
+        </h5>
+        
+        <div class="row g-4">
+            <!-- Option 1: Search by City Name -->
+            <div class="col-md-6 border-end-md" style="border-right: 1px solid var(--border-card);">
+                <form method="get" class="d-flex flex-column gap-2 h-100 justify-content-between">
+                    <div>
+                        <label class="form-label fw-bold mb-1">{{ t.weather.searchCityLabel }}</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" name="city" id="weatherCityInput" class="form-control" placeholder="{{ t.weather.cityPlaceholder }}" value="{{ city|default:'' }}" required>
+                            <button type="submit" class="btn-custom-primary text-nowrap px-4">{{ t.weather.searchCityBtn }}</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm align-self-start border-0 fw-bold p-0 mt-2" style="font-size: 0.75rem;" onclick="lookupWeatherCityGPS()">{{ t.weather.resolveGpsBtn }}</button>
+                </form>
+            </div>
+            
+            <!-- Option 2: Search by Coordinates -->
+            <div class="col-md-6">
+                <form method="get" class="d-flex flex-column gap-2 h-100 justify-content-between">
+                    <div>
+                        <label class="form-label fw-bold mb-1">{{ t.weather.searchCoordsLabel }}</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" step="0.0001" name="lat" id="weatherLatInput" class="form-control" placeholder="{{ t.weather.latitudePlaceholder }}" value="{{ lat|default:'' }}" required>
+                            <input type="number" step="0.0001" name="lon" id="weatherLonInput" class="form-control" placeholder="{{ t.weather.longitudePlaceholder }}" value="{{ lon|default:'' }}" required>
+                            <button type="submit" class="btn-custom-primary text-nowrap px-4">{{ t.weather.loadWeatherBtn }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Display (If Lat/Lon are resolved) -->
+    {% if not lat or not lon %}
+    <div class="glass-panel p-5 text-center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" class="mb-3"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <h4 class="fw-bold">{{ t.weather.noLocationMsg }}</h4>
+    </div>
+    {% else %}
+    
+    <!-- Location indicator & Crop Growth Suitability Checker -->
+    <div class="row g-4" style="position: relative; z-index: 1050;">
+        <!-- Location details -->
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100">
+                <span class="text-muted fw-bold small text-uppercase">{{ t.weather.configuredCoords }}</span>
+                <h4 class="fw-bold mt-2 d-flex align-items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    {{ lat|floatformat:4 }}, {{ lon|floatformat:4 }}
+                </h4>
+                <p class="text-muted small mb-0 mt-1">
+                    {{ t.weather.queryLocation }}: {% if request.GET.city %}{{ request.GET.city }}{% else %}{{ t.weather.profileGps }}{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Growth suitability form checker -->
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100" style="position: relative; z-index: 1060;">
+                <span class="text-muted fw-bold small text-uppercase">{{ t.weather.suitabilityAdvisor }}</span>
+                
+                <form method="get" id="cropSuitabilityForm" class="d-flex flex-column gap-2 mt-2">
+                    <input type="hidden" name="lat" value="{{ lat }}">
+                    <input type="hidden" name="lon" value="{{ lon }}">
+                    {% if request.GET.city %}
+                    <input type="hidden" name="city" value="{{ request.GET.city }}">
+                    {% endif %}
+                    
+                    <div class="position-relative w-100" id="customCropSearchDropdown">
+                        <input type="text" id="cropSearchInput" class="form-control" placeholder="🔍 {% if current_language == 'hi' %}फसल खोजें...{% elif current_language == 'gu' %}પાક શોધો...{% else %}Search Crop...{% endif %}" autocomplete="off" value="{% if growth %}{% if growth.crop %}{{ growth.crop.localized_name|default:growth.crop.name }}{% endif %}{% endif %}">
+                        
+                        <input type="hidden" name="crop_id" id="selectedCropId" value="{% if growth %}{% if growth.crop %}{{ growth.crop.id }}{% endif %}{% endif %}">
+                        
+                        <ul class="dropdown-menu w-100 mt-1 shadow-lg border-card glass-panel" id="cropSearchList" style="max-height: 250px; overflow-y: auto; display: none; z-index: 2000; position: absolute; background: var(--bg-card); border: 1px solid var(--border-card); padding: 5px; border-radius: 8px;">
+                            <li class="dropdown-item py-2 px-3 text-muted text-center no-results" style="display: none;">
+                                {% if current_language == 'hi' %}कोई फसल नहीं मिली{% elif current_language == 'gu' %}કોઈ પાક મળ્યો નથી{% else %}No crops found{% endif %}
+                            </li>
+                            {% for c in crops %}
+                            <li class="dropdown-item py-2 px-3 rounded-2 crop-search-item" data-value="{{ c.id }}" data-search-name="{{ c.localized_name|default:c.name|lower }}" style="cursor: pointer;">
+                                {{ c.localized_name|default:c.name }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </form>
+
+                {% if growth %}
+                <div class="mt-3 d-flex flex-column gap-3">
+                    <!-- Progress Bar -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small text-uppercase">
+                                {{ growth.crop.localized_name|default:growth.crop.name }}
+                                {{ t.weather.growthSuitability }}
+                            </span>
+                            <span class="fw-bold text-success">{{ growth.percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px; background: rgba(0, 204, 136, 0.08);">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ growth.percentage }}%;" aria-valuenow="{{ growth.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <!-- Verdict -->
+                    <div class="small d-flex align-items-center gap-2">
+                        <span class="text-muted">{{ t.weather.verdictLabel }}:</span>
+                        <span class="badge-custom {% if growth.verdict == 'Good' %}badge-custom-success{% elif growth.verdict == 'Mixed' %}badge-custom-warning{% else %}badge-custom-danger{% endif %} py-1">
+                            {% if growth.verdict == 'Good' %}{{ t.weather.verdict_good }}{% elif growth.verdict == 'Mixed' %}{{ t.weather.verdict_mixed }}{% else %}{{ t.weather.verdict_unfavorable }}{% endif %}
+                        </span>
+                    </div>
+
+                    <hr class="my-1" style="border-top: 1px solid var(--border-card);">
+
+                    <!-- Crop details grid -->
+                    <div class="d-flex flex-column gap-2 small">
+                        <!-- Scientific name -->
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">{% if current_language == 'hi' %}वैज्ञानिक नाम{% elif current_language == 'gu' %}વૈજ્ઞાનિક નામ{% else %}Scientific Name{% endif %}:</span>
+                            <span class="fw-bold"><i>{{ growth.crop.scientific_name }}</i></span>
+                        </div>
+                        <!-- Ideal temp -->
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">{% if current_language == 'hi' %}आदर्श तापमान{% elif current_language == 'gu' %}આદર્શ તાપમાન{% else %}Ideal Temperature{% endif %}:</span>
+                            <span class="fw-bold text-success">{{ growth.crop.ideal_temp_min_c }}°C - {{ growth.crop.ideal_temp_max_c }}°C</span>
+                        </div>
+                        <!-- Ideal humidity -->
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">{% if current_language == 'hi' %}आदर्श आर्द्रता{% elif current_language == 'gu' %}આદર્શ ભેજ{% else %}Ideal Humidity{% endif %}:</span>
+                            <span class="fw-bold text-success">{{ growth.crop.ideal_humidity_min }}% - {{ growth.crop.ideal_humidity_max }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Localized Description -->
+                    {% if growth.crop.localized_description %}
+                    <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-card);">
+                        <span class="text-muted d-block small mb-1 fw-bold">{% if current_language == 'hi' %}फसल के बारे में{% elif current_language == 'gu' %}પાક વિશે માહિતી{% else %}About Crop{% endif %}</span>
+                        <p class="m-0 text-muted small" style="line-height: 1.45;">{{ growth.crop.localized_description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather metrics & Graphs -->
+    <div class="row g-4">
+        <!-- Current conditions card -->
+        {% if weather %}
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 d-flex flex-column gap-3">
+                <span class="text-muted fw-bold small text-uppercase">{{ t.weather.current }}</span>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Dynamic weather icon -->
+                    <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M6.34 17.66l-1.41 1.41"></path><path d="M19.07 4.93l-1.41 1.41"></path><circle cx="12" cy="12" r="5"></circle></svg>
+                    </div>
+                    <div>
+                        <h2 class="fw-bold m-0" style="font-size: 2.2rem;">{{ weather.temperature_c|floatformat:1 }}°C</h2>
+                        <span class="text-capitalize text-success fw-bold">{{ weather.description }}</span>
+                    </div>
+                </div>
+                
+                <hr class="my-2" style="border-top: 1px solid var(--border-card);">
+                
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="d-flex justify-content-between">
+                        <span>{{ t.weather.humidityLabel|default:"Humidity" }}</span>
+                        <span class="fw-bold">{{ weather.humidity }}%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>{{ t.weather.windLabel|default:"Wind Speed" }}</span>
+                        <span class="fw-bold">{{ weather.wind_speed_m_s }} m/s</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>{{ t.weather.rainChanceLabel }}</span>
+                        <span class="fw-bold">{{ weather.rain_chance }}%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>{{ t.weather.conditionLabel }}</span>
+                        <span class="fw-bold">
+                            {% if weather.condition_type == 'Dry' %}{{ t.weather.condition_dry }}
+                            {% elif weather.condition_type == 'Humid' %}{{ t.weather.condition_humid }}
+                            {% else %}{{ t.weather.condition_normal }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Forecast Graph -->
+        {% if forecast %}
+        <div class="col-md-8">
+            <div class="glass-panel p-4 h-100">
+                <span class="text-muted fw-bold small text-uppercase">5-Day Forecast Chart</span>
+                <div style="position: relative; height: 180px; width: 100%;" class="mt-3">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tabbed Forecast details -->
+    <div class="glass-panel p-4">
+        <ul class="nav nav-tabs mb-3" id="weatherTabs" role="tablist" style="border-bottom: 2px solid var(--border-card);">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-success" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast-pane" type="button" role="tab">{{ t.weather.forecast }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-success" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">{{ t.weather.pastDays }}</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="weatherTabsContent">
+            <!-- Forecast pane -->
+            <div class="tab-pane fade show active" id="forecast-pane" role="tabpanel" aria-labelledby="forecast-tab">
+                <div class="table-responsive">
+                    <table class="table align-middle m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>{{ t.weather.table_date|default:"Date" }}</th>
+                                <th>{{ t.weather.table_temp|default:"Average Temperature" }}</th>
+                                <th>{{ t.weather.table_humidity|default:"Average Humidity" }}</th>
+                                <th>{{ t.weather.table_meaning|default:"Interpretation" }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in forecast %}
+                            <tr style="border-bottom: 1px solid var(--border-card);">
+                                <td class="fw-bold">{{ day.date }}</td>
+                                <td>{{ day.avg_temperature_c }}°C</td>
+                                <td>{{ day.avg_humidity }}%</td>
+                                <td>{{ day.meaning }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No forecast data loaded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- History pane -->
+            <div class="tab-pane fade" id="history-pane" role="tabpanel" aria-labelledby="history-tab">
+                <div class="table-responsive">
+                    <table class="table align-middle m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>{{ t.weather.table_date|default:"Date" }}</th>
+                                <th>{{ t.weather.table_temp|default:"Average Temperature" }}</th>
+                                <th>{{ t.weather.table_humidity|default:"Average Humidity" }}</th>
+                                <th>{{ t.weather.table_meaning|default:"Interpretation" }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in past %}
+                            <tr style="border-bottom: 1px solid var(--border-card);">
+                                <td class="fw-bold">{{ day.date }}</td>
+                                <td>{{ day.avg_temperature_c }}°C</td>
+                                <td>{{ day.avg_humidity }}%</td>
+                                <td>{{ day.meaning }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No history weather files found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+
+</div>
+
+<!-- Forecast Chart Initialization -->
+{% if forecast %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#a0a0a5' : '#4b5563';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.03)';
+        const primaryThemeColor = isDark ? '#ffffff' : '#111827';
+        
+        const dates = {{ chart_dates_json|safe }};
+        const temps = {{ chart_temps_json|safe }};
+        const hums = {{ chart_hums_json|safe }};
+
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Temp (°C)',
+                        data: temps,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Humidity (%)',
+                        data: hums,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: textColor, font: { family: 'Outfit' } }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const input = document.getElementById("cropSearchInput");
+        const list = document.getElementById("cropSearchList");
+        const items = list ? list.querySelectorAll(".crop-search-item") : [];
+        const hiddenInput = document.getElementById("selectedCropId");
+        const noResults = list ? list.querySelector(".no-results") : null;
+        const form = document.getElementById("cropSuitabilityForm");
+
+        if (!input || !list) return;
+
+        // Open dropdown on focus/click
+        input.addEventListener("focus", function() {
+            list.style.display = "block";
+            // Clear input so user can search fresh
+            input.value = "";
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function(e) {
+            if (!input.contains(e.target) && !list.contains(e.target)) {
+                list.style.display = "none";
+                // Restore selected value text if nothing selected
+                if (hiddenInput.value === "") {
+                    input.value = "";
+                } else {
+                    const selectedItem = Array.from(items).find(item => item.getAttribute("data-value") === hiddenInput.value);
+                    if (selectedItem) {
+                        input.value = selectedItem.textContent.trim();
+                    }
+                }
+            }
+        });
+
+        // Filter list items based on search input
+        input.addEventListener("input", function() {
+            const val = input.value.trim().toLowerCase();
+            let anyVisible = false;
+
+            items.forEach(function(item) {
+                const name = item.getAttribute("data-search-name");
+                if (name.includes(val)) {
+                    item.style.display = "block";
+                    anyVisible = true;
+                } else {
+                    item.style.display = "none";
+                }
+            });
+
+            if (anyVisible) {
+                if (noResults) noResults.style.display = "none";
+            } else {
+                if (noResults) noResults.style.display = "block";
+            }
+        });
+
+        // Select item on click
+        items.forEach(function(item) {
+            item.addEventListener("click", function() {
+                const cropId = item.getAttribute("data-value");
+                const cropName = item.textContent.trim();
+                
+                hiddenInput.value = cropId;
+                input.value = cropName;
+                list.style.display = "none";
+                
+                // Submit form automatically
+                if (form) form.submit();
+            });
+        });
+    });
+</script>
+
+{% endblock %}

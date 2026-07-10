@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh; background: linear-gradient(135deg, #09100d 0%, #10261a 50%, #0c1c13 100%);">
+
+    <div class="glass-panel p-5 fade-in-up" style="max-width: 440px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card);">
+
+        <!-- Icon & Brand -->
+        <div class="text-center mb-4">
+            <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2"
+                 style="border-radius: 12px; object-fit: cover; filter: invert(1) brightness(4) contrast(2);">
+            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Verify Your Email</h2>
+            <p class="text-muted mt-1" style="font-size: 0.9rem;">
+                A 6-digit OTP has been sent to<br>
+                <strong style="color: var(--primary);">{{ email }}</strong>
+            </p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger text-center py-2" role="alert"
+             style="border-radius: 10px; font-size: 0.9rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" id="otp-verification-form" class="d-flex flex-column gap-3">
+            {% csrf_token %}
+            <div class="form-group m-0">
+                <label class="form-label">Enter OTP</label>
+                <input
+                    type="text"
+                    id="otp-input"
+                    name="otp"
+                    class="form-control text-center"
+                    placeholder="e.g. 482913"
+                    maxlength="6"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    autocomplete="one-time-code"
+                    required
+                    style="font-size: 1.6rem; letter-spacing: 0.4rem; font-weight: 700;">
+            </div>
+
+            <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">
+                Verify &amp; Activate Account
+            </button>
+        </form>
+
+        <div class="text-center mt-4" style="font-size: 0.85rem;">
+            <a href="{% url 'register' %}" style="color: var(--text-secondary); text-decoration: none;">
+                &larr; Back to Register
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

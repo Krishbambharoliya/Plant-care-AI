@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4 fade-in-up">
+    <!-- Header title -->
+    <div>
+        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.nav.dashboard }}</h1>
+        <p class="text-muted m-0">{{ t.dashboard.desc }}</p>
+    </div>
+    <!-- Weather from registered city -->
+    <!-- Weather from registered city -->
+    {% if weather %}
+    <div class="glass-panel p-4 d-flex align-items-center gap-4" style="background: linear-gradient(135deg, var(--success-bg), rgba(0,0,0,0.01));">
+        <div class="p-3 rounded-circle d-flex align-items-center justify-content-center" style="background: var(--primary-glow); width: 56px; height: 56px;">
+            {% if weather.icon %}
+            <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="weather" style="width: 48px; height: 48px;">
+            {% else %}
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path><circle cx="12" cy="12" r="4"></circle></svg>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-baseline gap-3 flex-wrap">
+                <h3 class="fw-bold m-0" style="font-size: 2rem;">{{ weather.temperature_c|floatformat:1 }}°C</h3>
+                <span class="text-muted fw-bold" style="text-transform: capitalize;">{{ weather.description|default:"--" }}</span>
+            </div>
+            <div class="d-flex gap-4 mt-1 flex-wrap">
+                <span class="text-muted small"><strong>💧 {{ t.weather.humidity|default:"Humidity" }}:</strong> {{ weather.humidity }}%</span>
+                <span class="text-muted small"><strong>📍</strong> {{ user_city|default:"Your Location" }}</span>
+            </div>
+        </div>
+        <a href="{% url 'weather_advisor' %}" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" style="border-radius: 10px; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            {{ t.nav.weather|default:"Weather Advisor" }}
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Summary Count Cards -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fw-bold small" style="text-transform: uppercase;">{{ t.stats.totalScans }}</span>
+                    <h2 class="fw-bold mt-2 mb-0" style="font-size: 2rem;">{{ total }}</h2>
+                </div>
+                <div class="p-3 rounded-circle d-flex align-items-center justify-content-center" style="background: var(--success-bg); color: var(--success); width: 48px; height: 48px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fw-bold small" style="text-transform: uppercase;">{{ t.stats.healthyCount }}</span>
+                    <h2 class="fw-bold mt-2 mb-0" style="font-size: 2rem;">{{ healthy_count }}</h2>
+                </div>
+                <div class="p-3 rounded-circle d-flex align-items-center justify-content-center" style="background: var(--success-bg); color: var(--success); width: 48px; height: 48px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fw-bold small" style="text-transform: uppercase;">{{ t.stats.diseasedCount }}</span>
+                    <h2 class="fw-bold mt-2 mb-0 text-danger" style="font-size: 2rem;">{{ diseased_count }}</h2>
+                </div>
+                <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Visualization Section -->
+    {% if total > 0 %}
+    <div class="row g-4">
+        <!-- Distribution Donut Chart -->
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-3">{{ t.stats.distribution }}</h5>
+                <div style="position: relative; height: 220px; width: 100%;">
+                    <canvas id="healthPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group by Crop Bar Chart -->
+        <div class="col-lg-4 col-md-6">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-3">{{ t.stats.scansByCrop }}</h5>
+                <div style="position: relative; height: 220px; width: 100%;">
+                    <canvas id="cropBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Trends Line Chart -->
+        <div class="col-lg-4 col-12">
+            <div class="glass-panel p-4 h-100">
+                <h5 class="fw-bold mb-3">{{ t.stats.scansOverTime }}</h5>
+                <div style="position: relative; height: 220px; width: 100%;">
+                    <canvas id="monthlyLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scans History Table -->
+    <div class="glass-panel p-4">
+        <h5 class="fw-bold mb-3">{{ t.stats.recentDiagnostics }}</h5>
+        
+        <div class="table-responsive">
+            <table class="table align-middle table-hover m-0">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-card);">
+                        <th>{{ t.stats.photo }}</th>
+                        <th>{{ t.stats.cropName }}</th>
+                        <th>{{ t.stats.scanOrgan }}</th>
+                        <th>{{ t.stats.confidence }}</th>
+                        <th>{{ t.stats.healthStatus }}</th>
+                        <th>{{ t.stats.diagnosticDate }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in page_obj %}
+                    <tr style="cursor: pointer; border-bottom: 1px solid var(--border-card);" onclick="location.href='{% url 'scan_upload' %}?result_id={{ scan.id }}'">
+                        <td>
+                            <div class="rounded-3 overflow-hidden bg-success bg-opacity-10" style="width: 48px; height: 48px;">
+                                {% if scan.image %}
+                                <img src="{{ scan.image.url }}" alt="Scan Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" class="m-2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">
+                                {% if scan.matched_crop_name == 'Potato' %}{{ t.crop.potato }}
+                                {% elif scan.matched_crop_name == 'Tomato' %}{{ t.crop.tomato }}
+                                {% elif scan.matched_crop_name == 'Chili Pepper' or scan.matched_crop_name == 'Pepper' %}{{ t.crop.chili }}
+                                {% else %}{{ scan.matched_crop_name|default:"Unknown Species" }}{% endif %}
+                            </div>
+                            <small class="text-muted font-italic">{{ scan.identified_species }}</small>
+                        </td>
+                        <td>
+                            {% if scan.organ == 'leaf' %}{{ t.scan.organ_leaf }}
+                            {% elif scan.organ == 'flower' %}{{ t.scan.organ_flower }}
+                            {% elif scan.organ == 'fruit' %}{{ t.scan.organ_fruit }}
+                            {% elif scan.organ == 'bark' %}{{ t.scan.organ_bark }}
+                            {% else %}{{ scan.organ }}{% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-success">{% widthratio scan.confidence_score 1 100 %}%</div>
+                        </td>
+                        <td>
+                            {% if scan.is_healthy %}
+                            <span class="badge-custom badge-custom-success">{{ t.scan.healthy }}</span>
+                            {% else %}
+                            <span class="badge-custom badge-custom-danger">{{ t.scan.diseased }}</span>
+                            <div class="small text-danger mt-1">
+                                {% if scan.disease_identified == 'Early Blight' %}{{ t.disease.early_blight }}
+                                {% elif scan.disease_identified == 'Late Blight' %}{{ t.disease.late_blight }}
+                                {% else %}{{ scan.disease_identified }}{% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ scan.created_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            {{ t.dashboard.no_scans }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Navigation -->
+        {% if page_obj.has_other_pages %}
+        <nav class="d-flex justify-content-center mt-4">
+            <ul class="pagination pagination-sm m-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Chart.js and Graph Initializations -->
+{% if total > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#a0a0a5' : '#4b5563';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.03)';
+        const primaryThemeColor = isDark ? '#ffffff' : '#111827';
+        const primaryThemeBg = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(17, 24, 39, 0.05)';
+        
+        // Premium chart colors
+        const chartColorHealthy = '#3b82f6'; // Vibrant Blue
+        const chartColorBar = '#8b5cf6'; // Premium Purple
+        const chartColorLineBorder = '#06b6d4'; // Cyan
+        const chartColorLineBg = 'rgba(6, 182, 212, 0.1)';
+        
+        // 1. Health Distribution Donut
+        const ctxPie = document.getElementById('healthPieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['{{ t.stats.healthyCount|escapejs }}', '{{ t.stats.diseasedCount|escapejs }}'],
+                datasets: [{
+                    data: [{{ healthy_count }}, {{ diseased_count }}],
+                    backgroundColor: [chartColorHealthy, '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: textColor, font: { family: 'Outfit', size: 12 } }
+                    }
+                }
+            }
+        });
+
+        // 2. Crop Counts Bar
+        const ctxBar = document.getElementById('cropBarChart').getContext('2d');
+        const cropTranslations = {
+            'Tomato': '{{ t.crop.tomato|escapejs }}',
+            'Potato': '{{ t.crop.potato|escapejs }}',
+            'Chili Pepper': '{{ t.crop.chili|escapejs }}',
+            'Pepper': '{{ t.crop.chili|escapejs }}'
+        };
+        const cropLabels = {{ crop_labels_json|safe }}.map(lbl => cropTranslations[lbl] || lbl);
+        const cropData = {{ crop_data_json|safe }};
+        
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: cropLabels,
+                datasets: [{
+                    label: '{{ t.stats.totalScans|escapejs }}',
+                    data: cropData,
+                    backgroundColor: chartColorBar,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+                }
+            }
+        });
+
+        // 3. Monthly Line Trends
+        const ctxLine = document.getElementById('monthlyLineChart').getContext('2d');
+        const monthLabels = {{ month_labels_json|safe }};
+        const monthData = {{ month_data_json|safe }};
+        
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: '{{ t.stats.scansOverTime|escapejs }}',
+                    data: monthData,
+                    borderColor: chartColorLineBorder,
+                    backgroundColor: chartColorLineBg,
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script>
+function lookupCityGPS() {
+    const cityInput = document.querySelector('input[name="location_city"]');
+    const latInput = document.querySelector('input[name="latitude"]');
+    const lonInput = document.querySelector('input[name="longitude"]');
+    
+    if (!cityInput || !cityInput.value) {
+        alert("Please enter a City Name first.");
+        return;
+    }
+    
+    const city = cityInput.value;
+    const apiKey = "be7bfd5d33099d1342756e8161d6449d";
+    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                latInput.value = parseFloat(data[0].lat).toFixed(6);
+                lonInput.value = parseFloat(data[0].lon).toFixed(6);
+                alert(`GPS Coordinates for ${city} successfully resolved: ${latInput.value}, ${lonInput.value}`);
+            } else {
+                alert(`Could not find coordinates for city "${city}". Please check spelling.`);
+            }
+        })
+        .catch(err => {
+            alert("Error calling geocoding API. Please try again later.");
+        });
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4 fade-in-up" style="max-width: 800px; margin: 0 auto;">
+    <!-- Header title -->
+    <div>
+        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.profile.title }}</h1>
+        <p class="text-muted m-0">{{ t.profile.edit_desc }}</p>
+    </div>
+
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show py-3" role="alert" style="border-radius: 12px; font-weight: 600;">
+        {% if success_message %}{{ success_message }}{% else %}{{ t.profile.success }}{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+
+    {% if error %}
+    <div class="alert alert-danger py-3 text-center" role="alert" style="border-radius: 12px; font-weight: 600;">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="glass-panel p-4">
+        <form method="post" class="d-flex flex-column gap-4">
+            {% csrf_token %}
+            
+            <h5 class="fw-bold mb-0" style="color: var(--primary); border-bottom: 1px solid var(--border-card); padding-bottom: 6px;">
+                {{ t.profile.farmer_details_title }}
+            </h5>
+
+            <!-- Grid details -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.first_name }} *</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                </div>
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.last_name }} *</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.email_address }} *</label>
+                    <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                </div>
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.phone_number }}</label>
+                    <input type="text" name="phone_number" class="form-control" value="{{ form.phone_number.value|default:'' }}">
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-0" style="color: var(--primary); border-bottom: 1px solid var(--border-card); padding-bottom: 6px;">
+                {{ t.profile.farm_geolocation_title }}
+            </h5>
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.farm_name }}</label>
+                    <input type="text" name="farm_name" class="form-control" value="{{ form.farm_name.value|default:'' }}">
+                </div>
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{{ t.profile.farm_size }}</label>
+                    <input type="number" step="0.01" name="farm_size_acres" class="form-control" value="{{ form.farm_size_acres.value|default:'' }}">
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4 form-group m-0">
+                    <label class="form-label">{{ t.profile.location_city }}</label>
+                    <div class="d-flex flex-column gap-1">
+                        <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}">
+                        <button type="button" class="btn btn-outline-success btn-sm align-self-start border-0 fw-bold p-0 mt-1" style="font-size: 0.75rem;" onclick="lookupCityGPS()">{{ t.weather.resolveGpsBtn }}</button>
+                    </div>
+                </div>
+                <div class="col-md-4 form-group m-0">
+                    <label class="form-label">{{ t.profile.latitude }}</label>
+                    <input type="number" step="0.000001" name="latitude" class="form-control" value="{{ form.latitude.value|default:'' }}">
+                </div>
+                <div class="col-md-4 form-group m-0">
+                    <label class="form-label">{{ t.profile.longitude }}</label>
+                    <input type="number" step="0.000001" name="longitude" class="form-control" value="{{ form.longitude.value|default:'' }}">
+                </div>
+            </div>
+
+            <!-- Submit buttons -->
+            <button type="submit" class="btn-custom-primary py-3 align-self-start px-5 mt-2">
+                {{ t.profile.save }}
+            </button>
+
+        </form>
+    </div>
+
+    <!-- Quick preference display -->
+    <div class="glass-panel p-4 d-flex flex-column gap-3">
+        <h5 class="fw-bold mb-0" style="color: var(--primary); border-bottom: 1px solid var(--border-card); padding-bottom: 6px;">
+            {{ t.profile.preferences }}
+        </h5>
+        
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <span class="d-block fw-bold" style="font-size: 0.95rem;">{{ t.profile.lang_settings_title }}</span>
+                <small class="text-muted">{{ t.profile.lang_settings_desc }}</small>
+            </div>
+            
+            <div class="lang-toggle-bar">
+                <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="en">
+                    <button type="submit" class="lang-btn {% if current_language == 'en' %}active{% endif %}">English</button>
+                </form>
+                <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="hi">
+                    <button type="submit" class="lang-btn {% if current_language == 'hi' %}active{% endif %}">हिन्दी</button>
+                </form>
+                <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="gu">
+                    <button type="submit" class="lang-btn {% if current_language == 'gu' %}active{% endif %}">ગુજરાતી</button>
+                </form>
+            </div>
+        </div>
+
+        <hr style="border-top: 1px solid var(--border-card);" class="my-1">
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <span class="d-block fw-bold" style="font-size: 0.95rem;">{{ t.profile.visual_theme_title }}</span>
+                <small class="text-muted">{{ t.profile.visual_theme_desc }}</small>
+            </div>
+
+            <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                {% csrf_token %}
+                <input type="hidden" name="theme_preference" value="{% if current_theme == 'light' %}dark{% else %}light{% endif %}">
+                <button type="submit" class="btn btn-outline-success fw-bold px-4">
+                    {% if current_theme == 'light' %}{{ t.profile.switch_to_dark }}{% else %}{{ t.profile.switch_to_light }}{% endif %}
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

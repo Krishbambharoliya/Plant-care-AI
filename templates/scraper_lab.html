@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<title>Web Scraper Lab - PlantCare</title>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column gap-4">
+    <!-- Back to Hub Header -->
+    <div class="glass-panel p-4 d-flex justify-content-between align-items-center" style="background: rgba(16, 185, 129, 0.02);">
+        <div>
+            <h2 class="fw-bold m-0" style="color: var(--primary);">Web Scraper Lab (BeautifulSoup)</h2>
+            <p class="text-muted small m-0 mt-1">Extract, parse, and export real-time agricultural crop product catalogs</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="?export=true" class="btn btn-success d-flex align-items-center gap-2 fw-bold" style="border-radius: 12px; color: black;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <span>Export CSV</span>
+            </a>
+            <a href="{% url 'analytics_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Lab Hub</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Scraped Products Table -->
+    <div class="glass-panel p-4">
+        <h5 class="fw-bold mb-3" style="color: var(--primary);">Scraped Agricultural Products (BeautifulSoup Output)</h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle m-0">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-card);">
+                        <th>Product Title</th>
+                        <th>Price (INR)</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr style="border-bottom: 1px solid var(--border-card);">
+                        <td class="fw-bold">{{ item.title }}</td>
+                        <td class="text-success fw-bold">{{ item.price }}</td>
+                        <td class="text-muted small">{{ item.description }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">No scraped data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

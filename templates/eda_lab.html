@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<title>EDA & Visualizations Lab - PlantCare</title>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column gap-4">
+    <!-- Back to Hub Header -->
+    <div class="glass-panel p-4 d-flex justify-content-between align-items-center" style="background: rgba(16, 185, 129, 0.02);">
+        <div>
+            <h2 class="fw-bold m-0" style="color: var(--primary);">EDA & Visualizations Lab</h2>
+            <p class="text-muted small m-0 mt-1">Pandas cleaning, outlier handling, and multi-library visualization workbench</p>
+        </div>
+        <a href="{% url 'analytics_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Lab Hub</span>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Controls -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 d-flex flex-column gap-4">
+                <!-- CSV Uploader -->
+                <div>
+                    <h5 class="fw-bold mb-3" style="color: var(--primary);">Upload New Dataset</h5>
+                    <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                        {% csrf_token %}
+                        <div class="border border-dashed p-3 text-center rounded-3" style="border-style: dashed !important; border-color: var(--border-card) !important; background: rgba(255, 255, 255, 0.01);">
+                            <input type="file" name="csv_file" accept=".csv" class="form-control mb-2" required style="border-radius: 10px;">
+                            <span class="text-muted small">Only CSV file formats supported</span>
+                        </div>
+                        <button type="submit" class="btn btn-custom-primary w-100 py-2 fw-bold" style="border-radius: 12px;">
+                            Upload & Process
+                        </button>
+                    </form>
+                </div>
+
+                <hr class="m-0" style="border-color: var(--border-card);">
+
+                <!-- Dataset Selector -->
+                <div>
+                    <h5 class="fw-bold mb-3">Available Datasets</h5>
+                    <div class="list-group gap-2">
+                        <a href="{% url 'eda_lab' %}" class="list-group-item list-group-item-action border {% if not selected_id %}active{% endif %} rounded-3 p-3" style="background: {% if not selected_id %}rgba(16, 185, 129, 0.15){% else %}transparent{% endif %}; border-color: var(--border-card);">
+                            <div class="fw-bold small">crop_yield_data.csv [Default]</div>
+                            <small class="text-muted d-block mt-1">Pre-seeded agricultural analytics dataset</small>
+                        </a>
+                        {% for ds in datasets %}
+                        <a href="{% url 'eda_lab' %}?dataset_id={{ ds.id }}" class="list-group-item list-group-item-action border {% if selected_id|stringformat:'s' == ds.id|stringformat:'s' %}active{% endif %} rounded-3 p-3" style="background: {% if selected_id|stringformat:'s' == ds.id|stringformat:'s' %}rgba(16, 185, 129, 0.15){% else %}transparent{% endif %}; border-color: var(--border-card);">
+                            <div class="fw-bold small text-truncate">{{ ds.name }}</div>
+                            <small class="text-muted d-block mt-1">Uploaded: {{ ds.uploaded_at|date:"Y-m-d H:i" }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-4">
+                <!-- Dataset properties card -->
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3" style="color: var(--primary);">Exploratory Data Analysis Info</h5>
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-6 col-sm-3">
+                            <div class="p-3 border rounded-3" style="border-color: var(--border-card); background: rgba(255, 255, 255, 0.01);">
+                                <span class="d-block text-muted small">Row Count</span>
+                                <h3 class="fw-bold m-0 text-success mt-1">{{ shape.0 }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <div class="p-3 border rounded-3" style="border-color: var(--border-card); background: rgba(255, 255, 255, 0.01);">
+                                <span class="d-block text-muted small">Features Count</span>
+                                <h3 class="fw-bold m-0 text-success mt-1">{{ shape.1 }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 border rounded-3 text-start" style="border-color: var(--border-card); background: rgba(255, 255, 255, 0.01); height: 100%;">
+                                <span class="d-block text-muted small">Feature Columns</span>
+                                <div class="text-truncate small mt-2 fw-semibold text-success">
+                                    {{ columns|join:", " }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pandas Describe Matrix Table -->
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3">Pandas Summary Statistics (.describe)</h5>
+                    <div class="table-responsive">
+                        {{ stats_html|safe }}
+                    </div>
+                </div>
+
+                <!-- Two-Way Crosstab and Correlation tables -->
+                <div class="row g-4">
+                    {% if cross_tab_html %}
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 h-100">
+                            <h5 class="fw-bold mb-3">Two-Way Cross Tabulation (Crop Type vs Year)</h5>
+                            <div class="table-responsive" style="max-height: 350px;">
+                                {{ cross_tab_html|safe }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 h-100">
+                            <h5 class="fw-bold mb-3">Correlation Matrix (.corr)</h5>
+                            <div class="table-responsive" style="max-height: 350px;">
+                                {{ corr_html|safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plotly Scatter visualizer -->
+                {% if plotly_div %}
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3">Interactive Plotly Scatter Visualizer</h5>
+                    <div style="background: #111; border-radius: 12px; overflow: hidden;">
+                        {{ plotly_div|safe }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Seaborn Plots images -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 h-100 text-center">
+                            <h5 class="fw-bold mb-3 text-start">Seaborn Box Plot (Yield distribution)</h5>
+                            <img src="{{ box_plot_url }}" alt="Seaborn Box Plot" class="img-fluid rounded-3 border" style="border-color: var(--border-card);">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 h-100 text-center">
+                            <h5 class="fw-bold mb-3 text-start">Seaborn Heatmap (Correlation)</h5>
+                            <img src="{{ heatmap_url }}" alt="Seaborn Heatmap Plot" class="img-fluid rounded-3 border" style="border-color: var(--border-card);">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
