@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
+    <div class="glass-panel p-4 w-100" style="max-width: 520px;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Weekly Plant Check-in</h2>
+            <p class="text-muted small mt-1">Upload a photo of {{ journey.plant_name }} to log its current growth status</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label fw-bold">Plant Photo *</label>
+                <input type="file" name="image" class="form-control" accept="image/*" required>
+                <small class="text-muted">Take a clear picture of the leaves or stem of the plant</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">Visible Symptoms / Plant State</label>
+                <textarea name="symptoms" class="form-control" rows="3" placeholder="e.g. Pale yellow spots appearing on bottom leaves, wilting stems, dry soil edges"></textarea>
+                <small class="text-muted">Describe the symptoms or general appearance of the plant today</small>
+            </div>
+
+            <div class="form-group form-check mt-1">
+                <input type="checkbox" name="is_healthy" id="isHealthyCheck" class="form-check-input">
+                <label for="isHealthyCheck" class="form-check-label fw-bold small">This plant has fully recovered and is healthy now!</label>
+            </div>
+
+            <div class="d-flex gap-2 mt-3 w-100">
+                <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
+                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">Submit Log</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

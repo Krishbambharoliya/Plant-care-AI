@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
+    <div class="glass-panel p-4 w-100" style="max-width: 520px;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Start Recovery Journey</h2>
+            <p class="text-muted small mt-1">Initiate week-by-week monitoring to help your diseased crop recover</p>
+        </div>
+
+        <form method="post" class="d-flex flex-column gap-3">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label fw-bold">Plant Nickname / Location *</label>
+                <input type="text" name="plant_name" class="form-control" placeholder="e.g. Backyard Tomatoes, Field Section A" required>
+                <small class="text-muted">A friendly name to identify this specific plant in your list</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">Crop Variety (Optional)</label>
+                <input type="text" name="crop_type" class="form-control" placeholder="e.g. Tomato, Potato, Chili" list="cropSuggestions">
+                <datalist id="cropSuggestions">
+                    <option value="Tomato">
+                    <option value="Potato">
+                    <option value="Chili Pepper">
+                    <option value="Maize">
+                    <option value="Rice">
+                    <option value="Wheat">
+                </datalist>
+                <small class="text-muted">Specify the crop type to receive better care recommendations</small>
+            </div>
+
+            <div class="d-flex gap-2 mt-3 w-100">
+                <a href="{% url 'recovery_list' %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
+                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">Start Journey</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

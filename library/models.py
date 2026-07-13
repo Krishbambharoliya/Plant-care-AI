@@ -18,8 +18,15 @@ class Crop(models.Model):
     ideal_humidity_min = models.FloatField()
     ideal_humidity_max = models.FloatField()
 
+    # Soil type requirements
+    soil_type = models.CharField(max_length=200, default='Loamy Soil')
+    soil_type_en = models.CharField(max_length=200, blank=True, null=True)
+    soil_type_hi = models.CharField(max_length=200, blank=True, null=True)
+    soil_type_gu = models.CharField(max_length=200, blank=True, null=True)
+
     def __str__(self):
         return self.name
+
 
 class Fertilizer(models.Model):
     FERTILIZER_TYPES = [

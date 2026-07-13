@@ -31,6 +31,37 @@
     </div>
     {% endif %}
 
+    <!-- Quick Actions Panel -->
+    <div class="glass-panel p-4">
+        <h5 class="fw-bold mb-3">⚡ Quick Actions Shortcuts</h5>
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <a href="{% url 'scan_upload' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
+                    <span style="font-size: 1.5rem;">📸</span>
+                    <span style="font-size: 0.9rem; color: var(--text-primary);">Scan Leaf</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{% url 'recovery_list' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
+                    <span style="font-size: 1.5rem;">🩹</span>
+                    <span style="font-size: 0.9rem; color: var(--text-primary);">Recovery Tracker</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{% url 'crop_library' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
+                    <span style="font-size: 1.5rem;">📖</span>
+                    <span style="font-size: 0.9rem; color: var(--text-primary);">Crop Library</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{% url 'history' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
+                    <span style="font-size: 1.5rem;">📜</span>
+                    <span style="font-size: 0.9rem; color: var(--text-primary);">History Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Summary Count Cards -->
     <div class="row g-4">
         <div class="col-md-4">
@@ -212,11 +243,12 @@
         const primaryThemeColor = isDark ? '#ffffff' : '#111827';
         const primaryThemeBg = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(17, 24, 39, 0.05)';
         
-        // Premium chart colors
-        const chartColorHealthy = '#3b82f6'; // Vibrant Blue
-        const chartColorBar = '#8b5cf6'; // Premium Purple
-        const chartColorLineBorder = '#06b6d4'; // Cyan
-        const chartColorLineBg = 'rgba(6, 182, 212, 0.1)';
+        // Premium chart colors (monochrome style matching black/white theme)
+        const chartColorHealthy = isDark ? '#ffffff' : '#111827';
+        const chartColorDiseased = isDark ? '#4b5563' : '#9ca3af';
+        const chartColorBar = isDark ? '#ffffff' : '#111827';
+        const chartColorLineBorder = isDark ? '#ffffff' : '#111827';
+        const chartColorLineBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(17, 24, 39, 0.05)';
         
         // 1. Health Distribution Donut
         const ctxPie = document.getElementById('healthPieChart').getContext('2d');
@@ -226,7 +258,7 @@
                 labels: ['{{ t.stats.healthyCount|escapejs }}', '{{ t.stats.diseasedCount|escapejs }}'],
                 datasets: [{
                     data: [{{ healthy_count }}, {{ diseased_count }}],
-                    backgroundColor: [chartColorHealthy, '#ef4444'],
+                    backgroundColor: [chartColorHealthy, chartColorDiseased],
                     borderWidth: 0
                 }]
             },

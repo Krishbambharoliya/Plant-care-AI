@@ -106,7 +106,12 @@ function lookupCityGPS() {
                 <div class="col-md-4 form-group m-0">
                     <label class="form-label">{{ t.profile.location_city }}</label>
                     <div class="d-flex flex-column gap-1">
-                        <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}">
+                        <input type="text" name="location_city" class="form-control" list="gujaratCitiesList" value="{{ form.location_city.value|default:'' }}" placeholder="Select Gujarat City">
+                        <datalist id="gujaratCitiesList">
+                            {% for city in gujarat_cities %}
+                            <option value="{{ city }}">
+                            {% endfor %}
+                        </datalist>
                         <button type="button" class="btn btn-outline-success btn-sm align-self-start border-0 fw-bold p-0 mt-1" style="font-size: 0.75rem;" onclick="lookupCityGPS()">{{ t.weather.resolveGpsBtn }}</button>
                     </div>
                 </div>

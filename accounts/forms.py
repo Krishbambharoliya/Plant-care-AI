@@ -42,6 +42,19 @@ class FarmerRegistrationForm(UserCreationForm):
             raise forms.ValidationError("This email address is already registered. Please use a different email.")
         return email
 
+    def clean_location_city(self):
+        city = self.cleaned_data.get('location_city') or ''
+        city = city.strip()
+        if city:
+            from accounts.constants import GUJARAT_CITIES
+            matched = [c for c in GUJARAT_CITIES if c.lower() == city.lower()]
+            if not matched:
+                raise forms.ValidationError("Location City must be a city within Gujarat state.")
+            return matched[0]
+        return city
+
+
+
     def save(self, commit=True):
         user = super().save(commit=False)
         city = self.cleaned_data.get('location_city')
@@ -85,6 +98,19 @@ class FarmerProfileForm(forms.ModelForm):
             if qs.exists():
                 raise forms.ValidationError("This email address is already used by another account.")
         return email
+
+    def clean_location_city(self):
+        city = self.cleaned_data.get('location_city') or ''
+        city = city.strip()
+        if city:
+            from accounts.constants import GUJARAT_CITIES
+            matched = [c for c in GUJARAT_CITIES if c.lower() == city.lower()]
+            if not matched:
+                raise forms.ValidationError("Location City must be a city within Gujarat state.")
+            return matched[0]
+        return city
+
+
 
     def save(self, commit=True):
         user = super().save(commit=False)

@@ -8,7 +8,9 @@ from .views import (
     password_reset_request_view, password_reset_verify_view,
     crop_library_view, scan_upload_view, weather_advisor_view,
     profile_settings_view, toggle_preference_view, download_scan_pdf,
-    support_view
+    support_view, recovery_list_view, recovery_start_view,
+    recovery_detail_view, recovery_checkin_view, recovery_pdf_export_view,
+    recovery_ask_view, history_view
 )
 
 urlpatterns = [
@@ -33,6 +35,14 @@ urlpatterns = [
     path('profile/', profile_settings_view, name='profile_settings'),
     path('preferences/toggle/', toggle_preference_view, name='toggle_preference'),
     path('support/', support_view, name='support'),
+    path('history/', history_view, name='history'),
+    path('recovery/', recovery_list_view, name='recovery_list'),
+    path('recovery/start/', recovery_start_view, name='recovery_start'),
+    path('recovery/<int:journey_id>/', recovery_detail_view, name='recovery_detail'),
+    path('recovery/<int:journey_id>/checkin/', recovery_checkin_view, name='recovery_checkin'),
+    path('recovery/<int:journey_id>/pdf/', recovery_pdf_export_view, name='recovery_pdf'),
+    path('recovery/<int:journey_id>/ask/', recovery_ask_view, name='recovery_ask'),
+
 
 
     

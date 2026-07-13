@@ -23,9 +23,9 @@ class AccountsTests(APITestCase):
             'phone_number': '1234567890',
             'farm_name': 'Green Fields',
             'farm_size_acres': 10.5,
-            'location_city': 'New York',
-            'latitude': 40.7128,
-            'longitude': -74.0060,
+            'location_city': 'Surat',
+            'latitude': 21.1702,
+            'longitude': 72.8311,
             'preferred_language': 'en',
             'theme_preference': 'light'
         }
@@ -38,9 +38,9 @@ class AccountsTests(APITestCase):
             phone_number='0987654321',
             farm_name='Old Farm',
             farm_size_acres=5.0,
-            location_city='Boston',
-            latitude=42.3601,
-            longitude=-71.0589,
+            location_city='Ahmedabad',
+            latitude=23.0225,
+            longitude=72.5714,
             preferred_language='hi',
             theme_preference='dark'
         )
@@ -521,3 +521,178 @@ class AccountsTests(APITestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'fill in all required fields')
+
+    # ------------------------------------------------------------------
+    # Crop Library API Limit & SearchHistory tests
+    # ------------------------------------------------------------------
+
+    def test_crop_library_api_limit_tracking(self):
+        """External crop lookup increments APILimitTracker and caches Crop."""
+        from django.test import Client
+        from accounts.models import APILimitTracker, SearchHistory
+        from library.models import Crop
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # Verify initial tracker state
+        tracker, _ = APILimitTracker.objects.get_or_create(api_name='crop_api')
+        self.assertEqual(tracker.call_count, 0)
+        
+        # Search for a new crop
+        response = client.get('/library/', {'q': 'KiwiFruit'})
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify tracker was incremented
+        tracker.refresh_from_db()
+        self.assertEqual(tracker.call_count, 1)
+        
+        # Verify Crop was saved locally (caching)
+        self.assertTrue(Crop.objects.filter(name='Kiwifruit').exists())
+        
+        # Verify SearchHistory log was created
+        self.assertTrue(SearchHistory.objects.filter(user=self.test_user, query_type='crop', query_text='KiwiFruit').exists())
+
+    def test_crop_library_api_limit_exceeded(self):
+        """API lookup is blocked and returns error if call count exceeds max_limit (500)."""
+        from django.test import Client
+        from accounts.models import APILimitTracker
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # Set call count to limit
+        tracker, _ = APILimitTracker.objects.get_or_create(api_name='crop_api')
+        tracker.call_count = 500
+        tracker.save()
+        
+        # Search for a new crop
+        response = client.get('/library/', {'q': 'PineappleFruit'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'API limit is over')
+
+    # ------------------------------------------------------------------
+    # Gujarat Cities Location Constraints
+    # ------------------------------------------------------------------
+
+    def test_location_city_gujarat_only_registration(self):
+        """Registration blocks cities outside Gujarat state."""
+        from django.test import Client
+        client = Client()
+        
+        # Registration payload with non-Gujarat city
+        payload = {
+            'username': 'gujarat_test',
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': 'gujarat@example.com',
+            'password1': 'StrongPass123!',
+            'password2': 'StrongPass123!',
+            'location_city': 'Mumbai',  # Maharashtra city
+            'preferred_language': 'en'
+        }
+        response = client.post('/register/', payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Location City must be a city within Gujarat state.')
+
+    def test_location_city_gujarat_only_profile_settings(self):
+        """Profile update blocks cities outside Gujarat state."""
+        from django.test import Client
+        from accounts.models import EmailOTP
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # Verify initial state
+        self.assertEqual(self.test_user.location_city, 'Ahmedabad') # valid Gujarat city
+        
+        # Attempt to change location to non-Gujarat city
+        response = client.post('/profile/', {
+            'first_name': self.test_user.first_name,
+            'last_name': self.test_user.last_name,
+            'email': self.test_user.email,
+            'phone_number': self.test_user.phone_number,
+            'location_city': 'Delhi',  # Out of Gujarat
+            'latitude': '',
+            'longitude': '',
+            'farm_name': self.test_user.farm_name,
+            'farm_size_acres': ''
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Location City must be a city within Gujarat state.')
+
+    # ------------------------------------------------------------------
+    # Recovery Journey Tests
+    # ------------------------------------------------------------------
+
+    def test_recovery_journey_workflow(self):
+        """Test starting a recovery journey, checkin weekly, and mark recovered."""
+        from django.test import Client
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from accounts.models import RecoveryTracker, RecoveryCheckIn
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # 1. Start journey
+        response = client.post('/recovery/start/', {
+            'plant_name': 'My Diseased Potato Plant',
+            'crop_type': 'Potato'
+        })
+        self.assertRedirects(response, '/recovery/')
+        self.assertTrue(RecoveryTracker.objects.filter(user=self.test_user, plant_name='My Diseased Potato Plant').exists())
+        
+        journey = RecoveryTracker.objects.get(user=self.test_user, plant_name='My Diseased Potato Plant')
+        self.assertEqual(journey.status, 'ongoing')
+        
+        # 2. Upload Check-in image
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02\x4c\x01\x00\x3b'
+        )
+        img = SimpleUploadedFile('test_leaf.gif', small_gif, content_type='image/gif')
+        
+        response = client.post(f'/recovery/{journey.id}/checkin/', {
+            'image': img,
+            'symptoms': 'yellow leaves and brown spots',
+            'is_healthy': ''
+        })
+        self.assertRedirects(response, f'/recovery/{journey.id}/')
+        
+        checkins = journey.checkins.all()
+        self.assertEqual(checkins.count(), 1)
+        self.assertEqual(checkins[0].week_number, 1)
+        self.assertIn('Yellowing/Spotting detected', checkins[0].care_advice)
+        
+        # 3. Post care Q&A details request
+        response = client.post(f'/recovery/{journey.id}/ask/', {'question': 'How much fertilizer to use?'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'feed with nitrogen-rich organic compost')
+
+        # 4. Mark fully healthy
+        response = client.post(f'/recovery/{journey.id}/', {'action': 'mark_recovered'})
+        self.assertRedirects(response, f'/recovery/{journey.id}/')
+        journey.refresh_from_db()
+        self.assertEqual(journey.status, 'recovered')
+
+    # ------------------------------------------------------------------
+    # History Logs View
+    # ------------------------------------------------------------------
+
+    def test_history_logs_view(self):
+        """Test unified history logs page loads details correctly."""
+        from django.test import Client
+        from accounts.models import SearchHistory
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # Create some queries
+        SearchHistory.objects.create(user=self.test_user, query_type='weather', query_text='Surat')
+        
+        response = client.get('/history/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Surat')
+        self.assertContains(response, 'History Logs')
+

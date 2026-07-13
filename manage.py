@@ -91,8 +91,14 @@ def main():
             print("[PlantCare AI] Database not found. Initializing database and running migrations...")
             call_command('migrate', interactive=False)
             print("[PlantCare AI] Database initialized successfully.")
+            try:
+                print("[PlantCare AI] Seeding default agricultural crops...")
+                call_command('seed_crops', interactive=False)
+            except Exception as e:
+                print(f"[PlantCare AI] Failed to seed crops automatically: {e}")
     except Exception:
         pass
+
 
     try:
         from django.core.management import execute_from_command_line

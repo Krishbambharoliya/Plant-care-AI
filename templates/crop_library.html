@@ -19,6 +19,12 @@
             {% endif %}
         </form>
     </div>
+    
+    {% if error_msg %}
+    <div class="alert alert-danger text-center w-100" role="alert" style="border-radius: 10px; font-weight: 600;">
+        {{ error_msg }}
+    </div>
+    {% endif %}
 
     <!-- Main Content layout grid -->
     <div class="row g-4">
@@ -92,6 +98,34 @@
                     <a href="?{% if search_query %}q={{ search_query }}{% endif %}{% if disease_query %}&disease_q={{ disease_query }}{% endif %}" class="text-decoration-none text-muted">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </a>
+                </div>
+
+                <!-- Soil & Statistics Parameters -->
+                <div class="d-flex flex-wrap gap-3 py-2 border-top border-bottom border-card" style="font-size: 0.9rem;">
+                    <div>
+                        <strong class="text-dark">🌱 {{ t.library.soil|default:"Soil Type" }}:</strong>
+                        <span class="text-muted">
+                            {% if current_language == 'hi' %}{{ selected_crop.soil_type_hi|default:selected_crop.soil_type }}
+                            {% elif current_language == 'gu' %}{{ selected_crop.soil_type_gu|default:selected_crop.soil_type }}
+                            {% else %}{{ selected_crop.soil_type_en|default:selected_crop.soil_type }}{% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <strong class="text-dark">🦠 {{ t.library.diseasesCount|default:"Diseases" }}:</strong>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size: 0.75rem;">{{ selected_crop.diseases.count }}</span>
+                    </div>
+                </div>
+
+                <!-- Start Recovery Journey action -->
+                <div class="d-flex gap-2 align-items-center">
+                    <form method="post" action="{% url 'recovery_start' %}" class="m-0 w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="plant_name" value="My {{ selected_crop.name }}">
+                        <input type="hidden" name="crop_type" value="{{ selected_crop.name }}">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100 fw-bold py-2" style="border-radius: 8px;">
+                            🩹 Start Plant Recovery Journey
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Description -->

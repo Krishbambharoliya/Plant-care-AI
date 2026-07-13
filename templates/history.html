@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4 fade-in-up">
+    <div>
+        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">History Logs</h1>
+        <p class="text-muted m-0">Review all your previous diagnostics scans, query searches, and plant recovery logs</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs border-card" id="historyTabs" role="tablist" style="border-bottom: 1px solid var(--border-card);">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold border-0 text-muted" id="scans-tab" data-bs-toggle="tab" data-bs-target="#scans-panel" type="button" role="tab" style="background: transparent;">
+                📸 Diagnostics Scans ({{ scans.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold border-0 text-muted" id="searches-tab" data-bs-toggle="tab" data-bs-target="#searches-panel" type="button" role="tab" style="background: transparent;">
+                🔍 Queries & Searches ({{ searches.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold border-0 text-muted" id="journeys-tab" data-bs-toggle="tab" data-bs-target="#journeys-panel" type="button" role="tab" style="background: transparent;">
+                🩹 Recovery Journeys ({{ journeys.count }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="historyTabsContent">
+        
+        <!-- Tab 1: Scans History -->
+        <div class="tab-pane fade show active" id="scans-panel" role="tabpanel">
+            <div class="glass-panel p-4">
+                <h5 class="fw-bold mb-3">Diagnostic Scan History</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>Photo</th>
+                                <th>Crop Name</th>
+                                <th>Organ</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                                <th>Diagnostic Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for scan in scans %}
+                            <tr style="cursor: pointer; border-bottom: 1px solid var(--border-card);" onclick="location.href='{% url 'scan_upload' %}?result_id={{ scan.id }}'">
+                                <td>
+                                    <div class="rounded-3 overflow-hidden bg-success bg-opacity-10" style="width: 48px; height: 48px;">
+                                        {% if scan.image %}
+                                        <img src="{{ scan.image.url }}" alt="Scan Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" class="m-2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ scan.matched_crop_name|default:"Unknown Species" }}</div>
+                                    <small class="text-muted font-italic">{{ scan.identified_species }}</small>
+                                </td>
+                                <td style="text-transform: capitalize;">{{ scan.organ }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px; background: rgba(0,0,0,0.05); max-width: 80px; border-radius: 10px;">
+                                            <div class="progress-bar bg-success" style="width: {{ scan.confidence_score|floatformat:0 }}%; border-radius: 10px;"></div>
+                                        </div>
+                                        <span class="small fw-bold">{{ scan.confidence_score|floatformat:1 }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if scan.is_healthy %}
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">Healthy</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">{{ scan.disease_identified|default:"Diseased" }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ scan.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No diagnostic scans found. Upload a crop leaf photo to get started!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Queries & Searches History -->
+        <div class="tab-pane fade" id="searches-panel" role="tabpanel">
+            <div class="glass-panel p-4">
+                <h5 class="fw-bold mb-3">Search Log History</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>Query Type</th>
+                                <th>Searched Text</th>
+                                <th>Date & Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for search in searches %}
+                            <tr style="border-bottom: 1px solid var(--border-card);">
+                                <td>
+                                    {% if search.query_type == 'crop' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style="border-radius: 6px;">Crop Catalog</span>
+                                    {% elif search.query_type == 'disease' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">Disease & Symptoms</span>
+                                    {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">Weather Search</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">"{{ search.query_text }}"</td>
+                                <td class="small text-muted">{{ search.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if search.query_type == 'crop' %}
+                                    <a href="{% url 'crop_library' %}?q={{ search.query_text }}" class="btn btn-outline-primary btn-sm fw-bold">Search Again</a>
+                                    {% elif search.query_type == 'disease' %}
+                                    <a href="{% url 'crop_library' %}?disease_q={{ search.query_text }}" class="btn btn-outline-danger btn-sm fw-bold">Search Again</a>
+                                    {% else %}
+                                    <a href="{% url 'weather_advisor' %}?city={{ search.query_text }}" class="btn btn-outline-warning btn-sm fw-bold">Check Weather</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No searches or queries logged yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Recovery Journeys -->
+        <div class="tab-pane fade" id="journeys-panel" role="tabpanel">
+            <div class="glass-panel p-4">
+                <h5 class="fw-bold mb-3">Plant Recovery Log</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover m-0">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-card);">
+                                <th>Plant Nickname</th>
+                                <th>Crop Type</th>
+                                <th>Start Date</th>
+                                <th>Phase Status</th>
+                                <th>Log Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for journey in journeys %}
+                            <tr style="cursor: pointer; border-bottom: 1px solid var(--border-card);" onclick="location.href='{% url 'recovery_detail' journey.id %}'">
+                                <td class="fw-bold">{{ journey.plant_name }}</td>
+                                <td>{{ journey.crop_type|default:"General Plant" }}</td>
+                                <td>{{ journey.start_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    {% if journey.status == 'recovered' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">Fully Healthy</span>
+                                    {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">Ongoing Recovery</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-success btn-sm fw-bold">View Timeline</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No active recovery journeys found. Create a journey from the Recovery Center!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// Style active tab headers programmatically to match black/white theme
+document.querySelectorAll('#historyTabs button').forEach(button => {
+    button.addEventListener('shown.bs.tab', function (event) {
+        document.querySelectorAll('#historyTabs button').forEach(b => {
+            b.classList.remove('text-dark', 'border-bottom', 'border-dark');
+            b.classList.add('text-muted');
+            b.style.borderBottom = 'none';
+        });
+        event.target.classList.remove('text-muted');
+        event.target.classList.add('text-dark');
+        event.target.style.borderBottom = '2px solid var(--primary)';
+    });
+});
+// Trigger style update on initial load
+const activeTab = document.querySelector('#historyTabs button.active');
+if (activeTab) {
+    activeTab.classList.remove('text-muted');
+    activeTab.classList.add('text-dark');
+    activeTab.style.borderBottom = '2px solid var(--primary)';
+}
+</script>
+{% endblock %}

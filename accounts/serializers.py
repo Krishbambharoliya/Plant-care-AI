@@ -25,6 +25,16 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email address is already used by another account.")
         return value
 
+    def validate_location_city(self, value):
+        if value:
+            from accounts.constants import GUJARAT_CITIES
+            matched = [c for c in GUJARAT_CITIES if c.lower() == value.strip().lower()]
+            if not matched:
+                raise serializers.ValidationError("Location City must be a city within Gujarat state.")
+            return matched[0]
+        return value
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -47,6 +57,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("This email address is already registered. Please use a different email.")
         return value
+
+    def validate_location_city(self, value):
+        if value:
+            from accounts.constants import GUJARAT_CITIES
+            matched = [c for c in GUJARAT_CITIES if c.lower() == value.strip().lower()]
+            if not matched:
+                raise serializers.ValidationError("Location City must be a city within Gujarat state.")
+            return matched[0]
+        return value
+
 
     def create(self, validated_data):
         validated_data.pop('password2')
