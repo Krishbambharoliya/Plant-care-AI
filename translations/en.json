@@ -148,5 +148,9 @@
   "weather.table_temp": "Temp",
   "weather.table_humidity": "Humidity",
   "weather.table_meaning": "Interpretation",
-  "scan.undetermined_alert": "No diagnostic records exist for this crop in the library. Crop has been registered, but disease matching is unavailable. You can add diseases for this crop in the Admin Panel."
+  "scan.undetermined_alert": "No diagnostic records exist for this crop in the library. Crop has been registered, but disease matching is unavailable. You can add diseases for this crop in the Admin Panel.",
+  "footer.rights": "© 2026 PlantCare AI. All rights reserved.",
+  "footer.privacy": "Privacy Policy",
+  "footer.terms": "Terms of Service",
+  "footer.support": "Support"
 }

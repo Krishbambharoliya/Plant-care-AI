@@ -5,14 +5,14 @@
 
     <div class="glass-panel p-5 fade-in-up" style="max-width: 440px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card);">
 
-        <!-- Icon & Brand -->
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
-            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Verify New Email</h2>
+            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Confirm Update</h2>
             <p class="text-muted mt-1" style="font-size: 0.9rem;">
-                A 6-digit OTP has been sent to your new email address:<br>
-                <strong style="color: var(--primary);">{{ pending_email }}</strong>
+                A 6-digit OTP has been sent to:<br>
+                <strong style="color: var(--primary);">{{ current_email }}</strong>
             </p>
+            <p class="text-muted" style="font-size: 0.82rem;">Enter the OTP to confirm your profile changes.</p>
         </div>
 
         {% if error %}
@@ -22,7 +22,7 @@
         </div>
         {% endif %}
 
-        <form method="post" id="otp-email-change-form" class="d-flex flex-column gap-3">
+        <form method="post" id="otp-profile-update-form" class="d-flex flex-column gap-3">
             {% csrf_token %}
             <div class="form-group m-0">
                 <label class="form-label">Enter OTP</label>
@@ -41,7 +41,7 @@
             </div>
 
             <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">
-                Confirm Email Change
+                Confirm & Save Changes
             </button>
         </form>
 

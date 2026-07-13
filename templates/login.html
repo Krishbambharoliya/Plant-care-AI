@@ -1,36 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh; background: linear-gradient(135deg, #09100d 0%, #10261a 50%, #0c1c13 100%);">
+<div class="d-flex align-items-center justify-content-center auth-fullscreen-bg">
     
     <div class="glass-panel p-5 fade-in-up" style="max-width: 440px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card);">
         
         <!-- Logo and brand -->
         <div class="text-center mb-4">
-            <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2" style="border-radius: 12px; object-fit: cover; filter: invert(1) brightness(4) contrast(2);">
+            <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
             <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">PlantCare</h2>
             <p class="text-muted mt-1" style="font-size: 0.95rem;">{{ t.auth.login }}</p>
         </div>
-
-        <!-- Language toggle during login -->
-        <div class="lang-toggle-bar mb-4 d-flex">
-            <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
-                {% csrf_token %}
-                <input type="hidden" name="preferred_language" value="en">
-                <button type="submit" class="lang-btn {% if current_language == 'en' %}active{% endif %}">English</button>
-            </form>
-            <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
-                {% csrf_token %}
-                <input type="hidden" name="preferred_language" value="hi">
-                <button type="submit" class="lang-btn {% if current_language == 'hi' %}active{% endif %}">हिन्दी</button>
-            </form>
-            <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
-                {% csrf_token %}
-                <input type="hidden" name="preferred_language" value="gu">
-                <button type="submit" class="lang-btn {% if current_language == 'gu' %}active{% endif %}">ગુજરાતી</button>
-            </form>
-        </div>
-
         {% if error %}
         <div class="alert alert-danger text-center py-2" role="alert" style="border-radius: 10px; font-size: 0.9rem;">
             {{ error }}
@@ -70,6 +50,12 @@
                 Forgot Password?
             </a>
         </div>
+        <div class="text-center mt-2" style="font-size: 0.85rem;">
+            <a href="{% url 'find_username' %}" style="color: var(--text-secondary); text-decoration: none;">
+                Forgot Username?
+            </a>
+        </div>
+
     </div>
 </div>
 {% endblock %}

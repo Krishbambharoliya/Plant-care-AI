@@ -133,13 +133,13 @@ function lookupCityGPS() {
         <h5 class="fw-bold mb-0" style="color: var(--primary); border-bottom: 1px solid var(--border-card); padding-bottom: 6px;">
             {{ t.profile.preferences }}
         </h5>
-        
+
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div>
                 <span class="d-block fw-bold" style="font-size: 0.95rem;">{{ t.profile.lang_settings_title }}</span>
                 <small class="text-muted">{{ t.profile.lang_settings_desc }}</small>
             </div>
-            
+
             <div class="lang-toggle-bar">
                 <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
                     {% csrf_token %}

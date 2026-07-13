@@ -292,67 +292,232 @@ class AccountsTests(APITestCase):
         self.assertTrue(form.is_valid(), msg=form.errors)
 
     # ------------------------------------------------------------------
-    # Email-change OTP flow tests (MVT views)
+    # Profile update OTP flow tests (unified verify_profile_update_view)
     # ------------------------------------------------------------------
 
-    def test_profile_email_change_redirects_to_verify_page(self):
-        """Changing email via profile update redirects to verify-email-change page."""
+    def test_profile_any_change_redirects_to_verify_page(self):
+        """Any profile update redirects to /verify-profile-update/ for OTP confirmation."""
         from django.test import Client
         client = Client()
         client.force_login(self.test_user)
         response = client.post('/profile/', {
-            'first_name': 'Existing',
-            'last_name': 'User',
-            'email': 'newemail@example.com',  # different from current
-            'phone_number': '',
-            'location_city': 'Boston',
-            'farm_name': 'Old Farm',
-            'farm_size_acres': 5.0,
-            'latitude': 42.3601,
-            'longitude': -71.0589,
+            'first_name': 'Updated',
+            'last_name': 'Name',
+            'email': 'existinguser@example.com',  # same email, just other field changes
+            'phone_number': '9999999999',
+            'location_city': 'Mumbai',
+            'farm_name': 'New Farm',
+            'farm_size_acres': 8.0,
+            'latitude': 19.0760,
+            'longitude': 72.8777,
         })
-        self.assertRedirects(response, '/verify-email-change/')
+        self.assertRedirects(response, '/verify-profile-update/')
 
-    def test_email_change_otp_valid_updates_email(self):
-        """Valid OTP on verify-email-change page commits the new email."""
+    def test_profile_update_otp_valid_applies_changes(self):
+        """Valid OTP on verify-profile-update applies all pending profile changes."""
         from django.test import Client
         from accounts.models import EmailOTP
-        new_email = 'confirmed@example.com'
-        # Pre-create OTP record as the view would
-        EmailOTP.objects.create(email=new_email, otp='123456', purpose='email_change')
-
+        # Pre-create the OTP record as the view would
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='112233', purpose='profile_update'
+        )
+        pending = {
+            'first_name': 'Krish', 'last_name': 'B',
+            'email': 'existinguser@example.com',
+            'phone_number': '8888888888', 'location_city': 'Surat',
+            'farm_name': 'Krish Farm', 'farm_size_acres': 12.0,
+            'latitude': 21.1702, 'longitude': 72.8311,
+        }
         client = Client()
         client.force_login(self.test_user)
         session = client.session
-        session['pending_email'] = new_email
+        session['pending_profile'] = pending
         session.save()
 
-        response = client.post('/verify-email-change/', {'otp': '123456'})
-        # Should land back on profile page with success
+        response = client.post('/verify-profile-update/', {'otp': '112233'})
+        self.assertEqual(response.status_code, 200)
+
+        self.test_user.refresh_from_db()
+        self.assertEqual(self.test_user.first_name, 'Krish')
+        self.assertEqual(self.test_user.location_city, 'Surat')
+
+    def test_profile_update_otp_with_email_change(self):
+        """Valid OTP also commits email change if new email is unique."""
+        from django.test import Client
+        from accounts.models import EmailOTP
+        new_email = 'krishnew@example.com'
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='445566', purpose='profile_update'
+        )
+        pending = {
+            'first_name': 'Krish', 'last_name': 'B',
+            'email': new_email,   # <-- email is changing
+            'phone_number': '', 'location_city': 'Ahmedabad',
+            'farm_name': 'Test', 'farm_size_acres': None,
+            'latitude': None, 'longitude': None,
+        }
+        client = Client()
+        client.force_login(self.test_user)
+        session = client.session
+        session['pending_profile'] = pending
+        session.save()
+
+        response = client.post('/verify-profile-update/', {'otp': '445566'})
         self.assertEqual(response.status_code, 200)
 
         self.test_user.refresh_from_db()
         self.assertEqual(self.test_user.email, new_email)
 
-    def test_email_change_otp_invalid_shows_error(self):
-        """Wrong OTP on verify-email-change page shows error and does NOT update email."""
+    def test_profile_update_otp_invalid_shows_error(self):
+        """Wrong OTP shows error and does NOT apply any changes."""
         from django.test import Client
         from accounts.models import EmailOTP
-        new_email = 'shouldnotchange@example.com'
-        EmailOTP.objects.create(email=new_email, otp='999999', purpose='email_change')
-
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='777777', purpose='profile_update'
+        )
+        pending = {
+            'first_name': 'ShouldNotChange', 'last_name': '',
+            'email': 'existinguser@example.com',
+            'phone_number': '', 'location_city': '',
+            'farm_name': '', 'farm_size_acres': None,
+            'latitude': None, 'longitude': None,
+        }
         client = Client()
         client.force_login(self.test_user)
         session = client.session
-        session['pending_email'] = new_email
+        session['pending_profile'] = pending
         session.save()
 
-        response = client.post('/verify-email-change/', {'otp': '000000'})
+        response = client.post('/verify-profile-update/', {'otp': '000000'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Invalid OTP')
 
         self.test_user.refresh_from_db()
-        # Email must NOT have changed
-        self.assertEqual(self.test_user.email, 'existinguser@example.com')
+        self.assertNotEqual(self.test_user.first_name, 'ShouldNotChange')
 
+    # ------------------------------------------------------------------
+    # Password reset redirect fix tests
+    # ------------------------------------------------------------------
 
+    def test_password_reset_success_redirects_to_login(self):
+        """After successful password reset, user is redirected to /login/ (not a broken render)."""
+        from django.test import Client
+        from accounts.models import EmailOTP
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='654321', purpose='password_reset'
+        )
+        client = Client()
+        response = client.post('/password-reset/verify/', {
+            'email': self.test_user.email,
+            'otp': '654321',
+            'new_password': 'NewStrongPass123!',
+        })
+        self.assertRedirects(response, '/login/')
+
+    def test_new_password_works_after_reset(self):
+        """After password reset, logging in with the NEW password succeeds."""
+        from django.test import Client
+        from accounts.models import EmailOTP
+        new_pw = 'BrandNewPass456!'
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='321321', purpose='password_reset'
+        )
+        client = Client()
+        client.post('/password-reset/verify/', {
+            'email': self.test_user.email,
+            'otp': '321321',
+            'new_password': new_pw,
+        })
+        # Now log in with new password
+        login_ok = client.login(username=self.test_user.username, password=new_pw)
+        self.assertTrue(login_ok, "Login with new password should succeed after reset")
+
+    def test_old_password_fails_after_reset(self):
+        """After password reset, logging in with the OLD password fails."""
+        from django.test import Client
+        from accounts.models import EmailOTP
+        old_pw = 'ExistingPassword123!'
+        new_pw = 'TotallyDifferent789!'
+        EmailOTP.objects.create(
+            email=self.test_user.email, otp='159753', purpose='password_reset'
+        )
+        client = Client()
+        client.post('/password-reset/verify/', {
+            'email': self.test_user.email,
+            'otp': '159753',
+            'new_password': new_pw,
+        })
+        login_ok = client.login(username=self.test_user.username, password=old_pw)
+        self.assertFalse(login_ok, "Old password should NOT work after reset")
+
+    # ------------------------------------------------------------------
+    # Find Username tests
+    # ------------------------------------------------------------------
+
+    def test_find_username_with_valid_email_returns_success(self):
+        """GET+POST to /find-username/ with existing email shows success page."""
+        from django.test import Client
+        client = Client()
+        response = client.post('/find-username/', {'email': self.test_user.email})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'username has been sent')
+
+    def test_find_username_with_unknown_email_shows_error(self):
+        """POST to /find-username/ with unknown email shows error message."""
+        from django.test import Client
+        client = Client()
+        response = client.post('/find-username/', {'email': 'nobody@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No account found')
+
+    # ------------------------------------------------------------------
+    # Support page tests
+    # ------------------------------------------------------------------
+
+    def test_support_page_loads_anonymous(self):
+        """Support page loads successfully for unauthenticated users."""
+        from django.test import Client
+        client = Client()
+        response = client.get('/support/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Contact Support')
+
+    def test_support_page_loads_authenticated(self):
+        """Support page loads successfully for authenticated users with prefilled values."""
+        from django.test import Client
+        client = Client()
+        client.force_login(self.test_user)
+        response = client.get('/support/')
+        self.assertEqual(response.status_code, 200)
+        # Prefilled user email should be visible in template response
+        self.assertContains(response, self.test_user.email)
+
+    def test_support_submission_sends_email(self):
+        """Submitting support form sends email and shows success message."""
+        from django.test import Client
+        from django.core import mail
+        client = Client()
+        response = client.post('/support/', {
+            'name': 'Test User',
+            'email': 'test@example.com',
+            'phone': '9999999999',
+            'details': 'Need help identifying tomato early blight.'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Message Sent!')
+        # Check that email was successfully sent
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Support Request from Test User', mail.outbox[0].subject)
+
+    def test_support_submission_invalid_data(self):
+        """Submitting incomplete support form shows error."""
+        from django.test import Client
+        client = Client()
+        response = client.post('/support/', {
+            'name': '',
+            'email': 'test@example.com',
+            'phone': '',
+            'details': ''
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'fill in all required fields')

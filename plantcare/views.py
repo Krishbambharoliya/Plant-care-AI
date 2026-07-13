@@ -25,8 +25,11 @@ from weather.services import OpenWeatherClient, calculate_growth_chance, Weather
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
-    
+
     error = ""
+    # Read any success message set by password reset or other redirect flows
+    success_message = request.session.pop('login_success', '')
+
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -37,8 +40,12 @@ def login_view(request):
             error = "Invalid username or password."
     else:
         form = AuthenticationForm()
-        
-    return render(request, 'login.html', {'form': form, 'error': error})
+
+    return render(request, 'login.html', {
+        'form': form,
+        'error': error,
+        'success_message': success_message,
+    })
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -185,15 +192,48 @@ def password_reset_verify_view(request):
                 otp_record.save()
                 request.session.pop('reset_email', None)
 
-                return render(request, 'login.html', {
-                    'success_message': 'Password reset successful! Please log in with your new password.',
-                })
+                # Store success in session and redirect to login
+                # (rendering login.html directly would POST to wrong URL)
+                request.session['login_success'] = 'Password reset successful! Please log in with your new password.'
+                return redirect('login')
             except User.DoesNotExist:
                 error = "User not found."
         else:
             error = "Invalid OTP or email. Please check your details and try again."
 
     return render(request, 'password_reset_verify.html', {'email': session_email, 'error': error})
+
+
+def find_username_view(request):
+    """Allow a user to recover their username by entering their registered email."""
+    success = False
+    error = ""
+    if request.method == "POST":
+        email = request.POST.get('email', '').strip()
+        from accounts.models import User
+        try:
+            user = User.objects.get(email__iexact=email)
+            try:
+                send_mail(
+                    subject='PlantCare - Your Username',
+                    message=(
+                        f'Hello,\n\n'
+                        f'Your PlantCare username is:\n\n'
+                        f'   {user.username}\n\n'
+                        f'You can use this username (or your email) to log in.\n\n'
+                        f'- PlantCare Team'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
+            success = True
+        except User.DoesNotExist:
+            error = "No account found with this email address."
+
+    return render(request, 'find_username.html', {'success': success, 'error': error})
 
 
 @login_required
@@ -759,47 +799,46 @@ def profile_settings_view(request):
     error = ""
 
     if request.method == "POST":
-        new_email = request.POST.get('email', '').strip()
-        current_email = request.user.email
-        email_changed = new_email and new_email.lower() != current_email.lower()
-
         form = FarmerProfileForm(request.POST, instance=request.user)
         if form.is_valid():
-            if email_changed:
-                # Save everything EXCEPT email first
-                user = form.save(commit=False)
-                user.email = current_email  # keep old email for now
-                user.save()
+            # Store ALL cleaned data in session — apply only after OTP
+            data = form.cleaned_data
+            pending = {
+                'first_name': data.get('first_name', '') or '',
+                'last_name':  data.get('last_name', '')  or '',
+                'email':      data.get('email', '')       or '',
+                'phone_number':    data.get('phone_number', '')    or '',
+                'location_city':   data.get('location_city', '')   or '',
+                'farm_name':       data.get('farm_name', '')        or '',
+                'farm_size_acres': float(data['farm_size_acres']) if data.get('farm_size_acres') is not None else None,
+                'latitude':        float(data['latitude'])  if data.get('latitude')  is not None else None,
+                'longitude':       float(data['longitude']) if data.get('longitude') is not None else None,
+            }
+            request.session['pending_profile'] = pending
 
-                # Generate OTP for the new email
-                otp_code = str(random.randint(100000, 999999))
-                EmailOTP.objects.create(email=new_email, otp=otp_code, purpose='email_change')
+            # Generate OTP and send to the user's CURRENT email
+            otp_code = str(random.randint(100000, 999999))
+            EmailOTP.objects.create(
+                email=request.user.email, otp=otp_code, purpose='profile_update'
+            )
+            try:
+                send_mail(
+                    subject='PlantCare - Confirm Your Profile Update',
+                    message=(
+                        f'Hello {request.user.username},\n\n'
+                        f'Your One-Time Password (OTP) to confirm your profile update is:\n\n'
+                        f'   {otp_code}\n\n'
+                        f'Enter this code to save your changes. Do not share it with anyone.\n\n'
+                        f'- PlantCare Team'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[request.user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass
 
-                # Send OTP to the NEW email address
-                try:
-                    send_mail(
-                        subject='PlantCare - Verify Your New Email Address',
-                        message=(
-                            f'Hello {user.username},\n\n'
-                            f'You requested to change your PlantCare email to this address.\n'
-                            f'Your One-Time Password (OTP) to confirm this change is:\n\n'
-                            f'   {otp_code}\n\n'
-                            f'If you did not request this change, please ignore this email.\n\n'
-                            f'- PlantCare Team'
-                        ),
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[new_email],
-                        fail_silently=False,
-                    )
-                except Exception:
-                    pass
-
-                # Store new email in session for the verify step
-                request.session['pending_email'] = new_email
-                return redirect('verify_email_change')
-            else:
-                form.save()
-                success = True
+            return redirect('verify_profile_update')
         else:
             error = "Invalid updates. Please correct the errors."
     else:
@@ -813,40 +852,76 @@ def profile_settings_view(request):
 
 
 @login_required
-def verify_email_change_view(request):
-    """Verify the new email address with a 6-digit OTP before committing the change."""
-    pending_email = request.session.get('pending_email')
-    if not pending_email:
+def verify_profile_update_view(request):
+    """Confirm any profile change (including email) with a 6-digit OTP."""
+    pending = request.session.get('pending_profile')
+    if not pending:
         return redirect('profile_settings')
 
     error = ""
     if request.method == "POST":
         otp_entered = request.POST.get('otp', '').strip()
         otp_record = EmailOTP.objects.filter(
-            email=pending_email, purpose='email_change', is_verified=False
+            email=request.user.email, purpose='profile_update', is_verified=False
         ).first()
 
         if otp_record and otp_record.otp == otp_entered:
-            # Mark OTP used and update email
             otp_record.is_verified = True
             otp_record.save()
 
-            request.user.email = pending_email
-            request.user.save(update_fields=['email'])
-            request.session.pop('pending_email', None)
+            # Apply all pending changes
+            user = request.user
+            old_email = user.email
+            new_email = pending.get('email', '').strip()
+
+            user.first_name    = pending.get('first_name', '') or ''
+            user.last_name     = pending.get('last_name',  '') or ''
+            user.phone_number  = pending.get('phone_number', '') or ''
+            user.location_city = pending.get('location_city', '') or ''
+            user.farm_name     = pending.get('farm_name', '') or ''
+
+            try:
+                user.farm_size_acres = float(pending['farm_size_acres']) if pending.get('farm_size_acres') is not None else None
+            except (TypeError, ValueError):
+                user.farm_size_acres = None
+
+            try:
+                user.latitude = float(pending['latitude']) if pending.get('latitude') is not None else None
+            except (TypeError, ValueError):
+                user.latitude = None
+
+            try:
+                user.longitude = float(pending['longitude']) if pending.get('longitude') is not None else None
+            except (TypeError, ValueError):
+                user.longitude = None
+
+            # Apply email only if it changed and is still unique
+            from accounts.models import User as UserModel
+            email_updated = False
+            if new_email and new_email.lower() != old_email.lower():
+                if not UserModel.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
+                    user.email = new_email
+                    email_updated = True
+
+            user.save()
+            request.session.pop('pending_profile', None)
+
+            msg = 'Profile updated successfully!'
+            if email_updated:
+                msg += f' Email changed to {new_email}.'
 
             return render(request, 'profile_settings.html', {
-                'form': FarmerProfileForm(instance=request.user),
+                'form': FarmerProfileForm(instance=user),
                 'success': True,
-                'success_message': f'Email successfully updated to {pending_email}.',
+                'success_message': msg,
                 'error': ''
             })
         else:
             error = "Invalid OTP. Please check and try again."
 
-    return render(request, 'verify_email_change.html', {
-        'pending_email': pending_email,
-        'error': error
+    return render(request, 'verify_profile_update.html', {
+        'current_email': request.user.email,
+        'error': error,
     })
 
 # ==========================================
@@ -1175,4 +1250,52 @@ def download_scan_pdf(request, result_id):
     pdf.output(buffer)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f'crop_report_{result_id}.pdf')
+
+
+def support_view(request):
+    """Render Support contact details and handle the support submission form."""
+    success = False
+    error = ""
+
+    # Pre-fill form details if user is authenticated
+    initial = {}
+    if request.user.is_authenticated:
+        initial = {
+            'name': f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username,
+            'email': request.user.email,
+            'phone': getattr(request.user, 'phone_number', '') or '',
+        }
+
+    if request.method == "POST":
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        details = request.POST.get('details', '').strip()
+
+        if not name or not email or not details:
+            error = "Please fill in all required fields."
+        else:
+            try:
+                send_mail(
+                    subject=f'PlantCare Support Request from {name}',
+                    message=(
+                        f'New Support Request Received:\n\n'
+                        f'Name: {name}\n'
+                        f'Email: {email}\n'
+                        f'Phone: {phone}\n\n'
+                        f'Message/Details:\n{details}'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    fail_silently=False,
+                )
+                success = True
+            except Exception:
+                error = "Could not send support request. Please try again later."
+
+    return render(request, 'support.html', {
+        'success': success,
+        'error': error,
+        'initial': initial,
+    })
 
