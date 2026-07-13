@@ -150,7 +150,7 @@ class AccountsTests(APITestCase):
         response = self.client.post(self.profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'existinguser')
-        self.assertEqual(response.data['location_city'], 'Boston')
+        self.assertEqual(response.data['location_city'], 'Ahmedabad')
 
     def test_partial_profile_update_only_changes_given_fields(self):
         self.client.force_authenticate(user=self.test_user)
@@ -159,7 +159,7 @@ class AccountsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['farm_name'], 'Super Farm')
         # Check other fields remained same
-        self.assertEqual(response.data['location_city'], 'Boston')
+        self.assertEqual(response.data['location_city'], 'Ahmedabad')
 
     def test_update_theme_and_language(self):
         self.client.force_authenticate(user=self.test_user)
@@ -282,11 +282,11 @@ class AccountsTests(APITestCase):
             'last_name': 'User',
             'email': 'existinguser@example.com',  # same as self.test_user
             'phone_number': '',
-            'location_city': 'Boston',
+            'location_city': 'Ahmedabad',
             'farm_name': 'Old Farm',
             'farm_size_acres': 5.0,
-            'latitude': 42.3601,
-            'longitude': -71.0589,
+            'latitude': 23.0225,
+            'longitude': 72.5714,
         }
         form = FarmerProfileForm(data=form_data, instance=self.test_user)
         self.assertTrue(form.is_valid(), msg=form.errors)
@@ -305,11 +305,11 @@ class AccountsTests(APITestCase):
             'last_name': 'Name',
             'email': 'existinguser@example.com',  # same email, just other field changes
             'phone_number': '9999999999',
-            'location_city': 'Mumbai',
+            'location_city': 'Surat',
             'farm_name': 'New Farm',
             'farm_size_acres': 8.0,
-            'latitude': 19.0760,
-            'longitude': 72.8777,
+            'latitude': 21.1702,
+            'longitude': 72.8311,
         })
         self.assertRedirects(response, '/verify-profile-update/')
 

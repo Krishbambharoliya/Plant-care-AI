@@ -243,12 +243,12 @@
         const primaryThemeColor = isDark ? '#ffffff' : '#111827';
         const primaryThemeBg = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(17, 24, 39, 0.05)';
         
-        // Premium chart colors (monochrome style matching black/white theme)
-        const chartColorHealthy = isDark ? '#ffffff' : '#111827';
-        const chartColorDiseased = isDark ? '#4b5563' : '#9ca3af';
-        const chartColorBar = isDark ? '#ffffff' : '#111827';
-        const chartColorLineBorder = isDark ? '#ffffff' : '#111827';
-        const chartColorLineBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(17, 24, 39, 0.05)';
+        // Premium chart colors (vibrant agriculture theme for best user experience)
+        const chartColorHealthy = '#10b981'; // Premium Emerald Green for healthy crops
+        const chartColorDiseased = '#ef4444'; // Vibrant warning red for diseased crops
+        const chartColorBar = '#6366f1'; // Premium indigo for crop scan volumes
+        const chartColorLineBorder = '#3b82f6'; // Bright active blue for trend lines
+        const chartColorLineBg = 'rgba(59, 130, 246, 0.08)';
         
         // 1. Health Distribution Donut
         const ctxPie = document.getElementById('healthPieChart').getContext('2d');
