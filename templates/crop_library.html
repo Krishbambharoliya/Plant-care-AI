@@ -9,15 +9,19 @@
             <p class="text-muted m-0">Reference catalog for crops, ideal growing parameters, and disease treatments</p>
         </div>
         
-        <form method="get" class="d-flex align-items-center m-0" style="position: relative; width: 100%; max-width: 380px;">
-            <input type="text" name="q" class="form-control ps-5" placeholder="{{ t.library.searchPlaceholder }}" value="{{ search_query }}">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" style="position: absolute; left: 14px; top: 14px;">
-                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            {% if disease_query %}
-            <input type="hidden" name="disease_q" value="{{ disease_query }}">
-            {% endif %}
-        </form>
+        <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width: 500px; width: 100%; justify-content: md-end;">
+            <div class="d-flex flex-column gap-1" style="width: 100%; max-width: 320px;">
+                <form method="get" class="d-flex align-items-center m-0" style="position: relative; width: 100%;">
+                    <input type="text" name="q" class="form-control ps-5" placeholder="Search (English, ગુજરાતી, हिन्दी)" value="{{ search_query }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" style="position: absolute; left: 14px; top: 14px;">
+                        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    {% if disease_query %}
+                    <input type="hidden" name="disease_q" value="{{ disease_query }}">
+                    {% endif %}
+                </form>
+            </div>
+        </div>
     </div>
     
     {% if error_msg %}
@@ -43,7 +47,7 @@
                                     {% if crop.image %}
                                     <img src="{{ crop.image.url }}" alt="{{ crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
                                     {% else %}
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                    <img src="{{ crop.image_url }}" alt="{{ crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
                                     {% endif %}
                                 </div>
                                 <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.95rem;">{{ crop.localized_name|default:crop.name }}</span>
@@ -100,6 +104,15 @@
                     </a>
                 </div>
 
+                <!-- Crop Banner Image -->
+                <div class="rounded-3 overflow-hidden" style="height: 200px; width: 100%;">
+                    {% if selected_crop.image %}
+                    <img src="{{ selected_crop.image.url }}" alt="{{ selected_crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ selected_crop.image_url }}" alt="{{ selected_crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+
                 <!-- Soil & Statistics Parameters -->
                 <div class="d-flex flex-wrap gap-3 py-2 border-top border-bottom border-card" style="font-size: 0.9rem;">
                     <div>
@@ -116,8 +129,8 @@
                     </div>
                 </div>
 
-                <!-- Start Recovery Journey action -->
-                <div class="d-flex gap-2 align-items-center">
+                <!-- Start Recovery Journey & PDF Downloads -->
+                <div class="d-flex flex-column gap-2">
                     <form method="post" action="{% url 'recovery_start' %}" class="m-0 w-100">
                         {% csrf_token %}
                         <input type="hidden" name="plant_name" value="My {{ selected_crop.name }}">
@@ -126,6 +139,15 @@
                             🩹 Start Plant Recovery Journey
                         </button>
                     </form>
+                    
+                    <div class="d-flex gap-2 w-100">
+                        <a href="{% url 'single_crop_pdf' selected_crop.id %}" class="btn btn-sm btn-success fw-bold py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-1 text-white" style="border-radius: 8px; font-size: 0.85rem;">
+                            <span>📄</span> Download Crop PDF
+                        </a>
+                        <a href="{% url 'all_crops_pdf' %}" class="btn btn-sm btn-outline-secondary fw-bold py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-1" style="border-radius: 8px; font-size: 0.85rem;">
+                            <span>📁</span> All Crops Manual
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Description -->
@@ -166,66 +188,122 @@
                     </div>
                 </div>
 
-                <!-- Collapsible Disease Drawer -->
+                <!-- Grouped Diseases Part-wise -->
                 <div>
-                    <h5 class="fw-bold mb-3">{{ t.library.diseases }}</h5>
-                    <div class="accordion" id="diseaseAccordion">
-                        {% for disease in selected_crop.diseases.all %}
-                        <div class="accordion-item glass-panel mb-2 overflow-hidden" style="border-radius: 12px; background: transparent;">
-                            <h2 class="accordion-header" id="heading{{ disease.id }}">
-                                <button class="accordion-button collapsed fw-bold" style="background: transparent; color: var(--text-primary);" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ disease.id }}">
-                                    {{ disease.name }}
-                                </button>
-                            </h2>
-                            <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#diseaseAccordion">
-                                <div class="accordion-body d-flex flex-column gap-2 text-muted" style="font-size: 0.9rem; border-top: 1px solid var(--border-card);">
-                                    <div>
-                                        <strong class="text-danger">{{ t.library.symptoms }}:</strong>
-                                        {% if current_language == 'hi' %}
-                                            {{ disease.symptoms_hi|default:disease.symptoms }}
-                                        {% elif current_language == 'gu' %}
-                                            {{ disease.symptoms_gu|default:disease.symptoms }}
-                                        {% else %}
-                                            {{ disease.symptoms_en|default:disease.symptoms }}
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <strong>{{ t.library.causes }}:</strong>
-                                        {% if current_language == 'hi' %}
-                                            {{ disease.causes_hi|default:disease.causes }}
-                                        {% elif current_language == 'gu' %}
-                                            {{ disease.causes_gu|default:disease.causes }}
-                                        {% else %}
-                                            {{ disease.causes_en|default:disease.causes }}
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <strong class="text-success">{{ t.library.treatment }}:</strong>
-                                        {% if current_language == 'hi' %}
-                                            {{ disease.treatment_hi|default:disease.treatment }}
-                                        {% elif current_language == 'gu' %}
-                                            {{ disease.treatment_gu|default:disease.treatment }}
-                                        {% else %}
-                                            {{ disease.treatment_en|default:disease.treatment }}
-                                        {% endif %}
-                                    </div>
-                                    
-                                    {% if disease.fertilizers_recommended.all %}
-                                    <div class="mt-2">
-                                        <strong class="text-dark d-block mb-1">{{ t.library.fertilizers }}:</strong>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            {% for fert in disease.fertilizers_recommended.all %}
-                                            <span class="badge-custom badge-custom-warning" style="font-size: 0.7rem;">{{ fert.name }}</span>
-                                            {% endfor %}
+                    <h5 class="fw-bold mb-3">{{ t.library.diseases|default:"Diseases Reference (Grouped by Part)" }}</h5>
+                    
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Leaf Diseases Section -->
+                        <div class="glass-panel p-3">
+                            <h6 class="fw-bold mb-2 text-primary" style="font-size: 0.95rem;">🍃 Leaf Diseases</h6>
+                            <div class="accordion" id="leafAccordion">
+                                {% for disease in selected_crop.diseases.all %}
+                                    {% if disease.affected_part == 'leaf' %}
+                                        <div class="accordion-item mb-1 overflow-hidden" style="border: none; background: transparent;">
+                                            <h2 class="accordion-header" id="heading{{ disease.id }}">
+                                                <button class="accordion-button collapsed fw-bold p-2 text-dark" style="background: transparent;" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ disease.id }}">
+                                                    {{ disease.name }}
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#leafAccordion">
+                                                <div class="accordion-body p-2 text-muted small">
+                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    {% if disease.pesticides_recommended %}
+                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
                                     {% endif %}
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
-                        {% empty %}
-                        <p class="text-muted font-italic text-center py-2">No diseases registered for this crop.</p>
-                        {% endfor %}
+
+                        <!-- Fruit Diseases Section -->
+                        <div class="glass-panel p-3">
+                            <h6 class="fw-bold mb-2 text-warning" style="font-size: 0.95rem;">🍎 Fruit Diseases</h6>
+                            <div class="accordion" id="fruitAccordion">
+                                {% for disease in selected_crop.diseases.all %}
+                                    {% if disease.affected_part == 'fruit' %}
+                                        <div class="accordion-item mb-1 overflow-hidden" style="border: none; background: transparent;">
+                                            <h2 class="accordion-header" id="heading{{ disease.id }}">
+                                                <button class="accordion-button collapsed fw-bold p-2 text-dark" style="background: transparent;" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ disease.id }}">
+                                                    {{ disease.name }}
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#fruitAccordion">
+                                                <div class="accordion-body p-2 text-muted small">
+                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    {% if disease.pesticides_recommended %}
+                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Stem/Branch Diseases Section -->
+                        <div class="glass-panel p-3">
+                            <h6 class="fw-bold mb-2 text-info" style="font-size: 0.95rem;">🪵 Stem &amp; Branch Diseases</h6>
+                            <div class="accordion" id="stemAccordion">
+                                {% for disease in selected_crop.diseases.all %}
+                                    {% if disease.affected_part == 'branch_stem' %}
+                                        <div class="accordion-item mb-1 overflow-hidden" style="border: none; background: transparent;">
+                                            <h2 class="accordion-header" id="heading{{ disease.id }}">
+                                                <button class="accordion-button collapsed fw-bold p-2 text-dark" style="background: transparent;" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ disease.id }}">
+                                                    {{ disease.name }}
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#stemAccordion">
+                                                <div class="accordion-body p-2 text-muted small">
+                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    {% if disease.pesticides_recommended %}
+                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Root Diseases Section -->
+                        <div class="glass-panel p-3">
+                            <h6 class="fw-bold mb-2 text-danger" style="font-size: 0.95rem;">🕸 Root Diseases</h6>
+                            <div class="accordion" id="rootAccordion">
+                                {% for disease in selected_crop.diseases.all %}
+                                    {% if disease.affected_part == 'root' %}
+                                        <div class="accordion-item mb-1 overflow-hidden" style="border: none; background: transparent;">
+                                            <h2 class="accordion-header" id="heading{{ disease.id }}">
+                                                <button class="accordion-button collapsed fw-bold p-2 text-dark" style="background: transparent;" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ disease.id }}">
+                                                    {{ disease.name }}
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#rootAccordion">
+                                                <div class="accordion-body p-2 text-muted small">
+                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    {% if disease.pesticides_recommended %}
+                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

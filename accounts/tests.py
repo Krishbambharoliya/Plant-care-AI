@@ -505,9 +505,11 @@ class AccountsTests(APITestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Message Sent!')
-        # Check that email was successfully sent
-        self.assertEqual(len(mail.outbox), 1)
+        # Check that both support and confirmation emails were sent
+        self.assertEqual(len(mail.outbox), 2)
         self.assertIn('Support Request from Test User', mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].to, ['plantcare799@gmail.com'])
+        self.assertEqual(mail.outbox[1].to, ['test@example.com'])
 
     def test_support_submission_invalid_data(self):
         """Submitting incomplete support form shows error."""
@@ -695,4 +697,113 @@ class AccountsTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Surat')
         self.assertContains(response, 'History Logs')
+    # ------------------------------------------------------------------
+    # Multi-language search, detailed crop reference & support ticket mail
+    # ------------------------------------------------------------------
 
+    def test_multilingual_crop_search_resolving(self):
+        """Test crop searches resolve in Hindi and Gujarati to standard names."""
+        from django.test import Client
+        from library.models import Crop
+        from django.core.management import call_command
+        call_command('seed_crops')
+        
+        # Set preference to 'en' so the template renders English names
+        self.test_user.preferred_language = 'en'
+        self.test_user.save()
+
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # 1. Search in Hindi (टमाटर)
+        response = client.get('/library/', {'q': 'टमाटर'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tomato')
+        
+        # 2. Search in Gujarati (બટાકા)
+        response = client.get('/library/', {'q': 'બટાકા'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Potato')
+
+    def test_multilingual_weather_city_search_resolving(self):
+        """Test weather city search resolves Hindi/Gujarati names correctly."""
+        from django.test import Client
+        from accounts.models import SearchHistory
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # Search for Surat in Hindi (सूरत)
+        response = client.get('/weather/', {'city': 'सूरत'})
+        self.assertEqual(response.status_code, 200)
+        # Verify SearchHistory log recorded the query
+        self.assertTrue(SearchHistory.objects.filter(user=self.test_user, query_type='weather', query_text='सूरत').exists())
+
+    def test_partwise_disease_references_and_pdf(self):
+        """Verify diseases are grouped by plant part and the catalog PDF downloads."""
+        from django.test import Client
+        from library.models import Crop, Disease
+        from django.core.management import call_command
+        call_command('seed_crops')
+        
+        # Set preference to 'en' so the template renders English part-wise headers
+        self.test_user.preferred_language = 'en'
+        self.test_user.save()
+
+        client = Client()
+        client.force_login(self.test_user)
+        
+        # View crop library page for Potato
+        potato = Crop.objects.get(name='Potato')
+        response = client.get('/library/', {'crop_id': potato.id})
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify that part-wise headers are in response
+        self.assertContains(response, 'Leaf Diseases')
+        self.assertContains(response, 'Fruit Diseases')
+        
+        # Download all crops PDF Catalog
+        response_pdf = client.get('/library/pdf/')
+        self.assertEqual(response_pdf.status_code, 200)
+        self.assertEqual(response_pdf['Content-Type'], 'application/pdf')
+        
+        # Download single crop PDF
+        response_single_pdf = client.get(f'/library/pdf/{potato.id}/')
+        self.assertEqual(response_single_pdf.status_code, 200)
+        self.assertEqual(response_single_pdf['Content-Type'], 'application/pdf')
+
+    def test_support_alert_mail_delivery(self):
+        """Verify support form sends email to plantcare799@gmail.com and copies sender."""
+        from django.test import Client
+        from django.core import mail
+        client = Client()
+        client.force_login(self.test_user)
+        
+        response = client.post('/support/', {
+            'name': 'Test Farmer',
+            'email': 'farmer@example.com',
+            'phone': '9876543210',
+            'details': 'Need advice on wheat root wilt.'
+        })
+        self.assertEqual(response.status_code, 200)
+        # Verify both support mail and confirmation copy were sent
+        self.assertEqual(len(mail.outbox), 2)
+        
+        # First email is support ticket alert
+        support_alert = mail.outbox[0]
+        self.assertEqual(support_alert.to, ['plantcare799@gmail.com'])
+        self.assertIn('Support Request from Test Farmer', support_alert.subject)
+        
+        # Second email is confirmation to the sender
+        confirmation = mail.outbox[1]
+        self.assertEqual(confirmation.to, ['farmer@example.com'])
+        self.assertIn('We have received your support request!', confirmation.subject)
+
+    def test_invalid_crop_id_graceful_fallback(self):
+        """Verify requesting a non-existent crop_id falls back gracefully instead of 404."""
+        from django.test import Client
+        client = Client()
+        client.force_login(self.test_user)
+        
+        response = client.get('/library/', {'crop_id': 999999})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Crops Catalog')

@@ -348,12 +348,35 @@ def crop_library_view(request):
 
     # 2. Check if selected crop is requested
     if crop_id:
-        selected_crop = get_object_or_404(Crop, pk=crop_id)
+        try:
+            selected_crop = Crop.objects.get(pk=crop_id)
+        except Crop.DoesNotExist:
+            selected_crop = None
 
     # 3. Main crops list
     crops = Crop.objects.all().order_by('name')
     if search_query:
-        local_matches = crops.filter(name__icontains=search_query)
+        # Resolve 3 languages using CROP_TRANSLATIONS dictionary from plantcare.utils
+        from plantcare.utils import CROP_TRANSLATIONS
+        target_name = None
+        q_lower = search_query.lower().strip()
+        for eng_name, translations in CROP_TRANSLATIONS.items():
+            if (q_lower == eng_name.lower() or 
+                q_lower == translations.get('hi', '').lower() or 
+                q_lower == translations.get('gu', '').lower()):
+                target_name = eng_name
+                break
+        
+        if target_name:
+            local_matches = crops.filter(name__iexact=target_name)
+        else:
+            from django.db.models import Q
+            local_matches = crops.filter(
+                Q(name__icontains=search_query) |
+                Q(description_hi__icontains=search_query) |
+                Q(description_gu__icontains=search_query)
+            )
+
         if local_matches.exists():
             crops = local_matches
         else:
@@ -366,19 +389,21 @@ def crop_library_view(request):
                 tracker.call_count += 1
                 tracker.save()
 
-                # Generate/Fetch new Crop record dynamically
-                # This acts as our smart API query response
-                new_crop_name = search_query.title()
+                # Generate new Crop (check translation fallback if query was Hindi/Gujarati but not in static dict)
+                new_crop_name = (target_name or search_query).title()
                 scientific_name = f"{new_crop_name} domesticus"
                 
-                # Create the crop locally (database caching)
+                # Fetch translations or generate simple ones
+                desc_hi = f"बाहरी एपीआई के माध्यम से प्राप्त जानकारी: {new_crop_name}।"
+                desc_gu = f"બાહરી API દ્વારા મેળવેલ માહિતી: {new_crop_name}."
+                
                 new_crop = Crop.objects.create(
                     name=new_crop_name,
                     scientific_name=scientific_name,
                     description=f"Information fetched via external API for {new_crop_name}. A versatile agricultural variety.",
                     description_en=f"Information fetched via external API for {new_crop_name}. A versatile agricultural variety.",
-                    description_hi=f"बाहरी एपीआई के माध्यम से प्राप्त जानकारी: {new_crop_name}।",
-                    description_gu=f"બાહરી API દ્વારા મેળવેલ માહિતી: {new_crop_name}.",
+                    description_hi=desc_hi,
+                    description_gu=desc_gu,
                     ideal_temp_min_c=15.0,
                     ideal_temp_max_c=32.0,
                     ideal_humidity_min=50.0,
@@ -389,23 +414,42 @@ def crop_library_view(request):
                     soil_type_gu="ચીકણી કાળી / રેતીવાળી જમીન"
                 )
 
-                # Create associated fertilizer and disease for rich details display
+                # Create organic fertilizer
                 fert = Fertilizer.objects.create(
                     name=f"Special Fertilizer for {new_crop_name}",
                     fertilizer_type='organic',
-                    description=f"Optimized fertilizer mix for growth stimulation of {new_crop_name}.",
+                    description=f"Optimized organic fertilizer mix for growth stimulation of {new_crop_name}.",
                     usage_instructions="Apply in morning watering runs weekly."
                 )
-                dis = Disease.objects.create(
-                    crop=new_crop,
-                    name=f"{new_crop_name} Leaf Spot",
-                    symptoms="Brown spots on leaf margins",
-                    causes="Fungal pathogen spore",
-                    treatment="Spray with mild fungicide"
-                )
-                dis.fertilizers_recommended.add(fert)
+                
+                # Create 4 part-wise diseases for this new crop
+                diseases_info = [
+                    (f"{new_crop_name} Leaf Spot", "Dark circular leaf spots on margins", "Fungal pathogen spore dispersion", "Apply appropriate fungicide spray", "leaf"),
+                    (f"{new_crop_name} Blight Sickness", "Severe brown lesions on stem and leaves", "Excessive moisture and bacterial buildup", "Remove infected foliage and use organic pesticide", "branch_stem"),
+                    (f"{new_crop_name} Fruit Rot", "Soft watery spots on fruits followed by mold growth", "Wet weather harvesting and fungal spores", "Improve ventilation and spray organic copper soap", "fruit"),
+                    (f"{new_crop_name} Root Wilt", "Yellowing foliage, stunted growth and decay of feeder roots", "Soil-borne pathogen and poor soil drainage", "Drench soil with bio-fungicide and avoid overwatering", "root")
+                ]
+                for d_name, d_sym, d_cause, d_treat, d_part in diseases_info:
+                    dis = Disease.objects.create(
+                        crop=new_crop,
+                        name=d_name,
+                        affected_part=d_part,
+                        symptoms=d_sym,
+                        symptoms_en=d_sym,
+                        symptoms_hi=f"लक्षण: {d_sym}",
+                        symptoms_gu=f"લક્ષણ: {d_sym}",
+                        causes=d_cause,
+                        causes_en=d_cause,
+                        causes_hi=f"कारण: {d_cause}",
+                        causes_gu=f"કારણ: {d_cause}",
+                        treatment=d_treat,
+                        treatment_en=d_treat,
+                        treatment_hi=f"उपचार: {d_treat}",
+                        treatment_gu=f"ઉપચાર: {d_treat}",
+                        pesticides_recommended="Copper-based pesticide spray or organic sulfur compound"
+                    )
+                    dis.fertilizers_recommended.add(fert)
 
-                # Refetch crops list to include the newly indexed item
                 crops = Crop.objects.all().order_by('name')
                 selected_crop = new_crop
 
@@ -416,6 +460,8 @@ def crop_library_view(request):
         disease_results = Disease.objects.filter(
             Q(name__icontains=disease_query) |
             Q(symptoms__icontains=disease_query) |
+            Q(symptoms_hi__icontains=disease_query) |
+            Q(symptoms_gu__icontains=disease_query) |
             Q(crop__name__icontains=disease_query)
         ).order_by('name')
 
@@ -746,7 +792,25 @@ def weather_advisor_view(request):
     
     # If a city name is searched, resolve its coordinates first
     if city:
-        resolved_lat, resolved_lon = OpenWeatherClient.geocode_city(city)
+        from accounts.constants import CITY_TRANSLATIONS
+        resolved_english_city = None
+        city_stripped = city.strip().lower()
+        for eng_city, translations in CITY_TRANSLATIONS.items():
+            if city_stripped == eng_city.lower() or city_stripped in [t.lower() for t in translations]:
+                resolved_english_city = eng_city
+                break
+        
+        search_city = resolved_english_city or city
+        
+        # Log weather searches in SearchHistory
+        from accounts.models import SearchHistory
+        SearchHistory.objects.create(
+            user=request.user,
+            query_type='weather',
+            query_text=city
+        )
+
+        resolved_lat, resolved_lon = OpenWeatherClient.geocode_city(search_city)
         if resolved_lat is not None and resolved_lon is not None:
             lat = resolved_lat
             lon = resolved_lon
@@ -1356,6 +1420,7 @@ def support_view(request):
             error = "Please fill in all required fields."
         else:
             try:
+                # Send to support email
                 send_mail(
                     subject=f'PlantCare Support Request from {name}',
                     message=(
@@ -1366,8 +1431,25 @@ def support_view(request):
                         f'Message/Details:\n{details}'
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    recipient_list=['plantcare799@gmail.com'],
                     fail_silently=False,
+                )
+                # Send confirmation email to the user
+                send_mail(
+                    subject='We have received your support request!',
+                    message=(
+                        f'Hello {name},\n\n'
+                        f'Thank you for contacting PlantCare Support. We have received your request and our team will get back to you shortly.\n\n'
+                        f'Details submitted:\n'
+                        f'---\n'
+                        f'Message: {details}\n'
+                        f'---\n\n'
+                        f'Best regards,\n'
+                        f'PlantCare Support Team'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=True,
                 )
                 success = True
             except Exception:
@@ -1610,5 +1692,161 @@ def history_view(request):
         'searches': searches,
         'journeys': journeys
     })
+
+
+@login_required
+def all_crops_pdf_view(request):
+    """Generate detailed, print-ready PDF reference catalog of all crops and diseases."""
+    import io
+    from django.http import FileResponse
+    from library.models import Crop
+    from fpdf import FPDF
+
+    class CropsCatalogPDF(FPDF):
+        def header(self):
+            self.set_font('Helvetica', 'B', 14)
+            self.set_text_color(17, 24, 39)
+            self.cell(0, 10, "PlantCare AI - Complete Crops Catalog Reference Manual", new_x='LMARGIN', new_y='NEXT')
+            self.set_font('Helvetica', 'I', 8)
+            self.set_text_color(120, 120, 120)
+            self.cell(0, 5, "Detailed botanical soils, organic fertilizers, and part-wise disease treatments", new_x='LMARGIN', new_y='NEXT')
+            self.set_draw_color(17, 24, 39)
+            self.line(10, 22, 200, 22)
+            self.ln(5)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('Helvetica', 'I', 8)
+            self.set_text_color(150, 150, 150)
+            self.cell(0, 10, f"Page {self.page_no()}", align='C')
+
+    pdf = CropsCatalogPDF()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+    pdf.set_font('Helvetica', '', 10)
+    
+    crops = Crop.objects.all().order_by('name')
+    for crop in crops:
+        pdf.set_font('Helvetica', 'B', 12)
+        pdf.set_text_color(16, 124, 65) # Green
+        pdf.cell(0, 8, f"{crop.name} ({crop.scientific_name})", new_x='LMARGIN', new_y='NEXT')
+        
+        pdf.set_font('Helvetica', '', 10)
+        pdf.set_text_color(50, 50, 50)
+        
+        desc = crop.description or "No description."
+        pdf.multi_cell(0, 5, f"Description: {desc}")
+        pdf.cell(0, 5, f"Soil Type: {crop.soil_type}", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 5, f"Ideal Temperature: {crop.ideal_temp_min_c}C - {crop.ideal_temp_max_c}C", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 5, f"Ideal Humidity: {crop.ideal_humidity_min}% - {crop.ideal_humidity_max}%", new_x='LMARGIN', new_y='NEXT')
+        pdf.ln(2)
+
+        # Diseases part-wise
+        diseases = crop.diseases.all().order_by('affected_part')
+        if diseases.exists():
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.set_text_color(17, 24, 39)
+            pdf.cell(0, 6, f"Associated Diseases ({diseases.count()} total):", new_x='LMARGIN', new_y='NEXT')
+            pdf.set_font('Helvetica', '', 9)
+            pdf.set_text_color(80, 80, 80)
+            
+            for dis in diseases:
+                part_lbl = dis.get_affected_part_display()
+                pdf.set_font('Helvetica', 'B', 9)
+                pdf.cell(0, 5, f"  - {dis.name} (Affects: {part_lbl})", new_x='LMARGIN', new_y='NEXT')
+                pdf.set_font('Helvetica', '', 9)
+                pdf.cell(0, 4.5, f"    Symptoms: {dis.symptoms}", new_x='LMARGIN', new_y='NEXT')
+                pdf.cell(0, 4.5, f"    Causes: {dis.causes}", new_x='LMARGIN', new_y='NEXT')
+                pdf.cell(0, 4.5, f"    Treatment: {dis.treatment}", new_x='LMARGIN', new_y='NEXT')
+                if dis.pesticides_recommended:
+                    pdf.cell(0, 4.5, f"    Recommended Pesticides: {dis.pesticides_recommended}", new_x='LMARGIN', new_y='NEXT')
+        else:
+            pdf.cell(0, 5, "  No registered diseases in catalog.", new_x='LMARGIN', new_y='NEXT')
+        
+        pdf.ln(5)
+        pdf.set_draw_color(220, 220, 220)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(3)
+
+    buffer = io.BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename="crops_catalog.pdf")
+
+
+@login_required
+def single_crop_pdf_view(request, crop_id):
+    """Generate detailed, print-ready PDF reference sheet for a single selected crop."""
+    import io
+    from django.http import FileResponse
+    from library.models import Crop
+    from fpdf import FPDF
+    from django.shortcuts import get_object_or_404
+
+    crop = get_object_or_404(Crop, pk=crop_id)
+
+    class CropPDF(FPDF):
+        def header(self):
+            self.set_font('Helvetica', 'B', 14)
+            self.set_text_color(17, 24, 39)
+            self.cell(0, 10, f"PlantCare AI - {crop.name} Reference Sheet", new_x='LMARGIN', new_y='NEXT')
+            self.set_font('Helvetica', 'I', 8)
+            self.set_text_color(120, 120, 120)
+            self.cell(0, 5, "Detailed botanical soils, organic fertilizers, and part-wise disease treatments", new_x='LMARGIN', new_y='NEXT')
+            self.set_draw_color(17, 24, 39)
+            self.line(10, 22, 200, 22)
+            self.ln(5)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('Helvetica', 'I', 8)
+            self.set_text_color(150, 150, 150)
+            self.cell(0, 10, f"Page {self.page_no()}", align='C')
+
+    pdf = CropPDF()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+    
+    pdf.set_font('Helvetica', 'B', 12)
+    pdf.set_text_color(16, 124, 65) # Green
+    pdf.cell(0, 8, f"{crop.name} ({crop.scientific_name})", new_x='LMARGIN', new_y='NEXT')
+    
+    pdf.set_font('Helvetica', '', 10)
+    pdf.set_text_color(50, 50, 50)
+    
+    desc = crop.description or "No description."
+    pdf.multi_cell(0, 5, f"Description: {desc}")
+    pdf.cell(0, 5, f"Soil Type: {crop.soil_type}", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 5, f"Ideal Temperature: {crop.ideal_temp_min_c}C - {crop.ideal_temp_max_c}C", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 5, f"Ideal Humidity: {crop.ideal_humidity_min}% - {crop.ideal_humidity_max}%", new_x='LMARGIN', new_y='NEXT')
+    pdf.ln(4)
+
+    # Diseases part-wise
+    diseases = crop.diseases.all().order_by('affected_part')
+    if diseases.exists():
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(17, 24, 39)
+        pdf.cell(0, 8, f"Associated Diseases ({diseases.count()} total):", new_x='LMARGIN', new_y='NEXT')
+        pdf.set_font('Helvetica', '', 9)
+        pdf.set_text_color(80, 80, 80)
+        
+        for dis in diseases:
+            part_lbl = dis.get_affected_part_display()
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.cell(0, 6, f"  - {dis.name} (Affects: {part_lbl})", new_x='LMARGIN', new_y='NEXT')
+            pdf.set_font('Helvetica', '', 9)
+            pdf.cell(0, 4.5, f"    Symptoms: {dis.symptoms}", new_x='LMARGIN', new_y='NEXT')
+            pdf.cell(0, 4.5, f"    Causes: {dis.causes}", new_x='LMARGIN', new_y='NEXT')
+            pdf.cell(0, 4.5, f"    Treatment: {dis.treatment}", new_x='LMARGIN', new_y='NEXT')
+            if dis.pesticides_recommended:
+                pdf.cell(0, 4.5, f"    Recommended Pesticides: {dis.pesticides_recommended}", new_x='LMARGIN', new_y='NEXT')
+            pdf.ln(2)
+    else:
+        pdf.cell(0, 5, "  No registered diseases in catalog.", new_x='LMARGIN', new_y='NEXT')
+
+    buffer = io.BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"{crop.name.lower()}_details.pdf")
 
 

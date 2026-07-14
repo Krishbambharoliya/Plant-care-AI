@@ -152,28 +152,31 @@ class Command(BaseCommand):
             )
 
 
-            # Create 2 diseases for each crop
+            # Create 4 diseases for each crop (part-wise)
             diseases_info = [
-                (f"{name} Leaf Spot", "Dark circular leaf spots on margins", "Fungal pathogen spore dispersion", "Apply appropriate fungicide spray"),
-                (f"{name} Blight Sickness", "Severe brown lesions on stem and leaves", "Excessive moisture and bacterial buildup", "Remove infected foliage and use organic pesticide")
+                (f"{name} Leaf Spot", "Dark circular leaf spots on margins", "Fungal pathogen spore dispersion", "Apply appropriate fungicide spray", "leaf"),
+                (f"{name} Blight Sickness", "Severe brown lesions on stem and leaves", "Excessive moisture and bacterial buildup", "Remove infected foliage and use organic pesticide", "branch_stem"),
+                (f"{name} Fruit Rot", "Soft watery spots on fruits followed by mold growth", "Wet weather harvesting and fungal spores", "Improve ventilation and spray organic copper soap", "fruit"),
+                (f"{name} Root Wilt", "Yellowing foliage, stunted growth and decay of feeder roots", "Soil-borne pathogen and poor soil drainage", "Drench soil with bio-fungicide and avoid overwatering", "root")
             ]
-            for d_name, d_sym, d_cause, d_treat in diseases_info:
+            for d_name, d_sym, d_cause, d_treat, d_part in diseases_info:
                 dis = Disease.objects.create(
                     crop=crop,
                     name=d_name,
+                    affected_part=d_part,
                     symptoms=d_sym,
                     symptoms_en=d_sym,
-                    symptoms_hi=f"पत्ती का रंग बदल जाना और लक्षण: {d_sym}",
-                    symptoms_gu=f"પાન પર ડાઘ પડવા અને લક્ષણ: {d_sym}",
+                    symptoms_hi=f"लक्षण: {d_sym}",
+                    symptoms_gu=f"લક્ષણ: {d_sym}",
                     causes=d_cause,
                     causes_en=d_cause,
-                    causes_hi=f"रोग का मुख्य कारण: {d_cause}",
-                    causes_gu=f"રોગ ફેલાવવાનું કારણ: {d_cause}",
+                    causes_hi=f"कारण: {d_cause}",
+                    causes_gu=f"કારણ: {d_cause}",
                     treatment=d_treat,
                     treatment_en=d_treat,
-                    treatment_hi=f"उपचार प्रक्रिया: {d_treat}",
-                    treatment_gu=f"ઉપચાર પ્રક્રિયા: {d_treat}",
-                    pesticides_recommended=f"Copper-based pesticide spray or organic sulfur compound",
+                    treatment_hi=f"उपचार: {d_treat}",
+                    treatment_gu=f"ઉપચાર: {d_treat}",
+                    pesticides_recommended="Copper-based pesticide spray or organic sulfur compound",
                     pesticides_recommended_en="Copper-based pesticide spray or organic sulfur compound",
                     pesticides_recommended_hi="तांबा आधारित कीटनाशक स्प्रे या जैविक सल्फर यौगिक",
                     pesticides_recommended_gu="તાંબા આધારિત જંતુનાશક સ્પ્રે અથવા કાર્બનિક સલ્ફર સંયોજન"

@@ -10,7 +10,7 @@ from .views import (
     profile_settings_view, toggle_preference_view, download_scan_pdf,
     support_view, recovery_list_view, recovery_start_view,
     recovery_detail_view, recovery_checkin_view, recovery_pdf_export_view,
-    recovery_ask_view, history_view
+    recovery_ask_view, history_view, all_crops_pdf_view, single_crop_pdf_view
 )
 
 urlpatterns = [
@@ -29,6 +29,8 @@ urlpatterns = [
     path('password-reset/', password_reset_request_view, name='password_reset_request'),
     path('password-reset/verify/', password_reset_verify_view, name='password_reset_verify'),
     path('library/', crop_library_view, name='crop_library'),
+    path('library/pdf/', all_crops_pdf_view, name='all_crops_pdf'),
+    path('library/pdf/<int:crop_id>/', single_crop_pdf_view, name='single_crop_pdf'),
     path('scan/', scan_upload_view, name='scan_upload'),
     path('scan/download-pdf/<int:result_id>/', download_scan_pdf, name='download_scan_pdf'),
     path('weather/', weather_advisor_view, name='weather_advisor'),
