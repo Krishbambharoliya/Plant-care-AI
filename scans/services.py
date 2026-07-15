@@ -48,9 +48,7 @@ class PlantNetClient:
             species = top_result.get('species', {})
             
             # Extract names
-            scientific_name = species.get('scientificNameWithoutAuthor', '')
-            if not scientific_name:
-                scientific_name = species.get('scientificName', '')
+            scientific_name = species.get('scientificNameWithoutAuthor') or species.get('scientificName', '')
             
             common_names = species.get('commonNames', [])
             common_name = common_names[0] if common_names else None

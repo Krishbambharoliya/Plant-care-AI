@@ -5,12 +5,9 @@ def translation_processor(request):
     lang = 'en'
     theme = 'light'
     
-    if request.user.is_authenticated:
-        lang = getattr(request.user, 'preferred_language', 'en')
-        theme = getattr(request.user, 'theme_preference', 'light')
-    else:
-        lang = request.session.get('preferred_language', 'en')
-        theme = request.session.get('theme_preference', 'light')
+    u = request.user
+    lang = u.preferred_language if u.is_authenticated else request.session.get('preferred_language', 'en')
+    theme = u.theme_preference if u.is_authenticated else request.session.get('theme_preference', 'light')
         
     path = settings.BASE_DIR / 'translations' / f'{lang}.json'
     

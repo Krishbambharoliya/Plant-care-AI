@@ -30,8 +30,8 @@ class ScanUploadView(APIView):
             return Response({"organ": "Invalid choice."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Parse coordinates if given
-        lat = float(latitude) if latitude is not None and latitude != '' else None
-        lon = float(longitude) if longitude is not None and longitude != '' else None
+        lat = float(latitude) if latitude else None
+        lon = float(longitude) if longitude else None
 
         # 1. Save scan row
         scan = ScanHistory.objects.create(
@@ -56,27 +56,25 @@ class ScanUploadView(APIView):
             lang = getattr(request.user, 'preferred_language', 'en')
             if "404" in err_str:
                 organ_names = {
-                    'leaf': {'en': 'leaf', 'hi': '\u092a\u0924\u094d\u0924\u0940', 'gu': '\u0aaa\u0abe\u0a82\u0aa6\u0aa1\u0ac1\u0a82'},
-                    'flower': {'en': 'flower', 'hi': '\u092b\u0942\u0932', 'gu': '\u0aab\u0ac2\u0ab2'},
-                    'fruit': {'en': 'fruit', 'hi': '\u092b\u0932', 'gu': '\u0aab\u0ab3'},
-                    'bark': {'en': 'bark', 'hi': '\u091b\u093e\u0932', 'gu': '\u0a9b\u0abe\u0ab2'},
+                    'leaf': {'en': 'leaf', 'hi': 'पत्ती', 'gu': 'પાંદડું'},
+                    'flower': {'en': 'flower', 'hi': 'फूल', 'gu': 'ફૂલ'},
+                    'fruit': {'en': 'fruit', 'hi': 'फल', 'gu': 'ફળ'},
+                    'bark': {'en': 'bark', 'hi': 'छाल', 'gu': 'છाल'},
                 }
-                org_name_hi = organ_names.get(scan.organ, {}).get('hi', scan.organ)
-                org_name_gu = organ_names.get(scan.organ, {}).get('gu', scan.organ)
-                org_name_en = organ_names.get(scan.organ, {}).get('en', scan.organ)
-                if lang == 'hi':
-                    msg = f"\u0915\u094d\u0930\u092a\u092f\u093e \u0915\u0947\u0935\u0932 \u092a\u094c\u0927\u0947 \u0915\u0947 {org_name_hi} \u0915\u0940 \u090f\u0915 \u092e\u093e\u0928\u094d\u092f \u0914\u0930 \u0938\u094d\u092a\u0937\u094d\u091f \u091b\u0935\u093f \u0905\u092a\u0932\u094b\u0921 \u0915\u0930\u0947\u0902\u0964"
-                elif lang == 'gu':
-                    msg = f"\u0a95\u0ac3\u0aaa\u0abe \u0a95\u0ab0\u0ac0\u0aa8\u0ac5 \u0aae\u0abe\u0aa4\u0acd\u0ab0 \u0a9b\u0acb\u0aa1\u0aa8\u0abe {org_name_gu} \u0aa8\u0ac0 \u0a8f\u0a95 \u0aae\u0abe\u0aa8\u0acd\u0aaf \u0a85\u0aa8\u0ac7 \u0ab8\u0acd\u0aaa\u0ab7\u0acd\u0a9f \u0a9b\u0aac\u0ac0 \u0a85\u0aaa\u0ab2\u0acb\u0aa1 \u0a95\u0ab0\u0acb."
-                else:
-                    msg = f"Please upload a valid and clear image of a plant {org_name_en} only."
+                names = organ_names.get(scan.organ, {'en': scan.organ, 'hi': scan.organ, 'gu': scan.organ})
+                msg_templates = {
+                    'hi': f"कृपया केवल पौधे के {names.get('hi', scan.organ)} की एक मान्य और स्पष्ट छवि अपलोड करें।",
+                    'gu': f"કૃપા કરીને માત્ર છોડના {names.get('gu', scan.organ)} ની એક માન્ય અને સ્પષ્ટ છબી અપલોડ કરો.",
+                    'en': f"Please upload a valid and clear image of a plant {names.get('en', scan.organ)} only."
+                }
+                msg = msg_templates.get(lang, msg_templates['en'])
             else:
-                if lang == 'hi':
-                    msg = "पहचान सेवा अभी उपलब्ध नहीं है। कृपया बाद में प्रयास करें।"
-                elif lang == 'gu':
-                    msg = "ઓળખ સેવા હાલમાં ઉપલબ્ધ નથી. કૃપા કરીને પછીથી પ્રયાસ કરો।"
-                else:
-                    msg = "PlantNet identification service is currently unavailable. Please try again later."
+                msg_templates = {
+                    'hi': "पहचान सेवा अभी उपलब्ध नहीं है। कृपया बाद में प्रयास करें。",
+                    'gu': "ઓળખ સેવા હાલમાં ઉપલબ્ધ નથી. કૃપા કરીને પછીથી પ્રયાસ કરો。",
+                    'en': "PlantNet identification service is currently unavailable. Please try again later."
+                }
+                msg = msg_templates.get(lang, msg_templates['en'])
             return Response({"error": msg}, status=status.HTTP_502_BAD_GATEWAY)
 
         # Update identification details

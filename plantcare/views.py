@@ -248,20 +248,19 @@ def toggle_preference_view(request):
     if request.method == "POST":
         lang = request.POST.get('preferred_language')
         theme = request.POST.get('theme_preference')
+        is_auth = request.user.is_authenticated
         
-        if request.user.is_authenticated:
-            user = request.user
-            if lang in ['en', 'hi', 'gu']:
-                user.preferred_language = lang
-            if theme in ['light', 'dark']:
-                user.theme_preference = theme
-            user.save()
-        else:
-            if lang in ['en', 'hi', 'gu']:
-                request.session['preferred_language'] = lang
-            if theme in ['light', 'dark']:
-                request.session['theme_preference'] = theme
-                
+        if lang in ['en', 'hi', 'gu']:
+            if is_auth: request.user.preferred_language = lang
+            else: request.session['preferred_language'] = lang
+            
+        if theme in ['light', 'dark']:
+            if is_auth: request.user.theme_preference = theme
+            else: request.session['theme_preference'] = theme
+            
+        if is_auth:
+            request.user.save()
+            
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 # ==========================================
@@ -1725,48 +1724,16 @@ def all_crops_pdf_view(request):
     pdf.add_page()
     pdf.set_font('Helvetica', '', 10)
     
+    lang = request.user.preferred_language if request.user.is_authenticated else 'en'
+    from plantcare.utils import get_localized_crop_name
+    
     crops = Crop.objects.all().order_by('name')
-    for crop in crops:
+    for i, crop in enumerate(crops, start=1):
         pdf.set_font('Helvetica', 'B', 12)
         pdf.set_text_color(16, 124, 65) # Green
-        pdf.cell(0, 8, f"{crop.name} ({crop.scientific_name})", new_x='LMARGIN', new_y='NEXT')
-        
-        pdf.set_font('Helvetica', '', 10)
-        pdf.set_text_color(50, 50, 50)
-        
-        desc = crop.description or "No description."
-        pdf.multi_cell(0, 5, f"Description: {desc}")
-        pdf.cell(0, 5, f"Soil Type: {crop.soil_type}", new_x='LMARGIN', new_y='NEXT')
-        pdf.cell(0, 5, f"Ideal Temperature: {crop.ideal_temp_min_c}C - {crop.ideal_temp_max_c}C", new_x='LMARGIN', new_y='NEXT')
-        pdf.cell(0, 5, f"Ideal Humidity: {crop.ideal_humidity_min}% - {crop.ideal_humidity_max}%", new_x='LMARGIN', new_y='NEXT')
-        pdf.ln(2)
-
-        # Diseases part-wise
-        diseases = crop.diseases.all().order_by('affected_part')
-        if diseases.exists():
-            pdf.set_font('Helvetica', 'B', 10)
-            pdf.set_text_color(17, 24, 39)
-            pdf.cell(0, 6, f"Associated Diseases ({diseases.count()} total):", new_x='LMARGIN', new_y='NEXT')
-            pdf.set_font('Helvetica', '', 9)
-            pdf.set_text_color(80, 80, 80)
-            
-            for dis in diseases:
-                part_lbl = dis.get_affected_part_display()
-                pdf.set_font('Helvetica', 'B', 9)
-                pdf.cell(0, 5, f"  - {dis.name} (Affects: {part_lbl})", new_x='LMARGIN', new_y='NEXT')
-                pdf.set_font('Helvetica', '', 9)
-                pdf.cell(0, 4.5, f"    Symptoms: {dis.symptoms}", new_x='LMARGIN', new_y='NEXT')
-                pdf.cell(0, 4.5, f"    Causes: {dis.causes}", new_x='LMARGIN', new_y='NEXT')
-                pdf.cell(0, 4.5, f"    Treatment: {dis.treatment}", new_x='LMARGIN', new_y='NEXT')
-                if dis.pesticides_recommended:
-                    pdf.cell(0, 4.5, f"    Recommended Pesticides: {dis.pesticides_recommended}", new_x='LMARGIN', new_y='NEXT')
-        else:
-            pdf.cell(0, 5, "  No registered diseases in catalog.", new_x='LMARGIN', new_y='NEXT')
-        
-        pdf.ln(5)
-        pdf.set_draw_color(220, 220, 220)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(3)
+        loc_name = get_localized_crop_name(crop.name, lang)
+        pdf.cell(0, 8, f"{i}. {loc_name}", new_x='LMARGIN', new_y='NEXT')
+        pdf.ln(1)
 
     buffer = io.BytesIO()
     pdf.output(buffer)

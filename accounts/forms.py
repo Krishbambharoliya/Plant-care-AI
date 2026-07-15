@@ -43,32 +43,16 @@ class FarmerRegistrationForm(UserCreationForm):
         return email
 
     def clean_location_city(self):
-        city = self.cleaned_data.get('location_city') or ''
-        city = city.strip()
-        if city:
-            from accounts.constants import GUJARAT_CITIES
-            matched = [c for c in GUJARAT_CITIES if c.lower() == city.lower()]
-            if not matched:
-                raise forms.ValidationError("Location City must be a city within Gujarat state.")
-            return matched[0]
-        return city
-
-
+        return _clean_gujarat_city(self.cleaned_data.get('location_city'))
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        city = self.cleaned_data.get('location_city')
-        lat = self.cleaned_data.get('latitude')
-        lon = self.cleaned_data.get('longitude')
-        
-        # If city name is filled but coords are blank, resolve coords automatically via geocoding
-        if city and (lat is None or lon is None):
-            from weather.services import OpenWeatherClient
-            res_lat, res_lon = OpenWeatherClient.geocode_city(city)
-            if res_lat is not None and res_lon is not None:
-                user.latitude = res_lat
-                user.longitude = res_lon
-                
+        _resolve_user_coordinates(
+            user,
+            self.cleaned_data.get('location_city'),
+            self.cleaned_data.get('latitude'),
+            self.cleaned_data.get('longitude')
+        )
         if commit:
             user.save()
         return user
@@ -91,7 +75,6 @@ class FarmerProfileForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
-            # Exclude the current user from the uniqueness check
             qs = User.objects.filter(email__iexact=email)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
@@ -100,32 +83,35 @@ class FarmerProfileForm(forms.ModelForm):
         return email
 
     def clean_location_city(self):
-        city = self.cleaned_data.get('location_city') or ''
-        city = city.strip()
-        if city:
-            from accounts.constants import GUJARAT_CITIES
-            matched = [c for c in GUJARAT_CITIES if c.lower() == city.lower()]
-            if not matched:
-                raise forms.ValidationError("Location City must be a city within Gujarat state.")
-            return matched[0]
-        return city
-
-
+        return _clean_gujarat_city(self.cleaned_data.get('location_city'))
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        city = self.cleaned_data.get('location_city')
-        lat = self.cleaned_data.get('latitude')
-        lon = self.cleaned_data.get('longitude')
-
-        # Check if coordinates need to be auto-resolved
-        if city and (lat is None or lon is None):
-            from weather.services import OpenWeatherClient
-            res_lat, res_lon = OpenWeatherClient.geocode_city(city)
-            if res_lat is not None and res_lon is not None:
-                user.latitude = res_lat
-                user.longitude = res_lon
-
+        _resolve_user_coordinates(
+            user,
+            self.cleaned_data.get('location_city'),
+            self.cleaned_data.get('latitude'),
+            self.cleaned_data.get('longitude')
+        )
         if commit:
             user.save()
         return user
+
+
+def _clean_gujarat_city(city):
+    city = (city or '').strip()
+    if city:
+        from accounts.constants import GUJARAT_CITIES
+        matched = [c for c in GUJARAT_CITIES if c.lower() == city.lower()]
+        if not matched:
+            raise forms.ValidationError("Location City must be a city within Gujarat state.")
+        return matched[0]
+    return city
+
+
+def _resolve_user_coordinates(user, city, lat, lon):
+    if city and (lat is None or lon is None):
+        from weather.services import OpenWeatherClient
+        res_lat, res_lon = OpenWeatherClient.geocode_city(city)
+        if res_lat is not None and res_lon is not None:
+            user.latitude, user.longitude = res_lat, res_lon

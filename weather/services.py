@@ -207,12 +207,6 @@ def calculate_growth_chance(crop, forecast_days):
             favorable_days += 1
             
     pct = (favorable_days / total_days) * 100
-    
-    if pct >= 70.0:
-        verdict = "Good"
-    elif pct >= 40.0:
-        verdict = "Mixed"
-    else:
-        verdict = "Unfavorable"
+    verdict = "Good" if pct >= 70.0 else "Mixed" if pct >= 40.0 else "Unfavorable"
         
     return round(pct, 2), verdict
