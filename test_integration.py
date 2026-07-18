@@ -386,3 +386,94 @@ class PlantCareIntegrationTests(APITestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         pdf_bytes = b"".join(response.streaming_content)
         self.assertTrue(len(pdf_bytes) > 0)
+
+    def test_assistant_without_context_shows_interview(self):
+        user = User.objects.create_user(username='assistantuser', password='Password123!')
+        self.client.force_login(user)
+        response = self.client.get(reverse('assistant'))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['has_context'])
+
+    def test_assistant_submitting_interview_sets_context(self):
+        user = User.objects.create_user(username='interviewuser', password='Password123!')
+        self.client.force_login(user)
+        
+        post_data = {
+            'submit_interview': '1',
+            'crop': 'Tomato',
+            'soil_type': 'Clayey Soil',
+            'stage': 'Flowering',
+            'weather': 'Mild & Cloudy (24°C - 28°C)'
+        }
+        response = self.client.post(reverse('assistant'), post_data)
+        # Verify redirect
+        self.assertEqual(response.status_code, 302)
+        
+        # Follow redirect and verify has_context is True
+        follow_response = self.client.get(reverse('assistant'))
+        self.assertEqual(follow_response.status_code, 200)
+        self.assertTrue(follow_response.context['has_context'])
+        self.assertEqual(follow_response.context['crop_name'], 'Tomato')
+
+    def test_assistant_reset_clears_context(self):
+        user = User.objects.create_user(username='resetuser', password='Password123!')
+        self.client.force_login(user)
+        
+        session = self.client.session
+        session['assistant_crop'] = 'Tomato'
+        session['assistant_soil_type'] = 'Loamy Soil'
+        session['assistant_stage'] = 'Vegetative'
+        session['assistant_weather'] = 'Cloudy'
+        session.save()
+        
+        response = self.client.get(reverse('assistant') + '?reset=1')
+        self.assertEqual(response.status_code, 302)
+        
+        # Session cleared
+        self.assertNotIn('assistant_crop', self.client.session)
+
+    @patch('requests.post')
+    def test_assistant_submit_chat_communicates_with_gemini(self, mock_post):
+        # Setup mock response
+        class MockResponse:
+            status_code = 200
+            def json(self):
+                return {
+                    'candidates': [{
+                        'content': {
+                            'parts': [{
+                                'text': 'To cure late blight, use copper-based fungicides.'
+                            }]
+                        }
+                    }]
+                }
+        mock_post.return_value = MockResponse()
+
+        user = User.objects.create_user(username='chatuser', password='Password123!')
+        self.client.force_login(user)
+        
+        # Setup context in session
+        session = self.client.session
+        session['assistant_crop'] = 'Tomato'
+        session['assistant_soil_type'] = 'Loamy Soil'
+        session['assistant_stage'] = 'Vegetative'
+        session['assistant_weather'] = 'Cloudy'
+        session.save()
+
+        post_data = {
+            'submit_chat': '1',
+            'question': 'How do I cure blight?'
+        }
+        response = self.client.post(reverse('assistant'), post_data)
+        self.assertEqual(response.status_code, 302)
+
+        # Follow redirect and verify chat history contains answer
+        follow_response = self.client.get(reverse('assistant'))
+        self.assertEqual(follow_response.status_code, 200)
+        chat_history = follow_response.context['chat_history']
+        self.assertEqual(len(chat_history), 2)
+        self.assertEqual(chat_history[0]['sender'], 'farmer')
+        self.assertEqual(chat_history[0]['text'], 'How do I cure blight?')
+        self.assertEqual(chat_history[1]['sender'], 'ai')
+        self.assertEqual(chat_history[1]['text'], 'To cure late blight, use copper-based fungicides.')
+

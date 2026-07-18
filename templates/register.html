@@ -117,6 +117,12 @@ function lookupCityGPS() {
                     <div class="form-group m-0">
                         <label class="form-label">{{ t.auth.confirmPassword }} *</label>
                         <input type="password" name="password2" class="form-control" required placeholder="Re-enter password">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="showPasswordCheckReg" onclick="togglePasswordVisibility()">
+                            <label class="form-check-label text-muted small" for="showPasswordCheckReg" style="cursor: pointer;">
+                                Show Passwords / પાસવર્ડ બતાવો / पासवर्ड दिखाएं
+                            </label>
+                        </div>
                         {% if form.non_field_errors %}
                         <div class="text-danger small mt-1">{{ form.non_field_errors.0 }}</div>
                         {% endif %}

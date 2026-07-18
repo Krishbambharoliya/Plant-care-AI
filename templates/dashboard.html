@@ -4,7 +4,6 @@
 <div class="d-flex flex-column gap-4 fade-in-up">
     <!-- Header title -->
     <div>
-        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.nav.dashboard }}</h1>
         <p class="text-muted m-0">{{ t.dashboard.desc }}</p>
     </div>
     <!-- Weather from registered city -->
@@ -31,34 +30,43 @@
     </div>
     {% endif %}
 
-    <!-- Quick Actions Panel -->
+
+
+    <!-- Recovery Tracker Section -->
     <div class="glass-panel p-4">
-        <h5 class="fw-bold mb-3">⚡ Quick Actions Shortcuts</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0">🩹 Active Plant Recovery Journeys</h5>
+            <a href="{% url 'recovery_list' %}" class="small fw-bold text-decoration-none" style="color: var(--primary);">View All Journeys &rarr;</a>
+        </div>
         <div class="row g-3">
-            <div class="col-6 col-md-3">
-                <a href="{% url 'scan_upload' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
-                    <span style="font-size: 1.5rem;">📸</span>
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">Scan Leaf</span>
-                </a>
+            {% for journey in journeys|slice:":3" %}
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 border" style="background: rgba(0,0,0,0.01); border-color: var(--border-card) !important; cursor: pointer;" onclick="location.href='{% url 'recovery_detail' journey.id %}'">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong style="font-size: 1.05rem; color: var(--text-primary);">{{ journey.plant_name }}</strong>
+                        <span class="badge {% if journey.status == 'recovered' %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10 {% if journey.status == 'recovered' %}text-success{% else %}text-warning{% endif %} fw-bold px-2 py-0.5" style="font-size: 0.75rem; border-radius: 4px;">
+                            {{ journey.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="text-muted small">Variety: {{ journey.crop_type|default:"General" }}</div>
+                    {% if journey.checkins.last %}
+                    <div class="d-flex justify-content-between align-items-center mt-2 mb-1 small text-muted">
+                        <span>Recovery Progress</span>
+                        <strong>{{ journey.checkins.last.recovery_percentage }}%</strong>
+                    </div>
+                    <div class="progress" style="height: 6px; border-radius: 3px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ journey.checkins.last.recovery_percentage }}%;"></div>
+                    </div>
+                    {% else %}
+                    <div class="small text-muted mt-2">No check-ins logged yet</div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="col-6 col-md-3">
-                <a href="{% url 'recovery_list' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
-                    <span style="font-size: 1.5rem;">🩹</span>
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">Recovery Tracker</span>
-                </a>
+            {% empty %}
+            <div class="col-12 text-center py-2 text-muted small">
+                No active recovery journeys. Click <a href="{% url 'recovery_start' %}" style="color: var(--primary); font-weight: bold; text-decoration: none;">here</a> to start a new recovery journey!
             </div>
-            <div class="col-6 col-md-3">
-                <a href="{% url 'crop_library' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
-                    <span style="font-size: 1.5rem;">📖</span>
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">Crop Library</span>
-                </a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a href="{% url 'history' %}" class="btn btn-outline-dark w-100 py-3 d-flex flex-column align-items-center gap-2 text-decoration-none" style="border-radius: 12px; font-weight: 600; border: 1px solid var(--border-card);">
-                    <span style="font-size: 1.5rem;">📜</span>
-                    <span style="font-size: 0.9rem; color: var(--text-primary);">History Logs</span>
-                </a>
-            </div>
+            {% endfor %}
         </div>
     </div>
 

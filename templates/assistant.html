@@ -1,0 +1,668 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .form-select option {
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+    }
+    html.dark .form-select {
+        background-color: var(--bg-sidebar) !important;
+        color: #ffffff !important;
+        border-color: var(--border-card) !important;
+    }
+    html.dark .form-control {
+        background-color: var(--bg-sidebar) !important;
+        color: #ffffff !important;
+        border-color: var(--border-card) !important;
+    }
+    /* Chat inputs style adaptation */
+    #chatInputBox {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-card);
+    }
+    html.dark #chatInputBox {
+        background-color: var(--bg-sidebar) !important;
+        color: #ffffff !important;
+        border-color: var(--border-card) !important;
+    }
+
+    /* ── Black & White primary button ── */
+    .btn-bw {
+        background: #ffffff;
+        color: #000000;
+        border: 2px solid #ffffff;
+        transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+    .btn-bw:hover, .btn-bw:focus {
+        background: #000000;
+        color: #ffffff;
+        border-color: #000000;
+    }
+    html.dark .btn-bw {
+        background: #ffffff;
+        color: #000000;
+        border-color: #ffffff;
+    }
+    html.dark .btn-bw:hover, html.dark .btn-bw:focus {
+        background: #000000;
+        color: #ffffff;
+        border-color: #ffffff;
+    }
+
+    /* ── Quick Suggestion Chips (outlined mono) ── */
+    .chip-bw {
+        background: transparent;
+        color: var(--text-primary);
+        border: 1.5px solid var(--border-card);
+        border-radius: 20px !important;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 5px 14px;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+    .chip-bw:hover, .chip-bw:focus {
+        background: #000000;
+        color: #ffffff;
+        border-color: #000000;
+    }
+    html.dark .chip-bw:hover, html.dark .chip-bw:focus {
+        background: #ffffff;
+        color: #000000;
+        border-color: #ffffff;
+    }
+
+    /* ── User Chat Bubble ── */
+    .bubble-user {
+        background: #111827;
+        color: #ffffff;
+        border-radius: 16px 16px 0 16px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    html:not(.dark) .bubble-user {
+        background: #111827;
+    }
+    html.dark .bubble-user {
+        background: #ffffff;
+        color: #000000 !important;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
+    }
+    html.dark .bubble-user span {
+        color: #000000 !important;
+    }
+
+    /* ── AI Message + placeholder text: theme-aware ── */
+    .ai-msg-text {
+        color: var(--text-primary);
+    }
+    .chat-empty-title {
+        color: var(--text-primary);
+    }
+
+    /* ── Dropdown option selection: black/white override ── */
+    .form-select option:checked,
+    .form-select option:hover {
+        background-color: #111827 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 30px #111827 inset !important;
+    }
+    html:not(.dark) .form-select option:checked,
+    html:not(.dark) .form-select option:hover {
+        background-color: #111827 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 30px #111827 inset !important;
+    }
+    html.dark .form-select option:checked,
+    html.dark .form-select option:hover {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: 0 0 0 30px #ffffff inset !important;
+    }
+
+    /* ── Page title: theme-aware monochrome ── */
+    .title-bw {
+        color: var(--text-primary);
+    }
+    /* ── Robot icon: theme-aware ── */
+    .icon-bw {
+        color: var(--text-primary);
+    }
+
+    /* Style for custom select options */
+    .custom-list-option {
+        background-color: var(--bg-card) !important;
+        border-color: var(--border-card) !important;
+    }
+    .custom-list-option:hover {
+        background-color: var(--bg-sidebar) !important;
+    }
+    html:not(.dark) .custom-list-option.active {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border-color: #000000 !important;
+    }
+    html.dark .custom-list-option.active {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-color: #ffffff !important;
+    }
+</style>
+
+<div class="d-flex flex-column gap-4 fade-in-up">
+    <!-- Header title -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <p class="text-muted m-0">{{ t.assistant.subtitle }}</p>
+        </div>
+        {% if has_context %}
+        <a href="?reset=1" class="btn btn-outline-danger btn-sm fw-bold px-3 d-flex align-items-center gap-1" style="border-radius: 8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            {{ t.assistant.reset_btn }}
+        </a>
+        {% endif %}
+    </div>
+
+    {% if not has_context %}
+    <!-- Step 1: Clarifying Interview Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-7">
+            <div class="glass-panel p-4 p-md-5" style="border: 1px solid var(--border-card); border-radius: 24px; background: var(--bg-card); box-shadow: var(--shadow-panel);">
+
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:56px; height:56px; border: 2px solid var(--border-card); background: var(--bg-sidebar);">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw">
+                            <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+                            <path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+                        </svg>
+                    </div>
+                    <h4 class="fw-bold mt-1 mb-1 title-bw">{{ t.assistant.interview_title }}</h4>
+                    <p class="text-muted small mb-0">{{ t.assistant.interview_desc }}</p>
+                </div>
+
+                <!-- Step progress bar -->
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div id="stepIndicator-1" class="flex-fill" style="height:4px; border-radius:2px; background: var(--primary); transition: all 0.3s;"></div>
+                    <div id="stepIndicator-2" class="flex-fill" style="height:4px; border-radius:2px; background: var(--border-card); transition: all 0.3s;"></div>
+                    <div id="stepIndicator-3" class="flex-fill" style="height:4px; border-radius:2px; background: var(--border-card); transition: all 0.3s;"></div>
+                    <div id="stepIndicator-4" class="flex-fill" style="height:4px; border-radius:2px; background: var(--border-card); transition: all 0.3s;"></div>
+                </div>
+
+                 <form method="post" action="" onsubmit="return validateForm(event)">
+                    {% csrf_token %}
+                    <input type="hidden" name="submit_interview" value="1">
+                    <!-- Q1: Crop -->
+                    <div class="interview-step" id="step-1">
+                        <div class="mb-4 p-3 rounded-3" style="border: 1.5px solid var(--border-card); background: var(--bg-sidebar);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="d-inline-flex align-items-center justify-content-center fw-bold rounded-circle"
+                                      style="min-width:26px; height:26px; font-size:0.75rem; border: 1.5px solid var(--text-primary); color: var(--text-primary);">1</span>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw">
+                                    <path d="M7 20h10"/><path d="M10 20c5.5-2.5 5.5-10 0-12.5"/><path d="M14 20c-5.5-2.5-5.5-10 0-12.5"/><path d="M12 7a2 2 0 0 0 0-4 2 2 0 0 0 0 4"/>
+                                </svg>
+                                <label class="form-label fw-bold mb-0">{{ t.assistant.q1_label }}</label>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                            </div>
+                            <input type="text" id="cropSearchInput" class="form-control mb-2 py-2"
+                                   placeholder="🔍 {{ t.assistant.q1_placeholder }}"
+                                   style="border-radius: 8px; font-size: 0.88rem; border-color: var(--border-card);"
+                                   oninput="filterCrops(this.value)" autocomplete="off">
+                            
+                            <input type="hidden" name="crop" id="cropSelectValue" required>
+                            <div id="cropCustomListBox" class="border rounded-3 overflow-auto" 
+                                 style="max-height: 180px; border-color: var(--border-card) !important; background: var(--bg-card); display: flex; flex-direction: column;">
+                                {% for crop in crops_list %}
+                                <div class="custom-list-option crop-option px-3 py-2 border-bottom text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; transition: all 0.15s ease;"
+                                     data-value="{{ crop.value }}"
+                                     data-label="{{ crop.label|lower }}"
+                                     onclick="selectCustomOption('cropSelectValue', 'crop-option', this)">
+                                    {{ crop.label }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="small text-muted mt-1" id="cropCount">{{ t.assistant.crop_count_all }} {{ crops_list|length }} {{ t.assistant.crop_count_suffix }}</div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Q2: Soil Type -->
+                    <div class="interview-step" id="step-2" style="display: none;">
+                        <div class="mb-4 p-3 rounded-3" style="border: 1.5px solid var(--border-card); background: var(--bg-sidebar);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="d-inline-flex align-items-center justify-content-center fw-bold rounded-circle"
+                                      style="min-width:26px; height:26px; font-size:0.75rem; border: 1.5px solid var(--text-primary); color: var(--text-primary);">2</span>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw">
+                                    <path d="M12 22V12"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.07A10 10 0 0 1 22 12"/><path d="M2 12a10 10 0 0 1 14-9.07"/>
+                                </svg>
+                                <label class="form-label fw-bold mb-0">{{ t.assistant.q2_label }}</label>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                            </div>
+                            <input type="hidden" name="soil_type" id="soilTypeSelectValue" required>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="custom-list-option soil-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Loamy Soil" onclick="selectCustomOption('soilTypeSelectValue', 'soil-option', this)">
+                                    🟤 {{ t.assistant.q2_loamy }}
+                                </div>
+                                <div class="custom-list-option soil-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Clayey Soil" onclick="selectCustomOption('soilTypeSelectValue', 'soil-option', this)">
+                                    🔵 {{ t.assistant.q2_clayey }}
+                                </div>
+                                <div class="custom-list-option soil-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Sandy Soil" onclick="selectCustomOption('soilTypeSelectValue', 'soil-option', this)">
+                                    🟡 {{ t.assistant.q2_sandy }}
+                                </div>
+                                <div class="custom-list-option soil-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Black Cotton Soil" onclick="selectCustomOption('soilTypeSelectValue', 'soil-option', this)">
+                                    ⚫ {{ t.assistant.q2_black }}
+                                </div>
+                                <div class="custom-list-option soil-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Red Soil" onclick="selectCustomOption('soilTypeSelectValue', 'soil-option', this)">
+                                    🔴 {{ t.assistant.q2_red }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px;">
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}पीछे{% else %}Back{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Q3: Growth Stage -->
+                    <div class="interview-step" id="step-3" style="display: none;">
+                        <div class="mb-4 p-3 rounded-3" style="border: 1.5px solid var(--border-card); background: var(--bg-sidebar);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="d-inline-flex align-items-center justify-content-center fw-bold rounded-circle"
+                                      style="min-width:26px; height:26px; font-size:0.75rem; border: 1.5px solid var(--text-primary); color: var(--text-primary);">3</span>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                </svg>
+                                <label class="form-label fw-bold mb-0">{{ t.assistant.q3_label }}</label>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                            </div>
+                            <input type="hidden" name="stage" id="stageSelectValue" required>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="custom-list-option stage-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Seedling" onclick="selectCustomOption('stageSelectValue', 'stage-option', this)">
+                                    🌱 {{ t.assistant.q3_seedling }}
+                                </div>
+                                <div class="custom-list-option stage-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Vegetative" onclick="selectCustomOption('stageSelectValue', 'stage-option', this)">
+                                    🌿 {{ t.assistant.q3_vegetative }}
+                                </div>
+                                <div class="custom-list-option stage-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Flowering" onclick="selectCustomOption('stageSelectValue', 'stage-option', this)">
+                                    🌸 {{ t.assistant.q3_flowering }}
+                                </div>
+                                <div class="custom-list-option stage-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Fruiting" onclick="selectCustomOption('stageSelectValue', 'stage-option', this)">
+                                    🍅 {{ t.assistant.q3_fruiting }}
+                                </div>
+                                <div class="custom-list-option stage-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Harvesting" onclick="selectCustomOption('stageSelectValue', 'stage-option', this)">
+                                    🌾 {{ t.assistant.q3_harvesting }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px;">
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}પીછે{% else %}Back{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Q4: Weather -->
+                    <div class="interview-step" id="step-4" style="display: none;">
+                        <div class="mb-4 p-3 rounded-3" style="border: 1.5px solid var(--border-card); background: var(--bg-sidebar);">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="d-inline-flex align-items-center justify-content-center fw-bold rounded-circle"
+                                      style="min-width:26px; height:26px; font-size:0.75rem; border: 1.5px solid var(--text-primary); color: var(--text-primary);">4</span>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw">
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                                </svg>
+                                <label class="form-label fw-bold mb-0">{{ t.assistant.q4_label }}</label>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}ચુન રહે હૈં...{% else %}Selecting...{% endif %}</strong>
+                            </div>
+                            <input type="hidden" name="weather" id="weatherSelectValue" required>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Hot &amp; Dry (32°C - 38°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
+                                    ☀️ {{ t.assistant.q4_hot }}
+                                </div>
+                                <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Mild &amp; Cloudy (24°C - 28°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
+                                    ⛅ {{ t.assistant.q4_mild }}
+                                </div>
+                                <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Rainy &amp; Wet (Warm &amp; Humid)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
+                                    🌧️ {{ t.assistant.q4_rainy }}
+                                </div>
+                                <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
+                                     style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
+                                     data-value="Cold &amp; Humid (12°C - 18°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
+                                    ❄️ {{ t.assistant.q4_cold }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3 gap-3">
+                            <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px; max-width: 120px;">
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}પીછે{% else %}Back{% endif %}
+                            </button>
+                            <button type="submit" class="btn btn-bw fw-bold w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; font-size: 1rem;">
+                                {{ t.assistant.submit_btn }}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Step 2: Active Chat Interface -->
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px; background: var(--bg-card);">
+                <div class="small fw-bold text-muted mb-0.5">{{ t.assistant.context_crop }}</div>
+                <div class="fw-extrabold title-bw" style="font-size: 1rem;">{{ crop_name }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px; background: var(--bg-card);">
+                <div class="small fw-bold text-muted mb-0.5">{{ t.assistant.context_soil }}</div>
+                <div class="fw-extrabold title-bw" style="font-size: 1rem;">{{ soil_type }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px; background: var(--bg-card);">
+                <div class="small fw-bold text-muted mb-0.5">{{ t.assistant.context_stage }}</div>
+                <div class="fw-extrabold title-bw" style="font-size: 1rem;">{{ stage }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px; background: var(--bg-card);">
+                <div class="small fw-bold text-muted mb-0.5">{{ t.assistant.context_weather }}</div>
+                <div class="fw-extrabold title-bw" style="font-size: 1rem;">{{ weather_desc }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="glass-panel d-flex flex-column" style="border: 1px solid var(--border-card); border-radius: 20px; background: var(--bg-card); min-height: 520px; box-shadow: var(--shadow-panel);">
+                
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="border-color: var(--border-card) !important; background: rgba(0, 0, 0, 0.01);">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="font-size: 1.5rem;">💬</span>
+                        <div>
+                            <h6 class="fw-bold m-0">{{ t.assistant.chat_title }}</h6>
+                            <span class="small d-flex align-items-center gap-1 title-bw" style="font-size: 0.75rem;">
+                                <span class="d-inline-block rounded-circle" style="width: 6px; height: 6px; background: var(--text-primary);"></span>
+                                {{ t.assistant.chat_connected }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Body -->
+                <div class="p-4 flex-grow-1 overflow-auto d-flex flex-column gap-3" id="chatMessagesBox" style="max-height: 380px; background: rgba(0, 0, 0, 0.005);">
+                    {% if chat_history %}
+                        {% for msg in chat_history %}
+                            {% if msg.sender == 'farmer' %}
+                            <!-- User Message -->
+                            <div class="d-flex flex-column align-items-end mb-2">
+                                <div class="p-3 bubble-user" style="max-width: 80%;">
+                                    <span class="d-block" style="font-size: 0.95rem; line-height: 1.5;">{{ msg.text }}</span>
+                                </div>
+                                <span class="text-muted small mt-1" style="font-size: 0.7rem;">{{ t.assistant.sender_farmer }}</span>
+                            </div>
+                            {% else %}
+                            <!-- AI Message -->
+                            <div class="d-flex flex-column align-items-start mb-2">
+                                <div class="p-3 rounded-3 border" style="background: var(--bg-sidebar); border-color: var(--border-card) !important; max-width: 80%; border-radius: 16px 16px 16px 0 !important;">
+                                    <span class="d-block ai-msg-text" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">{{ msg.text }}</span>
+                                </div>
+                                <span class="text-muted small mt-1" style="font-size: 0.7rem;">{{ t.assistant.sender_ai }}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <!-- Empty chat placeholder -->
+                        <div class="text-center py-5 text-muted my-auto">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-bw mb-3">
+                                <path d="M12 8V4H8"/>
+                                <rect width="16" height="12" x="4" y="8" rx="2"/>
+                                <path d="M2 14h2"/>
+                                <path d="M20 14h2"/>
+                                <path d="M15 13v2"/>
+                                <path d="M9 13v2"/>
+                            </svg>
+                            <p class="fw-bold m-0 chat-empty-title">{{ t.assistant.chat_empty_title }}</p>
+                            <p class="text-muted small">{{ t.assistant.chat_empty_desc }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Chat Input Form -->
+                <div class="p-3 border-top" style="border-color: var(--border-card) !important; background: rgba(0, 0, 0, 0.01);">
+                    <form method="post" action="" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="submit_chat" value="1">
+                        <input type="text" name="question" id="chatInputBox" class="form-control py-2.5" placeholder="{{ t.assistant.input_placeholder }}" style="border-radius: 10px;" required autocomplete="off">
+                        <button type="submit" class="btn btn-bw px-4 fw-bold d-flex align-items-center justify-content-center gap-1" style="border-radius: 10px; white-space: nowrap;">
+                            {{ t.assistant.send_btn }}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <span class="small text-muted d-block mb-2 fw-bold">💡 {{ t.assistant.chips_label }}</span>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="chip-bw" onclick="selectQuickQuery('Why did my leaves start turning yellow?')">{{ t.assistant.chip_yellow }}</button>
+                            <button type="button" class="chip-bw" onclick="selectQuickQuery('Which fertilizer should I apply for better fruiting?')">{{ t.assistant.chip_fruiting }}</button>
+                            <button type="button" class="chip-bw" onclick="selectQuickQuery('What are organic remedies to cure leaf spot disease?')">{{ t.assistant.chip_organic }}</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Auto scroll chat box to bottom
+    window.addEventListener('DOMContentLoaded', () => {
+        const chatBox = document.getElementById('chatMessagesBox');
+        if (chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+
+    function selectQuickQuery(query) {
+        const input = document.getElementById('chatInputBox');
+        if (input) {
+            input.value = query;
+            input.focus();
+        }
+    }
+
+    // Step wizard active step track state
+    let currentStep = 1;
+
+    function showStep(stepNum) {
+        // Hide all steps
+        document.querySelectorAll('.interview-step').forEach(step => {
+            step.style.setProperty('display', 'none', 'important');
+        });
+        
+        // Show target step
+        const targetStep = document.getElementById('step-' + stepNum);
+        if (targetStep) {
+            targetStep.style.setProperty('display', 'block', 'important');
+        }
+        
+        // Update progress indicators (step completes highlight)
+        for (let i = 1; i <= 4; i++) {
+            const ind = document.getElementById('stepIndicator-' + i);
+            if (ind) {
+                if (i <= stepNum) {
+                    ind.style.backgroundColor = 'var(--primary)';
+                } else {
+                    ind.style.backgroundColor = 'var(--border-card)';
+                }
+            }
+        }
+        
+        currentStep = stepNum;
+    }
+
+    function nextStep() {
+        if (currentStep < 4) {
+            showStep(currentStep + 1);
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
+        }
+    }
+
+    // Custom select option logic to style selection and update hidden inputs
+    function selectCustomOption(inputId, optionClass, element) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.value = element.getAttribute('data-value');
+        }
+        
+        // Remove active class from all sibling options
+        document.querySelectorAll('.' + optionClass).forEach(opt => {
+            opt.classList.remove('active');
+        });
+        
+        // Add active class to clicked element
+        element.classList.add('active');
+
+        // Dynamic badge update if crop is selected
+        if (inputId === 'cropSelectValue') {
+            const cropLabel = element.textContent.trim();
+            document.querySelectorAll('.selected-crop-label-placeholder').forEach(el => {
+                el.textContent = cropLabel;
+            });
+        }
+
+        // Auto-advance slider/wizard to the next step after a tiny delay
+        setTimeout(() => {
+            if (inputId === 'cropSelectValue') {
+                nextStep();
+            } else if (inputId === 'soilTypeSelectValue') {
+                nextStep();
+            } else if (inputId === 'stageSelectValue') {
+                nextStep();
+            }
+        }, 280);
+    }
+
+    // Live search filter for custom 100-crop listbox
+    function filterCrops(query) {
+        const container = document.getElementById('cropCustomListBox');
+        const countEl = document.getElementById('cropCount');
+        if (!container) return;
+        const q = query.trim().toLowerCase();
+        let visible = 0;
+        
+        const options = container.querySelectorAll('.crop-option');
+        options.forEach(opt => {
+            const label = opt.getAttribute('data-label').toLowerCase();
+            const matches = !q || label.includes(q);
+            if (matches) {
+                opt.style.setProperty('display', 'block', 'important');
+                visible++;
+            } else {
+                opt.style.setProperty('display', 'none', 'important');
+            }
+        });
+        
+        if (countEl) {
+            const showingAllText = "{{ t.assistant.crop_count_all }}";
+            const suffixText = "{{ t.assistant.crop_count_suffix }}";
+            countEl.textContent = q
+                ? `${visible} match "${query}"`
+                : `${showingAllText} ${visible} ${suffixText}`;
+        }
+        
+        // Auto-select if only 1 matching result remains
+        if (visible === 1) {
+            const match = Array.from(options).find(opt => opt.style.display !== 'none');
+            if (match) {
+                selectCustomOption('cropSelectValue', 'crop-option', match);
+            }
+        }
+    }
+
+    // Validates that all 4 inputs have values selected before form submit
+    function validateForm(event) {
+        const crop = document.getElementById('cropSelectValue').value;
+        const soil = document.getElementById('soilTypeSelectValue').value;
+        const stage = document.getElementById('stageSelectValue').value;
+        const weather = document.getElementById('weatherSelectValue').value;
+        
+        if (!crop || !soil || !stage || !weather) {
+            event.preventDefault();
+            let msg = "Please answer all 4 questions before initializing the chatbot.";
+            const lang = "{{ current_language }}";
+            if (lang === 'gu') {
+                msg = "કૃપા કરીને ચેટબોટ શરૂ કરતા પહેલા તમામ 4 પ્રશ્નોના જવાબ આપો.";
+            } else if (lang === 'hi') {
+                msg = "कृपया चैटबॉट शुरू करने से पहले सभी 4 प्रश्नों के उत्तर दें।";
+            }
+            alert(msg);
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}

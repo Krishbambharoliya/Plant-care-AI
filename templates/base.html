@@ -516,6 +516,26 @@
             background-color: #ffffff !important;
             color: #111827 !important;
         }
+
+        /* ── Header active feature status button ── */
+        .header-feature-btn {
+            border-color: var(--border-card) !important;
+            color: var(--text-primary) !important;
+            background-color: var(--bg-card) !important;
+            cursor: pointer;
+            transition: all 0.25s ease-in-out;
+            user-select: none;
+        }
+        .header-feature-btn:hover {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border-color: #000000 !important;
+        }
+        html.dark .header-feature-btn:hover {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border-color: #ffffff !important;
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -569,12 +589,17 @@
 
             <a href="{% url 'recovery_list' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'recovery_list' or request.resolver_match.url_name == 'recovery_detail' or request.resolver_match.url_name == 'recovery_checkin' %}active{% endif %}">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Plant Recovery</span>
+                <span>{{ t.nav.recovery|default:"Plant Recovery" }}</span>
+            </a>
+
+            <a href="{% url 'assistant' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'assistant' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                <span>{{ t.nav.assistant|default:"AI Assistant" }}</span>
             </a>
 
             <a href="{% url 'history' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>History Logs</span>
+                <span>{{ t.nav.history|default:"History Logs" }}</span>
             </a>
 
             <a href="{% url 'profile_settings' %}" class="nav-link-custom {% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">
@@ -602,18 +627,63 @@
 
     <!-- Wrapper content -->
     <main class="{% if request.user.is_authenticated %}main-content{% else %}container-fluid p-0{% endif %} d-flex flex-column min-vh-100">
+        {% if request.user.is_authenticated %}
+        <!-- Active Feature Top-Left Indicator Button -->
+        <div class="d-flex justify-content-start mb-2 px-1 pt-2">
+            {% with url_name=request.resolver_match.url_name %}
+                <div class="btn btn-outline-dark fw-bold d-flex align-items-center gap-3 header-feature-btn" 
+                     style="border-radius: 12px; padding: 10px 20px; font-size: 1.1rem;">
+                    {% if url_name == 'dashboard' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">📊</span> {{ t.nav.dashboard|default:"Dashboard" }}
+                    {% elif url_name == 'scan_upload' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">📷</span> {{ t.nav.scan|default:"Identify Crop" }}
+                    {% elif url_name == 'weather_advisor' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">⛅</span> {{ t.nav.weather|default:"Weather Advisor" }}
+                    {% elif url_name == 'crop_library' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">📖</span> {{ t.nav.library|default:"Crop Details" }}
+                    {% elif url_name == 'recovery_list' or url_name == 'recovery_detail' or url_name == 'recovery_checkin' or url_name == 'recovery_start' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">🩹</span> {{ t.nav.recovery|default:"Plant Recovery" }}
+                    {% elif url_name == 'assistant' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">🤖</span> {{ t.nav.assistant|default:"AI Assistant" }}
+                    {% elif url_name == 'history' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">📜</span> {{ t.nav.history|default:"History Logs" }}
+                    {% elif url_name == 'profile_settings' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">⚙️</span> {{ t.nav.profile|default:"Settings" }}
+                    {% elif url_name == 'support' %}
+                        <span style="font-size: 1.8rem; line-height: 1;">✉️</span> {{ t.nav.support|default:"Support Form" }}
+                    {% else %}
+                        <span style="font-size: 1.8rem; line-height: 1;">🌱</span> PlantCare AI
+                    {% endif %}
+                </div>
+            {% endwith %}
+        </div>
+        {% endif %}
+
         <div class="d-flex flex-column flex-grow-1">
             {% block content %}{% endblock %}
         </div>
 
-        <!-- Standard Footer -->
-        <footer class="py-3 border-top mt-auto" style="border-color: var(--border-card) !important; background-color: var(--bg-sidebar);">
-            <div class="container-fluid d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 px-md-5">
-                <p class="m-0 text-muted" style="font-size: 0.85rem;">{{ t.footer.rights }}</p>
-                <div class="d-flex gap-4">
-                    <a href="#" class="footer-link">{{ t.footer.privacy }}</a>
-                    <a href="#" class="footer-link">{{ t.footer.terms }}</a>
-                    <a href="{% url 'support' %}" class="footer-link">{{ t.footer.support }}</a>
+        <!-- Premium Base Footer -->
+        <footer class="py-4 border-top mt-auto" style="border-color: var(--border-card) !important; background-color: var(--bg-sidebar); border-radius: 20px 20px 0 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.02); margin-top: 15px !important;">
+            <div class="container-fluid px-md-5">
+                <div class="row align-items-center justify-content-between g-3">
+                    <div class="col-md-4 text-center text-md-start">
+                        <div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start">
+                            <img src="/media/logo.png" alt="PlantCare Logo" width="24" height="24" style="border-radius: 4px; object-fit: cover;">
+                            <span class="fw-bold" style="letter-spacing: -0.2px;">PlantCare AI</span>
+                        </div>
+                        <p class="m-0 text-muted mt-1" style="font-size: 0.8rem;">© {% now "Y" %} PlantCare AI. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <span class="text-muted small">✉ Support: <a href="mailto:plantcare799@gmail.com" class="fw-bold text-decoration-none" style="color: var(--primary);">plantcare799@gmail.com</a></span>
+                    </div>
+                    <div class="col-md-4 text-center text-md-end">
+                        <div class="d-flex gap-3 justify-content-center justify-content-md-end text-muted small">
+                            <a href="{% url 'support' %}" class="text-decoration-none text-muted fw-bold">Support Form</a>
+                            <span>•</span>
+                            <span>Language: <strong>{{ current_language|upper }}</strong></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>
@@ -635,6 +705,20 @@
                 localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
             });
         })();
+
+        // Global Show/Hide Password Toggle Function
+        function togglePasswordVisibility() {
+            const passwordInputs = document.querySelectorAll('input[type="password"], input[data-is-password="true"]');
+            passwordInputs.forEach(input => {
+                if (input.type === "password") {
+                    input.type = "text";
+                    input.setAttribute('data-is-password', 'true');
+                } else if (input.type === "text" && input.getAttribute('data-is-password') === 'true') {
+                    input.type = "password";
+                }
+            });
+        }
+
     </script>
 </body>
 </html>

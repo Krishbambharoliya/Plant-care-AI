@@ -51,10 +51,37 @@ if (navigator.geolocation) {
 {% endblock %}
 
 {% block content %}
+<style>
+    .nav-tabs {
+        border-bottom: 2px solid var(--border-card) !important;
+    }
+    .nav-tabs .nav-link {
+        color: var(--text-muted) !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 10px 20px !important;
+        border-radius: 8px 8px 0 0 !important;
+        transition: all 0.3s ease !important;
+    }
+    .nav-tabs .nav-link:hover {
+        color: var(--primary) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: var(--primary) !important;
+        border-bottom: 3px solid var(--primary) !important;
+        background: rgba(16, 185, 129, 0.1) !important;
+        font-weight: 700 !important;
+    }
+    html.dark .nav-tabs .nav-link.active {
+        color: var(--primary) !important;
+        background: rgba(16, 185, 129, 0.15) !important;
+    }
+</style>
+
 <div class="d-flex flex-column gap-4 fade-in-up">
     <!-- Header title -->
     <div>
-        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.weather.title }}</h1>
         <p class="text-muted m-0">Analyze current micro-climates and predict crop suitability indexes</p>
     </div>
 

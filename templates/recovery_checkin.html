@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
-    <div class="glass-panel p-4 w-100" style="max-width: 520px;">
+    <div class="glass-panel p-4 w-100" style="max-width: 520px; border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
         <div class="text-center mb-4">
             <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Weekly Plant Check-in</h2>
             <p class="text-muted small mt-1">Upload a photo of {{ journey.plant_name }} to log its current growth status</p>
@@ -19,12 +19,38 @@
 
             <div class="form-group">
                 <label class="form-label fw-bold">Visible Symptoms / Plant State</label>
-                <textarea name="symptoms" class="form-control" rows="3" placeholder="e.g. Pale yellow spots appearing on bottom leaves, wilting stems, dry soil edges"></textarea>
+                <textarea name="symptoms" class="form-control" rows="2" placeholder="e.g. Pale yellow spots appearing on bottom leaves, wilting stems, dry soil edges"></textarea>
                 <small class="text-muted">Describe the symptoms or general appearance of the plant today</small>
             </div>
 
+            <div class="form-group">
+                <label class="form-label fw-bold">Farmer Observations / Custom Notes</label>
+                <textarea name="farmer_notes" class="form-control" rows="2" placeholder="e.g. Added mulch, sprayed neem oil, noticed new sprout growth"></textarea>
+                <small class="text-muted">Any specific observations or activities performed today</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold d-flex justify-content-between">
+                    <span>Recovery Progress (%)</span>
+                    <span id="sliderValueText" class="text-success fw-bold">0%</span>
+                </label>
+                <input type="range" name="recovery_percentage" class="form-range" min="0" max="100" value="0" id="recoveryProgressSlider" oninput="document.getElementById('sliderValueText').innerText = this.value + '%'; if(this.value == 100) { document.getElementById('isHealthyCheck').checked = true; } else { document.getElementById('isHealthyCheck').checked = false; }">
+                <small class="text-muted">Estimate how recovered/healthy the plant looks compared to starting phase</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">Pest Activity Level</label>
+                <select name="pest_activity" class="form-select">
+                    <option value="None" selected>None / કોઈ જીવાત નથી</option>
+                    <option value="Low">Low / ઓછી</option>
+                    <option value="Medium">Medium / મધ્યમ</option>
+                    <option value="High">High / વધારે</option>
+                </select>
+                <small class="text-muted">Presence of bugs or insects on the plant</small>
+            </div>
+
             <div class="form-group form-check mt-1">
-                <input type="checkbox" name="is_healthy" id="isHealthyCheck" class="form-check-input">
+                <input type="checkbox" name="is_healthy" id="isHealthyCheck" class="form-check-input" onchange="if(this.checked) { document.getElementById('recoveryProgressSlider').value = 100; document.getElementById('sliderValueText').innerText = '100%'; } else if (document.getElementById('recoveryProgressSlider').value == 100) { document.getElementById('recoveryProgressSlider').value = 0; document.getElementById('sliderValueText').innerText = '0%'; }">
                 <label for="isHealthyCheck" class="form-check-label fw-bold small">This plant has fully recovered and is healthy now!</label>
             </div>
 

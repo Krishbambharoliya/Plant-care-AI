@@ -10,7 +10,8 @@ from .views import (
     profile_settings_view, toggle_preference_view, download_scan_pdf,
     support_view, recovery_list_view, recovery_start_view,
     recovery_detail_view, recovery_checkin_view, recovery_pdf_export_view,
-    recovery_ask_view, history_view, all_crops_pdf_view, single_crop_pdf_view
+    recovery_ask_view, history_view, all_crops_pdf_view, single_crop_pdf_view,
+    assistant_view
 )
 
 urlpatterns = [
@@ -44,6 +45,7 @@ urlpatterns = [
     path('recovery/<int:journey_id>/checkin/', recovery_checkin_view, name='recovery_checkin'),
     path('recovery/<int:journey_id>/pdf/', recovery_pdf_export_view, name='recovery_pdf'),
     path('recovery/<int:journey_id>/ask/', recovery_ask_view, name='recovery_ask'),
+    path('assistant/', assistant_view, name='assistant'),
 
 
 

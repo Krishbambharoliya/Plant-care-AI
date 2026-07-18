@@ -11,13 +11,19 @@ class ScanHistorySerializer(serializers.ModelSerializer):
             'id', 'user', 'image', 'organ', 'identified_species',
             'identified_common_name', 'confidence_score', 'plantnet_raw_response',
             'matched_crop_name', 'disease_identified', 'is_healthy',
+            'severity', 'treatment_type', 'treatment_organic_recommendation',
+            'treatment_chemical_recommendation', 'treatment_dosage',
+            'treatment_application_method',
             'fertilizer_recommendation', 'latitude', 'longitude', 'created_at',
             'localized_crop_name', 'localized_disease_name'
         ]
         read_only_fields = [
             'id', 'user', 'identified_species', 'identified_common_name',
             'confidence_score', 'plantnet_raw_response', 'matched_crop_name',
-            'disease_identified', 'is_healthy', 'fertilizer_recommendation', 'created_at',
+            'disease_identified', 'is_healthy', 'severity', 'treatment_type',
+            'treatment_organic_recommendation', 'treatment_chemical_recommendation',
+            'treatment_dosage', 'treatment_application_method',
+            'fertilizer_recommendation', 'created_at',
             'localized_crop_name', 'localized_disease_name'
         ]
 

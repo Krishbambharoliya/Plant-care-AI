@@ -33,6 +33,12 @@
             <div class="form-group m-0">
                 <label class="form-label">{{ t.auth.password }}</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="showPasswordCheck" onclick="togglePasswordVisibility()">
+                    <label class="form-check-label text-muted small" for="showPasswordCheck" style="cursor: pointer;">
+                        Show Password / પાસવર્ડ બતાવો / पासवर्ड दिखाएं
+                    </label>
+                </div>
             </div>
 
             <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">

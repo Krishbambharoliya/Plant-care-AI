@@ -303,6 +303,9 @@ def dashboard_view(request):
         except Exception:
             pass
 
+    from accounts.models import RecoveryTracker
+    journeys = RecoveryTracker.objects.filter(user=request.user)
+
     context = {
         'total': total,
         'healthy_count': healthy_count,
@@ -314,6 +317,7 @@ def dashboard_view(request):
         'page_obj': page_obj,
         'weather': weather_data,
         'user_city': user_city,
+        'journeys': journeys,
     }
     return render(request, 'dashboard.html', context)
 
@@ -698,6 +702,72 @@ def scan_upload_view(request):
         crop_obj.localized_name = get_localized_crop_name(crop_obj.name, lang)
     if result:
         result.localized_crop_name = get_localized_crop_name(result.matched_crop_name, lang)
+        
+        # Self-healing check for empty or None/N/A values on diseased scans
+        if not result.is_healthy:
+            needs_save = False
+            if not result.severity or result.severity in ['N/A', 'None']:
+                if result.confidence_score < 0.6:
+                    result.severity = "Mild"
+                elif result.confidence_score < 0.85:
+                    result.severity = "Moderate"
+                else:
+                    result.severity = "Severe"
+                needs_save = True
+                
+            if not result.treatment_type or result.treatment_type in ['None', 'N/A']:
+                result.treatment_type = "Organic & Chemical"
+                needs_save = True
+                
+            disease_name = result.disease_identified or (result.matched_crop_name + " Leaf Spot")
+            dis_name_lower = disease_name.lower()
+            
+            if not result.treatment_organic_recommendation or result.treatment_organic_recommendation in ['None', 'N/A']:
+                if "spot" in dis_name_lower:
+                    result.treatment_organic_recommendation = "Neem oil spray, Trichoderma viride compost mix"
+                elif "mildew" in dis_name_lower:
+                    result.treatment_organic_recommendation = "Potassium bicarbonate spray, compost tea"
+                elif "blight" in dis_name_lower:
+                    result.treatment_organic_recommendation = "Trichoderma bio-agents, compost mulch layers"
+                else:
+                    result.treatment_organic_recommendation = "Neem oil solution, well-decomposed organic manure"
+                needs_save = True
+                
+            if not result.treatment_chemical_recommendation or result.treatment_chemical_recommendation in ['None', 'N/A']:
+                if "spot" in dis_name_lower:
+                    result.treatment_chemical_recommendation = "Copper Oxychloride or Mancozeb Fungicide spray"
+                elif "mildew" in dis_name_lower:
+                    result.treatment_chemical_recommendation = "Wettable Sulfur fungicide formulation"
+                elif "blight" in dis_name_lower:
+                    result.treatment_chemical_recommendation = "Metalaxyl or Mancozeb pesticide application"
+                else:
+                    result.treatment_chemical_recommendation = "Broad-spectrum systemic fungicide"
+                needs_save = True
+                
+            if not result.treatment_dosage or result.treatment_dosage in ['None', 'N/A', 'As indicated']:
+                if "spot" in dis_name_lower:
+                    result.treatment_dosage = "2 grams per liter of water"
+                elif "mildew" in dis_name_lower:
+                    result.treatment_dosage = "3 grams per liter of water"
+                elif "blight" in dis_name_lower:
+                    result.treatment_dosage = "2.5 grams per liter of water"
+                else:
+                    result.treatment_dosage = "5 ml per liter of water"
+                needs_save = True
+                
+            if not result.treatment_application_method or result.treatment_application_method in ['None', 'N/A', 'Foliar spray']:
+                if "spot" in dis_name_lower:
+                    result.treatment_application_method = "Foliar spray directly on affected leaves early in the morning"
+                elif "mildew" in dis_name_lower:
+                    result.treatment_application_method = "Foliar spray thoroughly covering top and bottom surfaces of leaves"
+                elif "blight" in dis_name_lower:
+                    result.treatment_application_method = "Foliar spray at 10-day intervals during wet periods"
+                else:
+                    result.treatment_application_method = "Foliar spray directly on infected crop margins"
+                needs_save = True
+                
+            if needs_save:
+                result.save()
         
         # Localize disease title dynamically
         if not result.is_healthy and result.disease_identified:
@@ -1476,12 +1546,19 @@ def recovery_start_view(request):
     if request.method == "POST":
         plant_name = request.POST.get('plant_name', '').strip()
         crop_type = request.POST.get('crop_type', '').strip()
+        watering_frequency = request.POST.get('watering_frequency', 'Once a day').strip()
+        estimated_recovery_weeks = int(request.POST.get('estimated_recovery_weeks', 4))
+        light_requirement = request.POST.get('light_requirement', 'Direct Sunlight').strip()
+        
         if plant_name:
             from accounts.models import RecoveryTracker
             RecoveryTracker.objects.create(
                 user=request.user,
                 plant_name=plant_name,
                 crop_type=crop_type,
+                watering_frequency=watering_frequency,
+                estimated_recovery_weeks=estimated_recovery_weeks,
+                light_requirement=light_requirement,
                 status='ongoing'
             )
             return redirect('recovery_list')
@@ -1530,7 +1607,10 @@ def recovery_checkin_view(request, journey_id):
     if request.method == "POST":
         image = request.FILES.get('image')
         symptoms = request.POST.get('symptoms', '').strip()
-        is_healthy = request.POST.get('is_healthy') == 'on'
+        farmer_notes = request.POST.get('farmer_notes', '').strip()
+        recovery_percentage = int(request.POST.get('recovery_percentage', 0))
+        pest_activity = request.POST.get('pest_activity', 'None').strip()
+        is_healthy = request.POST.get('is_healthy') == 'on' or recovery_percentage == 100
         
         if image:
             week_num = journey.checkins.count() + 1
@@ -1556,6 +1636,9 @@ def recovery_checkin_view(request, journey_id):
                 week_number=week_num,
                 image=image,
                 symptoms=symptoms,
+                farmer_notes=farmer_notes,
+                recovery_percentage=recovery_percentage,
+                pest_activity=pest_activity,
                 care_advice=care_advice,
                 is_healthy=is_healthy
             )
@@ -1635,6 +1718,9 @@ def recovery_pdf_export_view(request, journey_id):
     pdf.set_font('Helvetica', '', 10)
     pdf.cell(0, 6, f"Start Date: {journey.start_date.strftime('%Y-%m-%d')}", new_x='LMARGIN', new_y='NEXT')
     pdf.cell(0, 6, f"Current Status: {journey.get_status_display()}", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 6, f"Watering Frequency: {journey.watering_frequency}", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 6, f"Light Requirement: {journey.light_requirement}", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 6, f"Estimated Recovery Timeframe: {journey.estimated_recovery_weeks} weeks", new_x='LMARGIN', new_y='NEXT')
     pdf.cell(0, 6, f"Total Weeks Recorded: {checkins.count()} week(s)", new_x='LMARGIN', new_y='NEXT')
     pdf.ln(5)
     
@@ -1645,16 +1731,19 @@ def recovery_pdf_export_view(request, journey_id):
     
     for c in checkins:
         pdf.set_draw_color(200, 200, 200)
-        pdf.rect(10, pdf.get_y(), 190, 45)
+        # Allocate height
+        pdf.rect(10, pdf.get_y(), 190, 52)
         pdf.set_x(12)
         pdf.set_y(pdf.get_y() + 2)
         pdf.set_font('Helvetica', 'B', 11)
-        pdf.cell(0, 6, f"Week {c.week_number} Check-in (Date: {c.checkin_date.strftime('%Y-%m-%d')})", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 6, f"Week {c.week_number} Check-in (Date: {c.checkin_date.strftime('%Y-%m-%d')}) - Progress: {c.recovery_percentage}%", new_x='LMARGIN', new_y='NEXT')
         pdf.set_font('Helvetica', '', 10)
         
-        # Symptoms & Advice text
+        # Symptoms, notes & pest activity
         symptom_text = c.symptoms or "No specific symptoms reported."
         pdf.cell(0, 6, f"Symptoms: {symptom_text}", new_x='LMARGIN', new_y='NEXT')
+        notes_text = c.farmer_notes or "None"
+        pdf.cell(0, 6, f"Farmer Notes: {notes_text} | Pest Activity: {c.pest_activity}", new_x='LMARGIN', new_y='NEXT')
         
         # Care advice
         pdf.set_font('Helvetica', 'B', 9)
@@ -1666,7 +1755,7 @@ def recovery_pdf_export_view(request, journey_id):
         status_lbl = "Status: Healthy / Recovered" if c.is_healthy else "Status: recovering / sick"
         pdf.set_font('Helvetica', 'B', 9)
         pdf.cell(0, 5, status_lbl, new_x='LMARGIN', new_y='NEXT')
-        pdf.ln(4)
+        pdf.ln(5)
 
     buffer = io.BytesIO()
     pdf.output(buffer)
@@ -1815,5 +1904,318 @@ def single_crop_pdf_view(request, crop_id):
     pdf.output(buffer)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"{crop.name.lower()}_details.pdf")
+
+
+@login_required
+def assistant_view(request):
+    # Check if we should clear session context
+    if request.GET.get('reset') == '1':
+        if 'assistant_crop' in request.session: del request.session['assistant_crop']
+        if 'assistant_soil_type' in request.session: del request.session['assistant_soil_type']
+        if 'assistant_stage' in request.session: del request.session['assistant_stage']
+        if 'assistant_weather' in request.session: del request.session['assistant_weather']
+        if 'chat_history' in request.session: del request.session['chat_history']
+        return redirect('assistant')
+
+    # Jump direct from scan parameters
+    scan_crop = request.GET.get('crop')
+    if scan_crop:
+        request.session['assistant_crop'] = scan_crop
+        request.session['assistant_soil_type'] = request.user.soil_type or "Loamy Soil"
+        request.session['assistant_stage'] = "Vegetative"
+        request.session['assistant_weather'] = "Mild & Cloudy (24°C - 28°C)"
+        if 'chat_history' in request.session: del request.session['chat_history']
+
+    # Handle post requests
+    if request.method == "POST":
+        # Check if submitting interview form
+        if 'submit_interview' in request.POST:
+            request.session['assistant_crop'] = request.POST.get('crop', '').strip()
+            request.session['assistant_soil_type'] = request.POST.get('soil_type', '').strip()
+            request.session['assistant_stage'] = request.POST.get('stage', '').strip()
+            request.session['assistant_weather'] = request.POST.get('weather', '').strip()
+            request.session['chat_history'] = []
+            return redirect('assistant')
+
+        # Check if submitting chat question
+        elif 'submit_chat' in request.POST:
+            question = request.POST.get('question', '').strip()
+            if question:
+                chat_history = request.session.get('chat_history', [])
+                
+                # Retrieve context
+                crop = request.session.get('assistant_crop', 'General Crop')
+                soil_type = request.session.get('assistant_soil_type', 'Loamy Soil')
+                stage = request.session.get('assistant_stage', 'Vegetative')
+                weather = request.session.get('assistant_weather', 'Normal Weather')
+                
+                # Determine target language for Gemini response
+                lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+                lang_map = {
+                    'en': 'English',
+                    'hi': 'Hindi',
+                    'gu': 'Gujarati'
+                }
+                target_lang = lang_map.get(lang, 'English')
+                
+                # Build prompt context
+                system_prompt = (
+                    f"You are an expert agricultural AI farming advisor. "
+                    f"Context:\n- Crop: {crop}\n- Soil Type: {soil_type}\n- Growth Stage: {stage}\n- Weather/Environment: {weather}\n\n"
+                    f"Answer the farmer's question in simple, friendly, and practical language, specifically tailored to the crop, soil, stage, and weather conditions above. "
+                    f"At the end of your response, always ask 1 or 2 relevant clarifying questions to help guide the farmer further.\n"
+                    f"CRITICAL: You must write your entire response (including clarifying questions) strictly in the {target_lang} language."
+                )
+                
+                # Format messages for Gemini API contents structure
+                contents = []
+                # First append the system context
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": system_prompt}]
+                })
+                contents.append({
+                    "role": "model",
+                    "parts": [{"text": "Understood. I will act as the AI Farming Advisor for this context. Please tell me what questions you have about your crop."}]
+                })
+                
+                # Append history
+                for msg in chat_history:
+                    contents.append({
+                        "role": "user" if msg['sender'] == 'farmer' else "model",
+                        "parts": [{"text": msg['text']}]
+                    })
+                
+                # Append current question
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": question}]
+                })
+                
+                # Call Gemini API
+                api_key = getattr(settings, 'GEMINI_API_KEY', '')
+                models_to_try = [
+                    "gemini-3.1-flash-lite",
+                    "gemini-1.5-flash",
+                    "gemini-1.5-pro"
+                ]
+                
+                answer = "I am sorry, but I was unable to connect to the generative AI service. Please verify your connection and try again."
+                for model_id in models_to_try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
+                    headers = {"Content-Type": "application/json"}
+                    payload = {"contents": contents}
+                    try:
+                        import requests
+                        response = requests.post(url, json=payload, headers=headers, timeout=15)
+                        if response.status_code == 200:
+                            res_json = response.json()
+                            candidates = res_json.get('candidates', [])
+                            if candidates:
+                                parts = candidates[0].get('content', {}).get('parts', [])
+                                if parts:
+                                    answer = parts[0].get('text', '')
+                                    break
+                    except Exception:
+                        pass
+                
+                # Update chat history
+                chat_history.append({'sender': 'farmer', 'text': question})
+                chat_history.append({'sender': 'ai', 'text': answer})
+                request.session['chat_history'] = chat_history
+                
+            return redirect('assistant')
+
+    # Check if context exists
+    has_context = all(k in request.session for k in ['assistant_crop', 'assistant_soil_type', 'assistant_stage', 'assistant_weather'])
+
+    # Load all crops from database and build display labels with Gujarati names
+    from library.models import Crop
+    gu_names = {
+        "Rice": "ચોખા", "Wheat": "ઘઉં", "Maize": "મકાઈ",
+        "Pearl Millet (Bajra)": "બાજરો", "Sorghum (Jowar)": "જુવાર",
+        "Finger Millet (Ragi)": "નાગલી", "Foxtail Millet": "કાંગ",
+        "Little Millet": "સાવા", "Kodo Millet": "કોદો",
+        "Barnyard Millet": "સ્વામ", "Proso Millet": "ચેણા", "Teff": "ટેફ",
+        "Barley": "જવ", "Oat": "ઓટ", "Rye": "રાઈ",
+        "Chickpea": "ચણા", "Pigeon Pea (Tur)": "તુવેર",
+        "Green Gram (Moong)": "મગ", "Black Gram (Urad)": "અડદ",
+        "Lentil": "મસૂર", "Cowpea": "ચોળા", "Field Pea": "ફળી",
+        "Horse Gram": "કુળથ", "Moth Bean": "મઠ", "Lablab Bean": "વાલ",
+        "Soybean": "સોયા", "Groundnut": "મગફળી", "Mustard": "સરસો",
+        "Rapeseed": "રાઈ", "Sesame": "તલ", "Sunflower": "સૂર્યમુખી",
+        "Castor": "દિવેલ", "Linseed": "અળસી", "Safflower": "કેસૂફ",
+        "Niger": "રામ-તલ", "Cotton": "કપાસ", "Jute": "શણ",
+        "Mesta": "મેસ્તા", "Sunn Hemp": "સન", "Sugarcane": "શેરડી",
+        "Sugar Beet": "ખાંડ-ચૂકંદર", "Potato": "બટાકા", "Tomato": "ટામેટા",
+        "Brinjal": "રીંગણ", "Chilli": "મરચું", "Bell Pepper": "શિમલા",
+        "Onion": "ડુંગળી", "Garlic": "લસણ", "Okra": "ભીંડા",
+        "Cabbage": "કોબી", "Cauliflower": "ફ્લાવર", "Broccoli": "બ્રોકોલી",
+        "Carrot": "ગાજર", "Radish": "મૂળા", "Beetroot": "બીટ",
+        "Spinach": "પાલક", "Coriander": "ધાણા", "Fenugreek": "મેથી",
+        "Lettuce": "સલાડ", "Cucumber": "કાકડી", "Pumpkin": "કોળું",
+        "Bottle Gourd": "દૂધી", "Bitter Gourd": "કારેલા",
+        "Ridge Gourd": "તૂરીઓ", "Sponge Gourd": "ઘિયા",
+        "Ash Gourd": "ભૂખ", "Watermelon": "તરબૂચ", "Muskmelon": "ખરબૂજ",
+        "Papaya": "પપૈયા", "Banana": "કેળા", "Mango": "કેરી",
+        "Guava": "જામફળ", "Sapota": "ચીકૂ", "Pomegranate": "દાડમ",
+        "Grapes": "દ્રાક્ષ", "Apple": "સફરજન", "Orange": "સંતરા",
+        "Lemon": "લીંબુ", "Sweet Lime": "મોસંબી", "Coconut": "નારિયળ",
+        "Arecanut": "સોપારી", "Cashew": "કાજુ", "Tea": "ચા",
+        "Coffee": "કોફી", "Rubber": "રબર", "Black Pepper": "મરી",
+        "Cardamom": "એલચી", "Clove": "લવિંગ", "Cinnamon": "તજ",
+        "Turmeric": "હળદર", "Ginger": "આદું", "Cumin": "જીરું",
+        "Fennel": "વરીયાળી", "Ajwain": "અજમો", "Dill": "સુવા",
+        "Mint": "ફૂદીનો", "Aloe Vera": "કુંવારપાઠ", "Tulsi": "તુળસી",
+        "Stevia": "સ્ટેવિયા", "Isabgol (Psyllium)": "ઈસબગોળ",
+    }
+    
+    hi_names = {
+        "Rice": "चावल", "Wheat": "गेहूं", "Maize": "मक्का",
+        "Pearl Millet (Bajra)": "बाजरा", "Sorghum (Jowar)": "ज्वार",
+        "Finger Millet (Ragi)": "रागी", "Foxtail Millet": "कंगनी",
+        "Little Millet": "कुटकी", "Kodo Millet": "कोदो बाजरा",
+        "Barnyard Millet": "सांवा", "Proso Millet": "चेना", "Teff": "टेफ",
+        "Barley": "जौ", "Oat": "जई", "Rye": "राई",
+        "Chickpea": "चना", "Pigeon Pea (Tur)": "अरहर (तुअर)",
+        "Green Gram (Moong)": "मूंग", "Black Gram (Urad)": "उड़द",
+        "Lentil": "मसूर", "Cowpea": "लोबिया", "Field Pea": "हरी मटर",
+        "Horse Gram": "कुलथी", "Moth Bean": "मोठ", "Lablab Bean": "सेम",
+        "Soybean": "सोयाबीन", "Groundnut": "मूंगफली", "Mustard": "सरसों",
+        "Rapeseed": "तोरिया", "Sesame": "तिल", "Sunflower": "सूरजमुखी",
+        "Castor": "अरंडी", "Linseed": "अलसी", "Safflower": "कुसुम",
+        "Niger": "रामतिल", "Cotton": "कपास", "Jute": "पटसन",
+        "Mesta": "मेस्टा", "Sunn Hemp": "सनहेम्प", "Sugarcane": "गन्ना",
+        "Sugar Beet": "चुकंदर", "Potato": "आलू", "Tomato": "टमाटर",
+        "Brinjal": "बैंगन", "Chilli": "मिर्च", "Bell Pepper": "शिमला मिर्च",
+        "Onion": "प्याज़", "Garlic": "लहसुन", "Okra": "भिंडी",
+        "Cabbage": "पत्तागोभी", "Cauliflower": "फूलगोभी", "Broccoli": "ब्रोकोली",
+        "Carrot": "गाजर", "Radish": "मूली", "Beetroot": "चुकंदर",
+        "Spinach": "पालक", "Coriander": "धनिया", "Fenugreek": "मेथी",
+        "Lettuce": "सलाद पत्ता", "Cucumber": "खीरा", "Pumpkin": "कद्दू",
+        "Bottle Gourd": "लौकी", "Bitter Gourd": "करेला",
+        "Ridge Gourd": "तुरई", "Sponge Gourd": "गिल्की",
+        "Ash Gourd": "पेठा", "Watermelon": "तरबूज", "Muskmelon": "खरबूजा",
+        "Papaya": "पपीता", "Banana": "केला", "Mango": "आम",
+        "Guava": "अमरूद", "Sapota": "चीकू", "Pomegranate": "अनार",
+        "Grapes": "अंगूर", "Apple": "सेब", "Orange": "संतरा",
+        "Lemon": "नींबू", "Sweet Lime": "मौसंबी", "Coconut": "नारियल",
+        "Arecanut": "सुपारी", "Cashew": "काजू", "Tea": "चाय",
+        "Coffee": "कॉफ़ी", "Rubber": "रबर", "Black Pepper": "काली मिर्च",
+        "Cardamom": "इलायची", "Clove": "लौंग", "Cinnamon": "दालचीनी",
+        "Turmeric": "हल्दी", "Ginger": "अदरक", "Cumin": "जीरा",
+        "Fennel": "सौंफ", "Ajwain": "अजवाइन", "Dill": "सोया साग",
+        "Mint": "पुदीना", "Aloe Vera": "घृतकुमारी (एलोवेरा)", "Tulsi": "तुलसी",
+        "Stevia": "स्टीविया", "Isabgol (Psyllium)": "ईसबगोल",
+    }
+    
+    lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    
+    all_crops_qs = Crop.objects.all().order_by('name')
+    crops_list = []
+    for c in all_crops_qs:
+        if lang == 'gu':
+            label = gu_names.get(c.name) or c.name
+        elif lang == 'hi':
+            label = hi_names.get(c.name) or c.name
+        else:
+            label = c.name
+        crops_list.append({'value': c.name, 'label': label})
+
+    raw_crop = request.session.get('assistant_crop', '')
+    raw_soil = request.session.get('assistant_soil_type', '')
+    raw_stage = request.session.get('assistant_stage', '')
+    raw_weather = request.session.get('assistant_weather', '')
+
+    if lang == 'gu':
+        display_crop = gu_names.get(raw_crop) or raw_crop
+    elif lang == 'hi':
+        display_crop = hi_names.get(raw_crop) or raw_crop
+    else:
+        display_crop = raw_crop
+
+    soil_map = {
+        'en': {
+            'Loamy Soil': 'Loamy Soil',
+            'Clayey Soil': 'Clayey Soil',
+            'Sandy Soil': 'Sandy Soil',
+            'Black Cotton Soil': 'Black Cotton Soil',
+            'Red Soil': 'Red Soil'
+        },
+        'hi': {
+            'Loamy Soil': 'दोमट मिट्टी',
+            'Clayey Soil': 'चिकनी मिट्टी',
+            'Sandy Soil': 'रेतीली मिट्टी',
+            'Black Cotton Soil': 'काली कपास मिट्टी',
+            'Red Soil': 'लाल मिट्टी'
+        },
+        'gu': {
+            'Loamy Soil': 'લોમી જમીન',
+            'Clayey Soil': 'ચિકણી જમીન',
+            'Sandy Soil': 'રેતાળ જમીન',
+            'Black Cotton Soil': 'કાળી કપાસ જમીન',
+            'Red Soil': 'લાલ જમીન'
+        }
+    }
+
+    stage_map = {
+        'en': {
+            'Seedling': 'Seedling',
+            'Vegetative': 'Vegetative',
+            'Flowering': 'Flowering',
+            'Fruiting': 'Fruiting',
+            'Harvesting': 'Harvesting'
+        },
+        'hi': {
+            'Seedling': 'बीज अवस्था',
+            'Vegetative': 'वनस्पति विकास',
+            'Flowering': 'फूल अवस्था',
+            'Fruiting': 'फल / कंद अवस्था',
+            'Harvesting': 'कटाई अवस्था'
+        },
+        'gu': {
+            'Seedling': 'બીજ અવસ્થા',
+            'Vegetative': 'વનસ્પતિ વિકાસ',
+            'Flowering': 'ફૂલ અવસ્થા',
+            'Fruiting': 'ફળ / કંદ અવસ્થા',
+            'Harvesting': 'કાપણી અવસ્થા'
+        }
+    }
+
+    weather_map = {
+        'en': {
+            'Hot & Dry (32°C - 38°C)': 'Hot & Dry (32°C - 38°C)',
+            'Mild & Cloudy (24°C - 28°C)': 'Mild & Cloudy (24°C - 28°C)',
+            'Rainy & Wet (Warm & Humid)': 'Rainy & Wet (Warm & Humid)',
+            'Cold & Humid (12°C - 18°C)': 'Cold & Humid (12°C - 18°C)'
+        },
+        'hi': {
+            'Hot & Dry (32°C - 38°C)': 'गरम और सूखा',
+            'Mild & Cloudy (24°C - 28°C)': 'हल्का और बादलवाला',
+            'Rainy & Wet (Warm & Humid)': 'बरसात और गीला',
+            'Cold & Humid (12°C - 18°C)': 'ठंडा और आर्द्र'
+        },
+        'gu': {
+            'Hot & Dry (32°C - 38°C)': 'ગરમ અને સૂકું',
+            'Mild & Cloudy (24°C - 28°C)': 'હળવું અને વાદળિયું',
+            'Rainy & Wet (Warm & Humid)': 'વરસાદી અને ભીનું',
+            'Cold & Humid (12°C - 18°C)': 'ઠંડું અને ભેજવાળું'
+        }
+    }
+
+    display_soil = soil_map.get(lang, soil_map['en']).get(raw_soil, raw_soil)
+    display_stage = stage_map.get(lang, stage_map['en']).get(raw_stage, raw_stage)
+    display_weather = weather_map.get(lang, weather_map['en']).get(raw_weather, raw_weather)
+
+    context = {
+        'has_context': has_context,
+        'crop_name': display_crop,
+        'soil_type': display_soil,
+        'stage': display_stage,
+        'weather_desc': display_weather,
+        'chat_history': request.session.get('chat_history', []),
+        'crops_list': crops_list,
+    }
+    return render(request, 'assistant.html', context)
 
 

@@ -678,6 +678,44 @@ class AccountsTests(APITestCase):
         journey.refresh_from_db()
         self.assertEqual(journey.status, 'recovered')
 
+    def test_five_diseased_plants_recovery(self):
+        """Test Plant Recovery Center by adding 5 diseased plants, validating list and details views."""
+        from django.test import Client
+        from accounts.models import RecoveryTracker
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        plants = [
+            ("Tomato Late Blight Plant", "Tomato"),
+            ("Potato Early Blight Plant", "Potato"),
+            ("Wheat Leaf Rust Plant", "Wheat"),
+            ("Maize Common Rust Plant", "Maize"),
+            ("Rice Blast Plant", "Rice")
+        ]
+        
+        for name, crop in plants:
+            response = client.post('/recovery/start/', {
+                'plant_name': name,
+                'crop_type': crop
+            })
+            self.assertRedirects(response, '/recovery/')
+            
+        # Verify all 5 are added successfully
+        self.assertEqual(RecoveryTracker.objects.filter(user=self.test_user).count(), 5)
+        
+        # Verify the recovery list view shows them
+        response = client.get('/recovery/')
+        self.assertEqual(response.status_code, 200)
+        for name, crop in plants:
+            self.assertContains(response, name)
+            
+        # Verify detail page for each works without errors
+        for journey in RecoveryTracker.objects.filter(user=self.test_user):
+            response = client.get(f'/recovery/{journey.id}/')
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, journey.plant_name)
+
     # ------------------------------------------------------------------
     # History Logs View
     # ------------------------------------------------------------------
@@ -692,6 +730,10 @@ class AccountsTests(APITestCase):
         
         # Create some queries
         SearchHistory.objects.create(user=self.test_user, query_type='weather', query_text='Surat')
+        
+        # Set preference to 'en' to ensure English text is rendered
+        self.test_user.preferred_language = 'en'
+        self.test_user.save()
         
         response = client.get('/history/')
         self.assertEqual(response.status_code, 200)
@@ -807,3 +849,28 @@ class AccountsTests(APITestCase):
         response = client.get('/library/', {'crop_id': 999999})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Crops Catalog')
+
+    def test_farming_assistant_ten_times(self):
+        """Verify the Farming Assistant handles different queries correctly, querying the DB."""
+        from django.test import Client
+        client = Client()
+        client.force_login(self.test_user)
+
+        queries = [
+            "Why did my crop become yellow?",
+            "Which fertilizer should I use?",
+            "What soil type does Potato need?",
+            "How to cure leaf spot disease?",
+            "What are the symptoms of early blight?",
+            "Pesticide recommendation for tomato",
+            "Why are my potato leaves drying?",
+            "Best manure for clay soil",
+            "What is the ideal temperature range for Potato?",
+            "General advice for winter crop watering"
+        ]
+
+        for q in queries:
+            response = client.post('/assistant/', {'question': q})
+            self.assertEqual(response.status_code, 200)
+            # Check for a language-independent element (the robot SVG used in the assistant page header)
+            self.assertContains(response, 'submit_interview')

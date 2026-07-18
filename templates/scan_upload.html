@@ -4,7 +4,6 @@
 <div class="d-flex flex-column gap-4 fade-in-up">
     <!-- Header title -->
     <div>
-        <h1 class="fw-bold m-0" style="font-size: 2.2rem;">{{ t.scan.title }}</h1>
         <p class="text-muted m-0">{{ t.scan.desc }}</p>
     </div>
 
@@ -105,6 +104,9 @@
                         <span class="badge-custom badge-custom-success px-3 py-2" style="font-size: 0.85rem;">{{ t.scan.healthy }}</span>
                         {% else %}
                         <span class="badge-custom badge-custom-danger px-3 py-2" style="font-size: 0.85rem;">{{ t.scan.diseased }}</span>
+                        <span class="badge {% if result.severity == 'Mild' %}bg-success{% elif result.severity == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %} text-white px-3 py-2" style="font-size: 0.85rem; border-radius: 20px;">
+                            Severity: {{ result.severity }}
+                        </span>
                         {% endif %}
                     </div>
                 </div>
@@ -132,6 +134,59 @@
                     <h5 class="fw-bold text-danger mb-0">
                         {{ result.localized_disease_name|default:result.disease_identified }}
                     </h5>
+                    
+                    <!-- AI Structured Treatment Recommendation -->
+                    <div class="glass-panel p-3 border mb-1" style="background: rgba(59, 130, 246, 0.02); border-radius: 12px;">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--primary); font-size: 1.05rem;">
+                            <span>🤖</span> AI Treatment Directive (Dosage & Method)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">Treatment Type:</strong>
+                                    <span class="fw-extrabold text-dark" style="font-size: 0.95rem;">{{ result.treatment_type|default:"None" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">Pest/Disease Severity:</strong>
+                                    <span class="fw-extrabold {% if result.severity == 'Mild' %}text-success{% elif result.severity == 'Moderate' %}text-warning{% else %}text-danger{% endif %}" style="font-size: 0.95rem;">{{ result.severity|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">☘ Organic Treatment Options (Neem oil, Trichoderma, Compost):</strong>
+                                    <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_organic_recommendation|default:"None" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">🧪 Chemical Treatment Options (Fungicides, Pesticides):</strong>
+                                    <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_chemical_recommendation|default:"None" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">⚖ Recommended Dosage:</strong>
+                                    <span class="fw-extrabold text-success" style="font-size: 0.95rem;">{{ result.treatment_dosage|default:"As indicated" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
+                                    <strong class="small text-secondary d-block mb-1">📢 Application Method:</strong>
+                                    <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_application_method|default:"Foliar spray" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Direct jump link to AI chatbot -->
+                    <div class="mt-1">
+                        <a href="{% url 'assistant' %}?crop={{ result.matched_crop_name }}&disease={{ result.disease_identified|default:'None' }}" class="btn-custom-primary text-decoration-none fw-bold w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" style="border-radius: 12px; font-size: 1rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                            Discuss Treatment in AI Chatbot
+                        </a>
+                    </div>
                     
                     {% if disease_obj %}
                     <!-- Disease Treatment guidelines -->

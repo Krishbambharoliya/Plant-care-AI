@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 <div class="{% if not request.user.is_authenticated %}d-flex align-items-center justify-content-center auth-fullscreen-bg{% else %}container-fluid py-4{% endif %}">
@@ -9,7 +9,9 @@
             <!-- Left Column: Contact Details -->
             <div class="col-md-5 d-flex flex-column justify-content-between">
                 <div>
+                    {% if not request.user.is_authenticated %}
                     <h2 class="fw-extrabold mb-3" style="font-size: 1.8rem; letter-spacing: -0.5px; color: var(--primary);">Contact Support</h2>
+                    {% endif %}
                     <p class="text-muted" style="font-size: 0.95rem;">Have questions or running into issues with your crop analysis? Get in touch with our team.</p>
                 </div>
                 

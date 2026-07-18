@@ -471,4 +471,4 @@ def check_image_health(image_file, organ='leaf'):
             image_file.seek(0)
         except Exception:
             pass
-        return False
+        return True

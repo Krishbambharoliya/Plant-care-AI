@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
-    <div class="glass-panel p-4 w-100" style="max-width: 520px;">
+    <div class="glass-panel p-4 w-100" style="max-width: 520px; border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
         <div class="text-center mb-4">
             <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Start Recovery Journey</h2>
             <p class="text-muted small mt-1">Initiate week-by-week monitoring to help your diseased crop recover</p>
@@ -31,8 +31,36 @@
                 <small class="text-muted">Specify the crop type to receive better care recommendations</small>
             </div>
 
+            <div class="form-group">
+                <label class="form-label fw-bold">Watering Frequency</label>
+                <select name="watering_frequency" class="form-select">
+                    <option value="Once a day" selected>Once a day / દિવસમાં એક વાર</option>
+                    <option value="Twice a day">Twice a day / દિવસમાં બે વાર</option>
+                    <option value="Every 2 days">Every 2 days / દર બે દિવસે</option>
+                    <option value="Twice a week">Twice a week / અઠવાડિયામાં બે વાર</option>
+                    <option value="Once a week">Once a week / અઠવાડિયામાં એક વાર</option>
+                </select>
+                <small class="text-muted">How often does this plant require watering?</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">Light Requirement</label>
+                <select name="light_requirement" class="form-select">
+                    <option value="Direct Sunlight" selected>Direct Sunlight / સીધો સૂર્યપ્રકાશ</option>
+                    <option value="Partial Shade">Partial Shade / અંશતઃ છાયડો</option>
+                    <option value="Full Shade">Full Shade / પૂરેપૂરો છાયડો</option>
+                </select>
+                <small class="text-muted">Optimal sunlight level for this plant</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">Estimated Recovery Timeframe (Weeks)</label>
+                <input type="number" name="estimated_recovery_weeks" class="form-control" min="1" max="16" value="4" required>
+                <small class="text-muted">Target timeframe in weeks for full recovery</small>
+            </div>
+
             <div class="d-flex gap-2 mt-3 w-100">
-                <a href="{% url 'recovery_list' %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
                 <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">Start Journey</button>
             </div>
         </form>
