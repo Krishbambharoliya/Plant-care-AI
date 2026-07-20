@@ -77,10 +77,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     },
-    'FUTUREDATASET': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'FUTUREDATASET.db',
-    }
 }
 
 # Custom User Model

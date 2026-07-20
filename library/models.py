@@ -142,8 +142,8 @@ class Disease(models.Model):
         ('other', 'Other'),
     ]
     crop = models.ForeignKey(Crop, on_delete=models.CASCADE, related_name='diseases')
-    name = models.CharField(max_length=100)
-    affected_part = models.CharField(max_length=20, choices=AFFECTED_PART_CHOICES, default='leaf')
+    name = models.CharField(max_length=100, db_index=True)
+    affected_part = models.CharField(max_length=20, choices=AFFECTED_PART_CHOICES, default='leaf', db_index=True)
     
     # Base fields
     symptoms = models.TextField()

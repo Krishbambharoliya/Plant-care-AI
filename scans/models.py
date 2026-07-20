@@ -46,7 +46,7 @@ class ScanHistory(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
  
     class Meta:
         ordering = ['-created_at']
@@ -93,7 +93,7 @@ class FutureDataset(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
  
     class Meta:
         db_table = 'FUTUREDATASET'

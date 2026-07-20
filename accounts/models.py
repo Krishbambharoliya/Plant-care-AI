@@ -65,7 +65,7 @@ class SearchHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='searches')
     query_type = models.CharField(max_length=20)  # 'crop', 'disease', 'weather'
     query_text = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -82,12 +82,12 @@ class RecoveryTracker(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recovery_journeys')
     plant_name = models.CharField(max_length=100)
     crop_type = models.CharField(max_length=100, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing', db_index=True)
     watering_frequency = models.CharField(max_length=50, default='Once a day')
     estimated_recovery_weeks = models.IntegerField(default=4)
     light_requirement = models.CharField(max_length=50, default='Direct Sunlight')
     start_date = models.DateField(auto_now_add=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -98,7 +98,7 @@ class RecoveryTracker(models.Model):
 
 class RecoveryCheckIn(models.Model):
     tracker = models.ForeignKey(RecoveryTracker, on_delete=models.CASCADE, related_name='checkins')
-    week_number = models.IntegerField()
+    week_number = models.IntegerField(db_index=True)
     image = models.ImageField(upload_to='recovery/%Y/%m/')
     symptoms = models.TextField(blank=True, null=True)
     farmer_notes = models.TextField(blank=True, null=True)

@@ -12,7 +12,6 @@ from .services import PlantNetError
 User = get_user_model()
 
 class ScansTests(APITestCase):
-    databases = '__all__'
     
     def setUp(self):
         self.upload_url = reverse('api-scan-upload')
@@ -366,54 +365,3 @@ class ScansTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
 
-    @patch('scans.views.PlantNetClient.identify')
-    def test_future_dataset_logging(self, mock_identify):
-        mock_identify.return_value = {
-            'species': 'Solanum lycopersicum',
-            'common_name': 'Tomato',
-            'confidence_score': 0.95,
-            'raw': {'results': [{'images': [{'organ': 'leaf'}]}]}
-        }
-        self.client.force_authenticate(user=self.user1)
-        response = self.client.post(self.upload_url, {
-            'image': self.dummy_image,
-            'organ': 'leaf'
-        })
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
-        from .models import FutureDataset
-        records = FutureDataset.objects.using('FUTUREDATASET').all()
-        self.assertEqual(records.count(), 1)
-        record = records.first()
-        self.assertEqual(record.username, 'user1')
-        self.assertEqual(record.identified_species, 'Solanum lycopersicum')
-        self.assertEqual(record.identified_common_name, 'Tomato')
-        self.assertEqual(record.confidence_score, 0.95)
-
-    @patch('scans.views.PlantNetClient.identify')
-    def test_future_dataset_intact_after_user_deletion(self, mock_identify):
-        mock_identify.return_value = {
-            'species': 'Solanum lycopersicum',
-            'common_name': 'Tomato',
-            'confidence_score': 0.95,
-            'raw': {'results': [{'images': [{'organ': 'leaf'}]}]}
-        }
-        self.client.force_authenticate(user=self.user1)
-        response = self.client.post(self.upload_url, {
-            'image': self.dummy_image,
-            'organ': 'leaf'
-        })
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
-        from .models import FutureDataset
-        records = FutureDataset.objects.using('FUTUREDATASET').all()
-        self.assertEqual(records.count(), 1)
-        self.assertEqual(ScanHistory.objects.filter(user=self.user1).count(), 1)
-        
-        user1_id = self.user1.id
-        self.user1.delete()
-        self.assertEqual(ScanHistory.objects.filter(user_id=user1_id).count(), 0)
-        
-        records_after_delete = FutureDataset.objects.using('FUTUREDATASET').all()
-        self.assertEqual(records_after_delete.count(), 1)
-        self.assertEqual(records_after_delete.first().username, 'user1')

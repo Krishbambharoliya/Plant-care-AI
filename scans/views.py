@@ -174,31 +174,6 @@ class ScanUploadView(APIView):
         # 8. Save and return the full row
         scan.save()
 
-        # Log scan record to FUTUREDATASET database for future model training
-        try:
-            from scans.models import FutureDataset
-            FutureDataset.objects.using('FUTUREDATASET').create(
-                username=request.user.username if request.user.is_authenticated else None,
-                image_name=scan.image.name,
-                organ=scan.organ,
-                identified_species=scan.identified_species,
-                identified_common_name=scan.identified_common_name,
-                confidence_score=scan.confidence_score,
-                is_healthy=scan.is_healthy,
-                severity=scan.severity,
-                disease_identified=scan.disease_identified,
-                treatment_type=scan.treatment_type,
-                treatment_organic_recommendation=scan.treatment_organic_recommendation,
-                treatment_chemical_recommendation=scan.treatment_chemical_recommendation,
-                treatment_dosage=scan.treatment_dosage,
-                treatment_application_method=scan.treatment_application_method,
-                fertilizer_recommendation=scan.fertilizer_recommendation,
-                latitude=scan.latitude,
-                longitude=scan.longitude
-            )
-        except Exception:
-            pass
-
         serializer = ScanHistorySerializer(scan)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

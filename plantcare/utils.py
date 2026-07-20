@@ -1,4 +1,27 @@
 CROP_TRANSLATIONS = {
+    'Almond': {'hi': 'बादाम', 'gu': 'બદામ'},
+    'Asparagus': {'hi': 'शतावरी', 'gu': 'શતાવરી'},
+    'Basil': {'hi': 'तुलसी', 'gu': 'તુલસી'},
+    'Broad Beans': {'hi': 'बाकला', 'gu': 'વાલોળ'},
+    'Cassava': {'hi': 'कसवा', 'gu': 'કસાવા'},
+    'Celery': {'hi': 'अजमोदा', 'gu': 'અજમોદા'},
+    'Chives': {'hi': 'चाइव्स', 'gu': 'ચાઇવ્સ'},
+    'Cluster Bean': {'hi': 'ग्वार फली', 'gu': 'ગુવાર'},
+    'Eggplant': {'hi': 'बैंगन', 'gu': 'રીંગણ'},
+    'French Beans': {'hi': 'फ्रेंच बीन्स', 'gu': 'ફણસી'},
+    'Jackfruit': {'hi': 'कटहल', 'gu': 'ફણસ'},
+    'Litchi': {'hi': 'लीची', 'gu': 'લીચી'},
+    'Millet': {'hi': 'बाजरा', 'gu': 'બાજરી'},
+    'Nutmeg': {'hi': 'जायफल', 'gu': 'જાયફળ'},
+    'Oregano': {'hi': 'ऑरगेनो', 'gu': 'ઓરેગાનો'},
+    'Parsley': {'hi': 'अजमोद', 'gu': 'પાર્સલી'},
+    'Pineapple': {'hi': 'अनानास', 'gu': 'અનાનસ'},
+    'Sage': {'hi': 'सेज', 'gu': 'સેજ'},
+    'Soybeans': {'hi': 'सोयाबीन', 'gu': 'સોયાબીન'},
+    'Taro': {'hi': 'अरबी', 'gu': 'અળવી'},
+    'Thyme': {'hi': 'अजवायन के फूल', 'gu': 'થાઇમ'},
+    'Walnut': {'hi': 'अखरोट', 'gu': 'અખરોટ'},
+    'Yam': {'hi': 'रतालू', 'gu': 'રતાળુ'},
     'Ajwain': {'hi': 'अजवाइन', 'gu': 'અજમો (Ajwain)'},
     'Aloe Vera': {'hi': 'एलोवेरा', 'gu': 'એલોવેરા'},
     'Apple': {'hi': 'सेब', 'gu': 'સફરજન'},
@@ -102,11 +125,77 @@ CROP_TRANSLATIONS = {
     'Wheat': {'hi': 'गेहूं', 'gu': 'ઘઉં'},
 }
 
+_DYNAMIC_TRANSLATION_CACHE = {}
+
+def translate_via_gemini(text, target_lang):
+    from django.conf import settings
+    api_key = getattr(settings, 'GEMINI_API_KEY', '')
+    if not api_key:
+        return text
+    
+    lang_name = "Hindi" if target_lang == 'hi' else "Gujarati"
+    prompt = f"Translate the following plant or crop name into {lang_name}. Return ONLY the translated name in the target script, without any extra text or explanation.\n\nName: {text}"
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
+    }
+    try:
+        import requests
+        response = requests.post(url, json=payload, headers=headers, timeout=5)
+        if response.status_code == 200:
+            res_json = response.json()
+            translated = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+            if translated:
+                return translated
+    except Exception:
+        pass
+    return text
+
 def get_localized_crop_name(name, lang):
-    trans = CROP_TRANSLATIONS.get(name)
+    if not name:
+        return name
+    name_str = str(name).strip()
+    
+    if lang == 'en':
+        return name_str
+        
+    # 1. Try exact match first
+    trans = CROP_TRANSLATIONS.get(name_str)
     if trans and lang in trans:
         return trans[lang]
-    return name
+        
+    # 2. Try case-insensitive matching
+    name_lower = name_str.lower()
+    for key, val in CROP_TRANSLATIONS.items():
+        if key.lower() == name_lower:
+            if lang in val:
+                return val[lang]
+                
+    # 3. Try substring/contains matching (e.g. "Chili Pepper" -> "Chilli", "Green Gram" -> "Green Gram (Moong)")
+    for key, val in CROP_TRANSLATIONS.items():
+        key_lower = key.lower()
+        if (key_lower in name_lower) or (name_lower in key_lower) or \
+           (name_lower.replace(' ', '') in key_lower.replace(' ', '')) or \
+           (key_lower.replace(' ', '') in name_lower.replace(' ', '')):
+            if lang in val:
+                return val[lang]
+                
+    # 4. Check memory cache for dynamic translation
+    cache_key = (name_str, lang)
+    if cache_key in _DYNAMIC_TRANSLATION_CACHE:
+        return _DYNAMIC_TRANSLATION_CACHE[cache_key]
+        
+    # 5. If not found, translate dynamically via Gemini API
+    translated = translate_via_gemini(name_str, lang)
+    if translated and translated != name_str:
+        _DYNAMIC_TRANSLATION_CACHE[cache_key] = translated
+        return translated
+        
+    return name_str
 
 
 def get_structured_pesticides(pesticide_text, lang):

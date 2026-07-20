@@ -105,12 +105,7 @@ if (navigator.geolocation) {
                     <div>
                         <label class="form-label fw-bold mb-1">{{ t.weather.searchCityLabel }}</label>
                         <div class="d-flex gap-2">
-                            <input type="text" name="city" id="weatherCityInput" class="form-control" list="gujaratCitiesList" placeholder="{{ t.weather.cityPlaceholder }}" value="{{ city|default:'' }}" required>
-                            <datalist id="gujaratCitiesList">
-                                {% for city in gujarat_cities %}
-                                <option value="{{ city }}">
-                                {% endfor %}
-                            </datalist>
+                            <input type="text" name="city" id="weatherCityInput" class="form-control" placeholder="{{ t.weather.cityPlaceholder }}" value="{{ city|default:'' }}" required>
                             <button type="submit" class="btn-custom-primary text-nowrap px-4">{{ t.weather.searchCityBtn }}</button>
                         </div>
                     </div>

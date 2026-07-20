@@ -26,13 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_location_city(self, value):
-        if value:
-            from accounts.constants import GUJARAT_CITIES
-            matched = [c for c in GUJARAT_CITIES if c.lower() == value.strip().lower()]
-            if not matched:
-                raise serializers.ValidationError("Location City must be a city within Gujarat state.")
-            return matched[0]
-        return value
+        return (value or '').strip()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -59,13 +53,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_location_city(self, value):
-        if value:
-            from accounts.constants import GUJARAT_CITIES
-            matched = [c for c in GUJARAT_CITIES if c.lower() == value.strip().lower()]
-            if not matched:
-                raise serializers.ValidationError("Location City must be a city within Gujarat state.")
-            return matched[0]
-        return value
+        return (value or '').strip()
 
 
     def create(self, validated_data):

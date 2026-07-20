@@ -6,7 +6,6 @@ from rest_framework.test import APITestCase
 User = get_user_model()
 
 class AccountsTests(APITestCase):
-    databases = '__all__'
     
     def setUp(self):
         self.register_url = reverse('api-register')
@@ -572,56 +571,6 @@ class AccountsTests(APITestCase):
         response = client.get('/library/', {'q': 'PineappleFruit'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'API limit is over')
-
-    # ------------------------------------------------------------------
-    # Gujarat Cities Location Constraints
-    # ------------------------------------------------------------------
-
-    def test_location_city_gujarat_only_registration(self):
-        """Registration blocks cities outside Gujarat state."""
-        from django.test import Client
-        client = Client()
-        
-        # Registration payload with non-Gujarat city
-        payload = {
-            'username': 'gujarat_test',
-            'first_name': 'Test',
-            'last_name': 'User',
-            'email': 'gujarat@example.com',
-            'password1': 'StrongPass123!',
-            'password2': 'StrongPass123!',
-            'location_city': 'Mumbai',  # Maharashtra city
-            'preferred_language': 'en'
-        }
-        response = client.post('/register/', payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Location City must be a city within Gujarat state.')
-
-    def test_location_city_gujarat_only_profile_settings(self):
-        """Profile update blocks cities outside Gujarat state."""
-        from django.test import Client
-        from accounts.models import EmailOTP
-        
-        client = Client()
-        client.force_login(self.test_user)
-        
-        # Verify initial state
-        self.assertEqual(self.test_user.location_city, 'Ahmedabad') # valid Gujarat city
-        
-        # Attempt to change location to non-Gujarat city
-        response = client.post('/profile/', {
-            'first_name': self.test_user.first_name,
-            'last_name': self.test_user.last_name,
-            'email': self.test_user.email,
-            'phone_number': self.test_user.phone_number,
-            'location_city': 'Delhi',  # Out of Gujarat
-            'latitude': '',
-            'longitude': '',
-            'farm_name': self.test_user.farm_name,
-            'farm_size_acres': ''
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Location City must be a city within Gujarat state.')
 
     # ------------------------------------------------------------------
     # Recovery Journey Tests

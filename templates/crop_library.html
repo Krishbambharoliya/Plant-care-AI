@@ -41,15 +41,8 @@
                     {% for crop in crops %}
                     <div class="col">
                         <a href="?crop_id={{ crop.id }}{% if search_query %}&q={{ search_query }}{% endif %}{% if disease_query %}&disease_q={{ disease_query }}{% endif %}" class="text-decoration-none">
-                            <div class="glass-panel p-3 text-center h-100 {% if selected_crop.id == crop.id %}bg-success bg-opacity-10 border-success{% endif %}" style="transition: transform 0.2s;">
-                                <div class="rounded-3 bg-success bg-opacity-5 d-flex align-items-center justify-content-center overflow-hidden mb-2" style="height: 100px;">
-                                    {% if crop.image %}
-                                    <img src="{{ crop.image.url }}" alt="{{ crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    {% else %}
-                                    <img src="{{ crop.image_url }}" alt="{{ crop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    {% endif %}
-                                </div>
-                                <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.95rem;">{{ crop.localized_name|default:crop.name }}</span>
+                            <div class="glass-panel p-3 text-center h-100 d-flex align-items-center justify-content-center {% if selected_crop.id == crop.id %}bg-success bg-opacity-10 border-success{% endif %}" style="transition: transform 0.2s; min-height: 56px; border-radius: 12px;">
+                                <span class="fw-bold text-dark d-block text-truncate m-0" style="font-size: 0.95rem;">{{ crop.localized_name|default:crop.name }}</span>
                             </div>
                         </a>
                     </div>

@@ -276,8 +276,10 @@ def dashboard_view(request):
     diseased_count = scans.filter(is_healthy=False).count()
     
     # Group by crop for Chart.js
+    from plantcare.utils import get_localized_crop_name
+    lang = getattr(request.user, 'preferred_language', 'en')
     crop_counts = scans.values('matched_crop_name').annotate(count=Count('id'))
-    crop_labels = [item['matched_crop_name'] or 'Unknown' for item in crop_counts]
+    crop_labels = [get_localized_crop_name(item['matched_crop_name'] or 'Unknown', lang) for item in crop_counts]
     crop_data = [item['count'] for item in crop_counts]
     
     # Group by month for Chart.js
@@ -623,25 +625,6 @@ def scan_upload_view(request):
                     
                 scan.save()
                 
-                # Log scan record to FUTUREDATASET database for future model training
-                try:
-                    from scans.models import FutureDataset
-                    FutureDataset.objects.using('FUTUREDATASET').create(
-                        username=request.user.username if request.user.is_authenticated else None,
-                        image_name=scan.image.name,
-                        organ=scan.organ,
-                        identified_species=scan.identified_species,
-                        identified_common_name=scan.identified_common_name,
-                        confidence_score=scan.confidence_score,
-                        is_healthy=scan.is_healthy,
-                        disease_identified=scan.disease_identified,
-                        fertilizer_recommendation=scan.fertilizer_recommendation,
-                        latitude=scan.latitude,
-                        longitude=scan.longitude
-                    )
-                except Exception:
-                    pass
-
                 result = scan
             except PlantNetError as e:
                 scan.delete()

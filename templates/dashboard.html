@@ -73,7 +73,8 @@
     <!-- Summary Count Cards -->
     <div class="row g-4">
         <div class="col-md-4">
-            <div class="glass-panel p-4 d-flex align-items-center justify-content-between">
+            <a href="{% url 'crop_library' %}" class="text-decoration-none">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between" style="cursor: pointer; transition: transform 0.18s, box-shadow 0.18s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(16,185,129,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
                 <div>
                     <span class="text-muted fw-bold small" style="text-transform: uppercase;">{{ t.stats.totalScans }}</span>
                     <h2 class="fw-bold mt-2 mb-0" style="font-size: 2rem;">{{ total }}</h2>
@@ -82,6 +83,7 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
             </div>
+            </a>
         </div>
         
         <div class="col-md-4">
@@ -109,7 +111,6 @@
         </div>
     </div>
 
-    <!-- Charts Visualization Section -->
     {% if total > 0 %}
     <div class="row g-4">
         <!-- Distribution Donut Chart -->
@@ -284,14 +285,20 @@
 
         // 2. Crop Counts Bar
         const ctxBar = document.getElementById('cropBarChart').getContext('2d');
-        const cropTranslations = {
-            'Tomato': '{{ t.crop.tomato|escapejs }}',
-            'Potato': '{{ t.crop.potato|escapejs }}',
-            'Chili Pepper': '{{ t.crop.chili|escapejs }}',
-            'Pepper': '{{ t.crop.chili|escapejs }}'
-        };
-        const cropLabels = {{ crop_labels_json|safe }}.map(lbl => cropTranslations[lbl] || lbl);
+        const cropLabels = {{ crop_labels_json|safe }};
         const cropData = {{ crop_data_json|safe }};
+        const organicColors = [
+            '#de7c5a', // Clay Terracotta
+            '#608066', // Sage Green
+            '#dfa060', // Warm Ochre
+            '#7b8a80', // Muted Olive
+            '#8f5c38', // Soft Sienna
+            '#596f62', // Forest Sage
+            '#b88a76', // Soft Coral/Dusty Rose
+            '#a3937b', // Khaki/Sand
+            '#718196', // Slate Blue
+            '#a2a880'  // Moss Green
+        ];
         
         new Chart(ctxBar, {
             type: 'bar',
@@ -300,7 +307,7 @@
                 datasets: [{
                     label: '{{ t.stats.totalScans|escapejs }}',
                     data: cropData,
-                    backgroundColor: chartColorBar,
+                    backgroundColor: organicColors,
                     borderRadius: 6
                 }]
             },
