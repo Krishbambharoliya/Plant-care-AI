@@ -9,7 +9,7 @@
     <!-- Weather from registered city -->
     <!-- Weather from registered city -->
     {% if weather %}
-    <div class="glass-panel p-4 d-flex align-items-center gap-4" style="background: linear-gradient(135deg, var(--success-bg), rgba(0,0,0,0.01));">
+    <div class="glass-panel p-4 d-flex align-items-center gap-4" style="background: var(--bg-card);">
         <div class="p-3 rounded-circle d-flex align-items-center justify-content-center" style="background: var(--primary-glow); width: 56px; height: 56px;">
             {% if weather.icon %}
             <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="weather" style="width: 48px; height: 48px;">

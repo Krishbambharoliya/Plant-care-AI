@@ -43,7 +43,13 @@ class FarmerRegistrationForm(UserCreationForm):
         return email
 
     def clean_location_city(self):
-        return (self.cleaned_data.get('location_city') or '').strip()
+        city = (self.cleaned_data.get('location_city') or '').strip()
+        if city:
+            from weather.services import OpenWeatherClient
+            lat, lon = OpenWeatherClient.geocode_city(city)
+            if lat is None or lon is None:
+                raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
+        return city
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -83,7 +89,14 @@ class FarmerProfileForm(forms.ModelForm):
         return email
 
     def clean_location_city(self):
-        return (self.cleaned_data.get('location_city') or '').strip()
+        city = (self.cleaned_data.get('location_city') or '').strip()
+        if city:
+            from weather.services import OpenWeatherClient
+            lat, lon = OpenWeatherClient.geocode_city(city)
+            if lat is None or lon is None:
+                raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
+        return city
+
 
     def save(self, commit=True):
         user = super().save(commit=False)

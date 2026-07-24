@@ -133,20 +133,23 @@ def verify_email_view(request):
 
 
 def password_reset_request_view(request):
-    """Step 1 of password reset: user enters their email and receives an OTP."""
+    """Step 1 of Password Reset: Asks for Username or Email first, sends an OTP email, and advances to Step 2."""
     error = ""
     if request.method == "POST":
-        email = request.POST.get('email', '').strip()
+        username_or_email = request.POST.get('username_or_email', '').strip()
         from accounts.models import User
-        if User.objects.filter(email=email).exists():
+        from django.db.models import Q
+        user = User.objects.filter(Q(username__iexact=username_or_email) | Q(email__iexact=username_or_email)).first()
+        
+        if user:
             otp_code = str(random.randint(100000, 999999))
-            EmailOTP.objects.create(email=email, otp=otp_code, purpose='password_reset')
+            EmailOTP.objects.create(email=user.email, otp=otp_code, purpose='password_reset')
 
             try:
                 send_mail(
-                    subject='PlantCare Password Reset - OTP',
+                    subject='PlantCare Password Reset Verification Code',
                     message=(
-                        f'Hello,\n\n'
+                        f'Hello {user.username},\n\n'
                         f'Your One-Time Password (OTP) to reset your PlantCare password is:\n\n'
                         f'   {otp_code}\n\n'
                         f'This OTP is valid for a single use. Do not share it with anyone.\n\n'
@@ -154,54 +157,103 @@ def password_reset_request_view(request):
                         f'- PlantCare Team'
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
+                    recipient_list=[user.email],
                     fail_silently=False,
                 )
             except Exception:
                 pass
 
-            request.session['reset_email'] = email
+            request.session['reset_email'] = user.email
+            request.session['reset_username'] = user.username
             return redirect('password_reset_verify')
         else:
-            error = "No account found with this email address."
+            error = "Account not found. Please enter a valid username or email address."
 
     return render(request, 'password_reset_request.html', {'error': error})
 
 
 def password_reset_verify_view(request):
-    """Step 2 of password reset: user enters OTP + new password."""
-    session_email = request.session.get('reset_email', '')
+    """Step 2 of Password Reset: Accepts Current Password OR OTP code, validates new password, updates account, and sends confirmation email."""
+    target_email = request.session.get('reset_email', '') or request.POST.get('email', '').strip()
+    session_username = request.session.get('reset_username', '')
+
     error = ""
     if request.method == "POST":
-        email = request.POST.get('email', session_email).strip()
+        if not target_email:
+            return redirect('password_reset_request')
+
+        auth_mode = request.POST.get('auth_mode', 'otp')
+        current_password = request.POST.get('current_password', '')
         otp_entered = request.POST.get('otp', '').strip()
-        new_password = request.POST.get('new_password', '').strip()
+        
+        np1 = request.POST.get('new_password1', '').strip()
+        np2 = request.POST.get('new_password2', '').strip()
+        np_single = request.POST.get('new_password', '').strip()
+
+        new_password1 = np1 or np_single
+        new_password2 = np2 or np_single
 
         from accounts.models import User
-        otp_record = EmailOTP.objects.filter(
-            email=email, purpose='password_reset', is_verified=False
-        ).first()
+        user = User.objects.filter(email__iexact=target_email).first()
 
-        if otp_record and otp_record.otp == otp_entered:
-            try:
-                user = User.objects.get(email=email)
-                user.set_password(new_password)
+        if not user:
+            error = "User account not found."
+        elif new_password1 != new_password2:
+            error = "New passwords do not match. Please re-enter your new password."
+        elif len(new_password1) < 8:
+            error = "New password must be at least 8 characters long."
+        else:
+            authenticated = False
+            if auth_mode == "current_password":
+                if user.check_password(current_password):
+                    authenticated = True
+                else:
+                    error = "Current password does not match. Please enter your correct current password."
+            else:
+                otp_record = EmailOTP.objects.filter(
+                    email=target_email, purpose='password_reset', is_verified=False
+                ).first()
+                if otp_record and otp_record.otp == otp_entered:
+                    authenticated = True
+                    otp_record.is_verified = True
+                    otp_record.save()
+                else:
+                    error = "Invalid or expired verification code."
+
+            if authenticated:
+                user.set_password(new_password1)
                 user.save()
 
-                otp_record.is_verified = True
-                otp_record.save()
+                # Send security notification email
+                try:
+                    send_mail(
+                        subject='Security Alert: PlantCare Password Changed Successfully',
+                        message=(
+                            f'Hello {user.username},\n\n'
+                            f'This email confirms that your PlantCare account password has been successfully changed.\n\n'
+                            f'If you did not initiate this change, please contact PlantCare Support immediately.\n\n'
+                            f'- PlantCare Security Team'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+
                 request.session.pop('reset_email', None)
-
-                # Store success in session and redirect to login
-                # (rendering login.html directly would POST to wrong URL)
-                request.session['login_success'] = 'Password reset successful! Please log in with your new password.'
+                request.session.pop('reset_username', None)
+                request.session['login_success'] = 'Password changed successfully! Please log in with your new password.'
                 return redirect('login')
-            except User.DoesNotExist:
-                error = "User not found."
-        else:
-            error = "Invalid OTP or email. Please check your details and try again."
 
-    return render(request, 'password_reset_verify.html', {'email': session_email, 'error': error})
+    elif not target_email:
+        return redirect('password_reset_request')
+
+    return render(request, 'password_reset_verify.html', {
+        'email': target_email,
+        'username': session_username,
+        'error': error
+    })
 
 
 def find_username_view(request):
@@ -837,6 +889,7 @@ def get_weather_meaning(temp, humidity, lang):
 # ==========================================
 @login_required
 def weather_advisor_view(request):
+    error = ""
     # Resolve coordinates
     lat = request.GET.get('lat')
     lon = request.GET.get('lon')
@@ -866,6 +919,14 @@ def weather_advisor_view(request):
         if resolved_lat is not None and resolved_lon is not None:
             lat = resolved_lat
             lon = resolved_lon
+        else:
+            lang = getattr(request.user, 'preferred_language', 'en') if request.user.is_authenticated else 'en'
+            if lang == 'hi':
+                error = "शहर का नाम नहीं मिला। कृपया एक सही शहर का नाम दर्ज करें।"
+            elif lang == 'gu':
+                error = "શહેરનું નામ મળ્યું નથી. કૃપા કરીને યોગ્ય શહેરનું નામ દાખલ કરો."
+            else:
+                error = "The city name does not match. Please enter a valid city name."
     
     if lat is not None and lon is not None:
         try:
@@ -873,6 +934,7 @@ def weather_advisor_view(request):
             lon = float(lon)
         except ValueError:
             lat, lon = None, None
+
             
     # Priority Fallbacks
     trigger_browser_geolocation = False
@@ -899,7 +961,6 @@ def weather_advisor_view(request):
     forecast_data = None
     past_data = None
     growth_data = None
-    error = ""
     if lat is not None and lon is not None:
         try:
             weather_data = OpenWeatherClient.get_current(lat, lon)
@@ -991,40 +1052,66 @@ def weather_advisor_view(request):
 # ==========================================
 @login_required
 def profile_settings_view(request):
+    from django.contrib.auth import update_session_auth_hash
     success = False
     error = ""
+    pwd_success = ""
+    pwd_error = ""
+    pwd_info = ""
+    pwd_otp_sent = False
 
     if request.method == "POST":
-        form = FarmerProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            # Store ALL cleaned data in session — apply only after OTP
-            data = form.cleaned_data
-            pending = {
-                'first_name': data.get('first_name', '') or '',
-                'last_name':  data.get('last_name', '')  or '',
-                'email':      data.get('email', '')       or '',
-                'phone_number':    data.get('phone_number', '')    or '',
-                'location_city':   data.get('location_city', '')   or '',
-                'farm_name':       data.get('farm_name', '')        or '',
-                'farm_size_acres': float(data['farm_size_acres']) if data.get('farm_size_acres') is not None else None,
-                'latitude':        float(data['latitude'])  if data.get('latitude')  is not None else None,
-                'longitude':       float(data['longitude']) if data.get('longitude') is not None else None,
-            }
-            request.session['pending_profile'] = pending
+        action = request.POST.get('action', '')
+        
+        # 1. Direct password change with current password
+        if action == "change_password_direct":
+            current_password = request.POST.get('current_password', '')
+            new_password1 = request.POST.get('new_password1', '')
+            new_password2 = request.POST.get('new_password2', '')
+            
+            if not request.user.check_password(current_password):
+                pwd_error = "Current password does not match. Please enter your correct current password."
+            elif new_password1 != new_password2:
+                pwd_error = "New passwords do not match. Please re-enter your new password."
+            elif len(new_password1) < 8:
+                pwd_error = "New password must be at least 8 characters long."
+            else:
+                request.user.set_password(new_password1)
+                request.user.save()
+                update_session_auth_hash(request, request.user)
+                pwd_success = "Password updated successfully!"
 
-            # Generate OTP and send to the user's CURRENT email
+                # Send security notification email
+                try:
+                    send_mail(
+                        subject='Security Notification: Your PlantCare Password Was Updated',
+                        message=(
+                            f'Hello {request.user.username},\n\n'
+                            f'This email confirms that your PlantCare password has been updated successfully.\n\n'
+                            f'If you did not perform this change, please contact PlantCare Support immediately.\n\n'
+                            f'- PlantCare Team'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+
+        # 2. Request OTP for email password verification
+        elif action == "send_password_otp":
             otp_code = str(random.randint(100000, 999999))
             EmailOTP.objects.create(
-                email=request.user.email, otp=otp_code, purpose='profile_update'
+                email=request.user.email, otp=otp_code, purpose='password_reset_profile'
             )
             try:
                 send_mail(
-                    subject='PlantCare - Confirm Your Profile Update',
+                    subject='PlantCare - Password Reset Verification Code',
                     message=(
                         f'Hello {request.user.username},\n\n'
-                        f'Your One-Time Password (OTP) to confirm your profile update is:\n\n'
+                        f'Your One-Time Password (OTP) to reset your password is:\n\n'
                         f'   {otp_code}\n\n'
-                        f'Enter this code to save your changes. Do not share it with anyone.\n\n'
+                        f'Enter this code to change your password. Do not share it with anyone.\n\n'
                         f'- PlantCare Team'
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1033,17 +1120,108 @@ def profile_settings_view(request):
                 )
             except Exception:
                 pass
+            pwd_otp_sent = True
+            pwd_info = f"Verification code sent to {request.user.email}."
 
-            return redirect('verify_profile_update')
+        # 3. Verify OTP & set new password
+        elif action == "verify_password_otp":
+            otp_entered = request.POST.get('otp', '').strip()
+            new_password1 = request.POST.get('new_password1', '').strip()
+            new_password2 = request.POST.get('new_password2', '').strip()
+            
+            otp_record = EmailOTP.objects.filter(
+                email=request.user.email, purpose='password_reset_profile', is_verified=False
+            ).first()
+            
+            if not otp_record or otp_record.otp != otp_entered:
+                pwd_error = "Invalid or expired verification code."
+                pwd_otp_sent = True
+            elif new_password1 != new_password2:
+                pwd_error = "New passwords do not match. Please re-enter your new password."
+                pwd_otp_sent = True
+            elif len(new_password1) < 8:
+                pwd_error = "New password must be at least 8 characters long."
+                pwd_otp_sent = True
+            else:
+                request.user.set_password(new_password1)
+                request.user.save()
+                update_session_auth_hash(request, request.user)
+                otp_record.is_verified = True
+                otp_record.save()
+                pwd_success = "Password updated successfully via email verification!"
+
+                # Send security notification email
+                try:
+                    send_mail(
+                        subject='Security Notification: Your PlantCare Password Was Updated',
+                        message=(
+                            f'Hello {request.user.username},\n\n'
+                            f'This email confirms that your PlantCare password has been updated successfully via email verification.\n\n'
+                            f'If you did not perform this change, please contact PlantCare Support immediately.\n\n'
+                            f'- PlantCare Team'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+        
+        # 4. Standard Profile Form update
         else:
-            error = "Invalid updates. Please correct the errors."
+            form = FarmerProfileForm(request.POST, instance=request.user)
+            if form.is_valid():
+                # Store ALL cleaned data in session — apply only after OTP
+                data = form.cleaned_data
+                pending = {
+                    'first_name': data.get('first_name', '') or '',
+                    'last_name':  data.get('last_name', '')  or '',
+                    'email':      data.get('email', '')       or '',
+                    'phone_number':    data.get('phone_number', '')    or '',
+                    'location_city':   data.get('location_city', '')   or '',
+                    'farm_name':       data.get('farm_name', '')        or '',
+                    'farm_size_acres': float(data['farm_size_acres']) if data.get('farm_size_acres') is not None else None,
+                    'latitude':        float(data['latitude'])  if data.get('latitude')  is not None else None,
+                    'longitude':       float(data['longitude']) if data.get('longitude') is not None else None,
+                }
+                request.session['pending_profile'] = pending
+
+                # Generate OTP and send to the user's CURRENT email
+                otp_code = str(random.randint(100000, 999999))
+                EmailOTP.objects.create(
+                    email=request.user.email, otp=otp_code, purpose='profile_update'
+                )
+                try:
+                    send_mail(
+                        subject='PlantCare - Confirm Your Profile Update',
+                        message=(
+                            f'Hello {request.user.username},\n\n'
+                            f'Your One-Time Password (OTP) to confirm your profile update is:\n\n'
+                            f'   {otp_code}\n\n'
+                            f'Enter this code to save your changes. Do not share it with anyone.\n\n'
+                            f'- PlantCare Team'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    pass
+
+                return redirect('verify_profile_update')
+            else:
+                error = "Invalid updates. Please correct the errors."
     else:
         form = FarmerProfileForm(instance=request.user)
 
     return render(request, 'profile_settings.html', {
         'form': form,
         'success': success,
-        'error': error
+        'error': error,
+        'pwd_success': pwd_success,
+        'pwd_error': pwd_error,
+        'pwd_info': pwd_info,
+        'pwd_otp_sent': pwd_otp_sent,
     })
 
 
@@ -1933,13 +2111,19 @@ def assistant_view(request):
                 weather = request.session.get('assistant_weather', 'Normal Weather')
                 
                 # Determine target language for Gemini response
-                lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
-                lang_map = {
-                    'en': 'English',
-                    'hi': 'Hindi',
-                    'gu': 'Gujarati'
-                }
-                target_lang = lang_map.get(lang, 'English')
+                lang = request.session.get('preferred_language') or (request.user.preferred_language if request.user.is_authenticated else 'en')
+                if lang == 'hi':
+                    target_lang = "Hindi (हिंदी)"
+                    lang_instruction = "CRITICAL REQUIREMENT: You MUST write your entire response (including clarifying questions) strictly in Hindi (हिंदी) language using Devanagari script. Do NOT respond in English."
+                    fallback_answer = "क्षमा करें, एआई सेवा से संपर्क नहीं हो सका। कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।"
+                elif lang == 'gu':
+                    target_lang = "Gujarati (ગુજરાતી)"
+                    lang_instruction = "CRITICAL REQUIREMENT: You MUST write your entire response (including clarifying questions) strictly in Gujarati (ગુજરાતી) language using Gujarati script. Do NOT respond in English."
+                    fallback_answer = "માફ કરશો, એઆઈ સેવાનો સંપર્ક થઈ શક્યો નથી. કૃપા કરીને તમારું ઇન્ટરનેટ કનેક્શન ચકાસો અને ફરી પ્રયાસ કરો."
+                else:
+                    target_lang = "English"
+                    lang_instruction = "CRITICAL REQUIREMENT: Write your entire response (including clarifying questions) strictly in clear, friendly English."
+                    fallback_answer = "I am sorry, but I was unable to connect to the generative AI service. Please verify your connection and try again."
                 
                 # Build prompt context
                 system_prompt = (
@@ -1947,7 +2131,7 @@ def assistant_view(request):
                     f"Context:\n- Crop: {crop}\n- Soil Type: {soil_type}\n- Growth Stage: {stage}\n- Weather/Environment: {weather}\n\n"
                     f"Answer the farmer's question in simple, friendly, and practical language, specifically tailored to the crop, soil, stage, and weather conditions above. "
                     f"At the end of your response, always ask 1 or 2 relevant clarifying questions to help guide the farmer further.\n"
-                    f"CRITICAL: You must write your entire response (including clarifying questions) strictly in the {target_lang} language."
+                    f"{lang_instruction}"
                 )
                 
                 # Format messages for Gemini API contents structure
@@ -1959,7 +2143,7 @@ def assistant_view(request):
                 })
                 contents.append({
                     "role": "model",
-                    "parts": [{"text": "Understood. I will act as the AI Farming Advisor for this context. Please tell me what questions you have about your crop."}]
+                    "parts": [{"text": f"Understood. I will act as the AI Farming Advisor for this context and communicate strictly in {target_lang}."}]
                 })
                 
                 # Append history
@@ -1972,7 +2156,7 @@ def assistant_view(request):
                 # Append current question
                 contents.append({
                     "role": "user",
-                    "parts": [{"text": question}]
+                    "parts": [{"text": f"{question}\n\n({lang_instruction})"}]
                 })
                 
                 # Call Gemini API
@@ -1983,7 +2167,7 @@ def assistant_view(request):
                     "gemini-1.5-pro"
                 ]
                 
-                answer = "I am sorry, but I was unable to connect to the generative AI service. Please verify your connection and try again."
+                answer = fallback_answer
                 for model_id in models_to_try:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
                     headers = {"Content-Type": "application/json"}

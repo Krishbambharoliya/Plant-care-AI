@@ -2,13 +2,18 @@
 
 {% block extra_head %}
 <script>
+let geocodeTimeout = null;
+function lookupCityGPSAutomatic() {
+    clearTimeout(geocodeTimeout);
+    geocodeTimeout = setTimeout(lookupCityGPS, 600);
+}
+
 function lookupCityGPS() {
     const cityInput = document.querySelector('input[name="location_city"]');
     const latInput = document.querySelector('input[name="latitude"]');
     const lonInput = document.querySelector('input[name="longitude"]');
     
     if (!cityInput || !cityInput.value) {
-        alert("Please enter a City Name first.");
         return;
     }
     
@@ -22,13 +27,12 @@ function lookupCityGPS() {
             if (data && data.length > 0) {
                 latInput.value = parseFloat(data[0].lat).toFixed(6);
                 lonInput.value = parseFloat(data[0].lon).toFixed(6);
-                alert(`GPS Coordinates for ${city} successfully resolved: ${latInput.value}, ${lonInput.value}`);
-            } else {
-                alert(`Could not find coordinates for city "${city}". Please check spelling.`);
+                latInput.dispatchEvent(new Event('input'));
+                lonInput.dispatchEvent(new Event('input'));
             }
         })
         .catch(err => {
-            alert("Error calling geocoding API. Please try again later.");
+            console.error("Geocoding failed:", err);
         });
 }
 </script>
@@ -164,10 +168,7 @@ function lookupCityGPS() {
                         </div>
                         <div class="col-6 form-group m-0">
                             <label class="form-label">{{ t.auth.city }}</label>
-                            <div class="d-flex flex-column gap-1">
-                                <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}" placeholder="Enter your city">
-                                <button type="button" class="btn btn-outline-success btn-sm align-self-start border-0 fw-bold p-0 mt-1" style="font-size: 0.75rem;" onclick="lookupCityGPS()">{{ t.weather.resolveGpsBtn }}</button>
-                            </div>
+                            <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}" placeholder="Enter your city" oninput="lookupCityGPSAutomatic()" onchange="lookupCityGPS()">
                         </div>
                     </div>
 

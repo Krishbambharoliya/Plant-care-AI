@@ -2,13 +2,18 @@
 
 {% block extra_head %}
 <script>
+let geocodeWeatherTimeout = null;
+function lookupWeatherCityGPSAutomatic() {
+    clearTimeout(geocodeWeatherTimeout);
+    geocodeWeatherTimeout = setTimeout(lookupWeatherCityGPS, 600);
+}
+
 function lookupWeatherCityGPS() {
     const cityInput = document.getElementById('weatherCityInput');
     const latInput = document.getElementById('weatherLatInput');
     const lonInput = document.getElementById('weatherLonInput');
     
     if (!cityInput || !cityInput.value) {
-        alert("Please enter a City Name first.");
         return;
     }
     
@@ -22,15 +27,15 @@ function lookupWeatherCityGPS() {
             if (data && data.length > 0) {
                 latInput.value = parseFloat(data[0].lat).toFixed(6);
                 lonInput.value = parseFloat(data[0].lon).toFixed(6);
-                alert(`GPS Coordinates for ${city} successfully resolved: ${latInput.value}, ${lonInput.value}. You can now search by coordinates or search directly by submitting the city form.`);
-            } else {
-                alert(`Could not find coordinates for city "${city}". Please check spelling.`);
+                latInput.dispatchEvent(new Event('input'));
+                lonInput.dispatchEvent(new Event('input'));
             }
         })
         .catch(err => {
-            alert("Error calling geocoding API. Please try again later.");
+            console.error("Geocoding failed:", err);
         });
 }
+
 
 {% if trigger_browser_geolocation %}
 // Auto trigger browser geolocation fallback if no profile city or GPS exists
@@ -105,11 +110,10 @@ if (navigator.geolocation) {
                     <div>
                         <label class="form-label fw-bold mb-1">{{ t.weather.searchCityLabel }}</label>
                         <div class="d-flex gap-2">
-                            <input type="text" name="city" id="weatherCityInput" class="form-control" placeholder="{{ t.weather.cityPlaceholder }}" value="{{ city|default:'' }}" required>
+                            <input type="text" name="city" id="weatherCityInput" class="form-control" placeholder="{{ t.weather.cityPlaceholder }}" value="{{ city|default:'' }}" oninput="lookupWeatherCityGPSAutomatic()" onchange="lookupWeatherCityGPS()" required>
                             <button type="submit" class="btn-custom-primary text-nowrap px-4">{{ t.weather.searchCityBtn }}</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-outline-success btn-sm align-self-start border-0 fw-bold p-0 mt-2" style="font-size: 0.75rem;" onclick="lookupWeatherCityGPS()">{{ t.weather.resolveGpsBtn }}</button>
                 </form>
             </div>
             
