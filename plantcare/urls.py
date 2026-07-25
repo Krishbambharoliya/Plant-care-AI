@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from .views import (
     dashboard_view, login_view, register_view, logout_view,
     verify_email_view, verify_profile_update_view, find_username_view,
+    resend_registration_otp_view,
     password_reset_request_view, password_reset_verify_view,
     crop_library_view, scan_upload_view, weather_advisor_view,
     profile_settings_view, toggle_preference_view, download_scan_pdf,
@@ -25,6 +26,7 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     # Email verification, password reset & username recovery
     path('verify-email/', verify_email_view, name='verify_email'),
+    path('verify-email/resend/', resend_registration_otp_view, name='resend_registration_otp'),
     path('verify-profile-update/', verify_profile_update_view, name='verify_profile_update'),
     path('find-username/', find_username_view, name='find_username'),
     path('password-reset/', password_reset_request_view, name='password_reset_request'),

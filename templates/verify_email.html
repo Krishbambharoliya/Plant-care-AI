@@ -15,6 +15,13 @@
             </p>
         </div>
 
+        {% if success %}
+        <div class="alert alert-success text-center py-2 mb-3" role="alert"
+             style="border-radius: 10px; font-size: 0.9rem;">
+            ✅ {{ success }}
+        </div>
+        {% endif %}
+
         {% if error %}
         <div class="alert alert-danger text-center py-2" role="alert"
              style="border-radius: 10px; font-size: 0.9rem;">
@@ -45,7 +52,14 @@
             </button>
         </form>
 
-        <div class="text-center mt-4" style="font-size: 0.85rem;">
+        <div class="text-center mt-3" style="font-size: 0.85rem;">
+            <span class="text-muted">Didn't receive the email?</span>
+            <a href="{% url 'resend_registration_otp' %}" class="fw-bold ms-1" style="color: var(--primary); text-decoration: none;">
+                Resend OTP &rarr;
+            </a>
+        </div>
+
+        <div class="text-center mt-2" style="font-size: 0.85rem;">
             <a href="{% url 'register' %}" style="color: var(--text-secondary); text-decoration: none;">
                 &larr; Back to Register
             </a>
@@ -53,3 +67,4 @@
     </div>
 </div>
 {% endblock %}
+

@@ -38,8 +38,10 @@ class FarmerRegistrationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("This email address is already registered. Please use a different email.")
+        if email:
+            email = email.strip().lower()
+            if User.objects.filter(email__iexact=email).exists():
+                raise forms.ValidationError("This email address is already registered. Please use a different email.")
         return email
 
     def clean_location_city(self):
@@ -53,6 +55,9 @@ class FarmerRegistrationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        # Ensure email is saved in lowercase/clean form
+        if user.email:
+            user.email = user.email.strip().lower()
         _resolve_user_coordinates(
             user,
             self.cleaned_data.get('location_city'),
@@ -81,6 +86,7 @@ class FarmerProfileForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
+            email = email.strip().lower()
             qs = User.objects.filter(email__iexact=email)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)

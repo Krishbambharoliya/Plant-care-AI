@@ -60,11 +60,13 @@ def register_view(request):
             user.is_active = False
             user.save()
 
-            # Generate a 6-digit OTP and save it
+            # Generate a 6-digit OTP — delete any old unverified ones first
             otp_code = str(random.randint(100000, 999999))
+            EmailOTP.objects.filter(email=user.email, purpose='register', is_verified=False).delete()
             EmailOTP.objects.create(email=user.email, otp=otp_code, purpose='register')
 
             # Send OTP email
+            email_error = None
             try:
                 send_mail(
                     subject='Verify Your PlantCare Account - OTP',
@@ -80,8 +82,18 @@ def register_view(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
-            except Exception:
-                pass  # Fallback: OTP printed to console if email fails
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error('Registration OTP email failed: %s', str(e))
+                email_error = str(e)
+
+            if email_error:
+                # Delete the user so they can try again with a correct email
+                user.delete()
+                return render(request, 'register.html', {
+                    'form': form,
+                    'error': f'Could not send verification email to {form.cleaned_data["email"]}. Please check the email address and try again.',
+                })
 
             # Store email in session for the verify step
             request.session['verification_email'] = user.email
@@ -100,12 +112,16 @@ def verify_email_view(request):
     if not email:
         return redirect('register')
 
-    error = ""
+    # Retrieve flash messages from session if any
+    error = request.session.pop('verify_error', '')
+    success = request.session.pop('verify_success', '')
+
     if request.method == "POST":
         otp_entered = request.POST.get('otp', '').strip()
+        # Always use the LATEST unverified OTP (not the oldest)
         otp_record = EmailOTP.objects.filter(
             email=email, purpose='register', is_verified=False
-        ).first()
+        ).order_by('-created_at').first()
 
         if otp_record and otp_record.otp == otp_entered:
             # Mark OTP used
@@ -127,9 +143,56 @@ def verify_email_view(request):
             request.session.pop('verification_email', None)
             return redirect('dashboard')
         else:
-            error = "Invalid OTP. Please check and try again."
+            error = "OTP is not valid. Please check and try again."
 
-    return render(request, 'verify_email.html', {'email': email, 'error': error})
+    return render(request, 'verify_email.html', {'email': email, 'error': error, 'success': success})
+
+
+def resend_registration_otp_view(request):
+    """Resend the registration OTP email to the user's stored session email."""
+    email = request.session.get('verification_email')
+    if not email:
+        return redirect('register')
+
+    from accounts.models import User
+    try:
+        user = User.objects.get(email__iexact=email, is_active=False)
+    except User.DoesNotExist:
+        return redirect('register')
+
+    otp_code = str(random.randint(100000, 999999))
+    # Delete all previous unverified OTPs for this email/purpose before creating new
+    EmailOTP.objects.filter(email=user.email, purpose='register', is_verified=False).delete()
+    EmailOTP.objects.create(email=user.email, otp=otp_code, purpose='register')
+
+    error_msg = None
+    try:
+        send_mail(
+            subject='Verify Your PlantCare Account - New OTP',
+            message=(
+                f'Hello {user.username},\n\n'
+                f'You requested a new OTP to verify your PlantCare account.\n\n'
+                f'Your new One-Time Password is:\n\n'
+                f'   {otp_code}\n\n'
+                f'This OTP is valid for a single use. Do not share it with anyone.\n\n'
+                f'If you did not register, please ignore this email.\n\n'
+                f'- PlantCare Team'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error('Resend registration OTP failed: %s', str(e))
+        error_msg = f'Could not send email to {email}. Please try again later.'
+
+    if error_msg:
+        request.session['verify_error'] = error_msg
+    else:
+        request.session['verify_success'] = f'A new OTP has been sent to {email}.'
+
+    return redirect('verify_email')
 
 
 def password_reset_request_view(request):
@@ -143,8 +206,11 @@ def password_reset_request_view(request):
         
         if user:
             otp_code = str(random.randint(100000, 999999))
+            # Delete old unverified reset OTPs before creating new one
+            EmailOTP.objects.filter(email=user.email, purpose='password_reset', is_verified=False).delete()
             EmailOTP.objects.create(email=user.email, otp=otp_code, purpose='password_reset')
 
+            email_sent = True
             try:
                 send_mail(
                     subject='PlantCare Password Reset Verification Code',
@@ -160,8 +226,14 @@ def password_reset_request_view(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error('Password reset OTP email failed: %s', str(e))
+                email_sent = False
+                error = f'Could not send verification email to {user.email}. Please check the email address registered on your account or try again later.'
+
+            if error:
+                return render(request, 'password_reset_request.html', {'error': error})
 
             request.session['reset_email'] = user.email
             request.session['reset_username'] = user.username
@@ -210,15 +282,16 @@ def password_reset_verify_view(request):
                 else:
                     error = "Current password does not match. Please enter your correct current password."
             else:
+                # Always use the LATEST unverified reset OTP
                 otp_record = EmailOTP.objects.filter(
                     email=target_email, purpose='password_reset', is_verified=False
-                ).first()
+                ).order_by('-created_at').first()
                 if otp_record and otp_record.otp == otp_entered:
                     authenticated = True
                     otp_record.is_verified = True
                     otp_record.save()
                 else:
-                    error = "Invalid or expired verification code."
+                    error = "OTP is not valid. Please check the code and try again."
 
             if authenticated:
                 user.set_password(new_password1)
@@ -1053,7 +1126,8 @@ def weather_advisor_view(request):
 @login_required
 def profile_settings_view(request):
     from django.contrib.auth import update_session_auth_hash
-    success = False
+    success = request.session.pop('profile_success', False)
+    success_message = request.session.pop('profile_success_message', '')
     error = ""
     pwd_success = ""
     pwd_error = ""
@@ -1217,6 +1291,7 @@ def profile_settings_view(request):
     return render(request, 'profile_settings.html', {
         'form': form,
         'success': success,
+        'success_message': success_message,
         'error': error,
         'pwd_success': pwd_success,
         'pwd_error': pwd_error,
@@ -1284,12 +1359,9 @@ def verify_profile_update_view(request):
             if email_updated:
                 msg += f' Email changed to {new_email}.'
 
-            return render(request, 'profile_settings.html', {
-                'form': FarmerProfileForm(instance=user),
-                'success': True,
-                'success_message': msg,
-                'error': ''
-            })
+            request.session['profile_success'] = True
+            request.session['profile_success_message'] = msg
+            return redirect('profile_settings')
         else:
             error = "Invalid OTP. Please check and try again."
 
