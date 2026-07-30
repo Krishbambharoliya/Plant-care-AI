@@ -45,10 +45,13 @@ class FarmerRegistrationForm(UserCreationForm):
         return email
 
     def clean_location_city(self):
+        # Retrieve the location city value from the form
         city = (self.cleaned_data.get('location_city') or '').strip()
         if city:
             from weather.services import OpenWeatherClient
-            lat, lon = OpenWeatherClient.geocode_city(city)
+            # If the location is formatted as "City, State", extract just the city name for API verification
+            city_name = city.split(',')[0].strip()
+            lat, lon = OpenWeatherClient.geocode_city(city_name)
             if lat is None or lon is None:
                 raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
         return city
@@ -95,10 +98,13 @@ class FarmerProfileForm(forms.ModelForm):
         return email
 
     def clean_location_city(self):
+        # Retrieve location city value from the form
         city = (self.cleaned_data.get('location_city') or '').strip()
         if city:
             from weather.services import OpenWeatherClient
-            lat, lon = OpenWeatherClient.geocode_city(city)
+            # If the location is formatted as "City, State", extract just the city name for API verification
+            city_name = city.split(',')[0].strip()
+            lat, lon = OpenWeatherClient.geocode_city(city_name)
             if lat is None or lon is None:
                 raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
         return city
@@ -119,8 +125,14 @@ class FarmerProfileForm(forms.ModelForm):
 
 
 def _resolve_user_coordinates(user, city, lat, lon):
+    """
+    Resolves city name into latitude/longitude coordinates if they are missing.
+    Supports 'City, State' formatted inputs by splitting the string.
+    """
     if city and (lat is None or lon is None):
         from weather.services import OpenWeatherClient
-        res_lat, res_lon = OpenWeatherClient.geocode_city(city)
+        # Extract just the city name for OpenWeather geocoding
+        city_name = city.split(',')[0].strip()
+        res_lat, res_lon = OpenWeatherClient.geocode_city(city_name)
         if res_lat is not None and res_lon is not None:
             user.latitude, user.longitude = res_lat, res_lon

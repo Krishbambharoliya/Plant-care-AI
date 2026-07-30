@@ -48,6 +48,20 @@ class EmailOTP(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.is_verified:
+            try:
+                import os
+                from django.conf import settings
+                filepath = os.path.join(settings.BASE_DIR, 'otp_debug.txt')
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write(f"EMAIL: {self.email}\n")
+                    f.write(f"OTP CODE: {self.otp}\n")
+                    f.write(f"PURPOSE: {self.purpose}\n")
+            except Exception:
+                pass
+
     def __str__(self):
         return f"{self.email} - {self.otp} - {self.purpose} (Verified: {self.is_verified})"
 

@@ -117,6 +117,37 @@ class OpenWeatherClient:
         return None, None
 
     @staticmethod
+    def reverse_geocode(lat, lon):
+        """
+        Reverse geocodes GPS coordinates (latitude and longitude) into City and State 
+        names using OpenWeather's Reverse Geocoding API.
+        """
+        # Fetch the api key or fallback to default
+        api_key = getattr(settings, 'OPENWEATHER_API_KEY', None) or 'be7bfd5d33099d1342756e8161d6449d'
+        if not api_key:
+            return None, None
+        
+        # OpenWeather reverse geocode endpoint
+        url = "https://api.openweathermap.org/geo/1.0/reverse"
+        params = {
+            'lat': lat,
+            'lon': lon,
+            'limit': 1,
+            'appid': api_key
+        }
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data:
+                    city = data[0].get('name')
+                    state = data[0].get('state')
+                    return city, state
+        except Exception:
+            pass
+        return None, None
+
+    @staticmethod
     def get_rain_prediction(lat, lon):
         api_key = getattr(settings, 'OPENWEATHER_API_KEY', None)
         if not api_key:

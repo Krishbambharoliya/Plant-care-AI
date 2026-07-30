@@ -334,7 +334,7 @@ class AccountsTests(APITestCase):
         session.save()
 
         response = client.post('/verify-profile-update/', {'otp': '112233'})
-        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, '/profile/')
 
         self.test_user.refresh_from_db()
         self.assertEqual(self.test_user.first_name, 'Krish')
@@ -362,7 +362,7 @@ class AccountsTests(APITestCase):
         session.save()
 
         response = client.post('/verify-profile-update/', {'otp': '445566'})
-        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, '/profile/')
 
         self.test_user.refresh_from_db()
         self.assertEqual(self.test_user.email, new_email)

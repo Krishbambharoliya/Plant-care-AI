@@ -113,3 +113,45 @@ class GrowthChanceView(APIView):
             }, status=status.HTTP_200_OK)
         except WeatherAPIError as e:
             return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+from django.http import JsonResponse
+
+class GeocodeCityView(APIView):
+    permission_classes = []  # Allow public geocoding for signup/registration pages
+
+    def get(self, request, *args, **kwargs):
+        city = request.query_params.get('city', '').strip()
+        if not city:
+            return JsonResponse({"error": "City parameter is required"}, status=400)
+        
+        try:
+            lat, lon = OpenWeatherClient.geocode_city(city)
+            if lat is not None and lon is not None:
+                return JsonResponse({"lat": lat, "lon": lon}, status=200)
+            return JsonResponse({"error": "City name does not match; please enter a valid city name."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+class ReverseGeocodeView(APIView):
+    permission_classes = []  # Allow public geocoding for signup pages
+
+    def get(self, request, *args, **kwargs):
+        """
+        Public endpoint that reverse-geocodes GPS coordinates (lat, lon) 
+        into City and State names.
+        """
+        # Retrieve query parameters
+        lat = request.query_params.get('lat', '').strip()
+        lon = request.query_params.get('lon', '').strip()
+        if not lat or not lon:
+            return JsonResponse({"error": "Latitude and longitude parameters are required"}, status=400)
+        
+        try:
+            # Parse parameters to float and reverse geocode
+            city, state = OpenWeatherClient.reverse_geocode(float(lat), float(lon))
+            if city:
+                return JsonResponse({"city": city, "state": state or ""}, status=200)
+            return JsonResponse({"error": "No location found for the given coordinates."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+

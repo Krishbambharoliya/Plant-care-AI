@@ -140,13 +140,13 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# App Specific Keys
+# App Specific Keys — loaded from .env (see .env.example)
 PLANTNET_API_KEY = os.getenv('PLANTNET_API_KEY')
 PLANTNET_PROJECT = os.getenv('PLANTNET_PROJECT', 'all')
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# Email configuration
+# Email configuration — loaded from .env
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 

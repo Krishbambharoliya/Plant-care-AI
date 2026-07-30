@@ -3,24 +3,24 @@
 {% block content %}
 <div class="d-flex flex-column gap-4 fade-in-up">
     <div>
-        <p class="text-muted m-0">Review all your previous diagnostics scans, query searches, and plant recovery logs</p>
+        <p class="text-muted m-0">{{ t.history.subtitle }}</p>
     </div>
 
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs border-card" id="historyTabs" role="tablist" style="border-bottom: 1px solid var(--border-card);">
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold border-0 text-muted" id="scans-tab" data-bs-toggle="tab" data-bs-target="#scans-panel" type="button" role="tab" style="background: transparent;">
-                📸 Diagnostics Scans ({{ scans.count }})
+                📸 {{ t.history.tab_scans }} ({{ scans.count }})
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold border-0 text-muted" id="searches-tab" data-bs-toggle="tab" data-bs-target="#searches-panel" type="button" role="tab" style="background: transparent;">
-                🔍 Queries & Searches ({{ searches.count }})
+                🔍 {{ t.history.tab_searches }} ({{ searches.count }})
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold border-0 text-muted" id="journeys-tab" data-bs-toggle="tab" data-bs-target="#journeys-panel" type="button" role="tab" style="background: transparent;">
-                🩹 Recovery Journeys ({{ journeys.count }})
+                🩹 {{ t.history.tab_journeys }} ({{ journeys.count }})
             </button>
         </li>
     </ul>
@@ -31,17 +31,16 @@
         <!-- Tab 1: Scans History -->
         <div class="tab-pane fade show active" id="scans-panel" role="tabpanel">
             <div class="glass-panel p-4">
-                <h5 class="fw-bold mb-3">Diagnostic Scan History</h5>
+                <h5 class="fw-bold mb-3">{{ t.history.scans_title }}</h5>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover m-0">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--border-card);">
-                                <th>Photo</th>
-                                <th>Crop Name</th>
-                                <th>Organ</th>
-                                <th>Confidence</th>
-                                <th>Status</th>
-                                <th>Diagnostic Date</th>
+                                <th>{{ t.history.table_photo }}</th>
+                                <th>{{ t.history.table_crop }}</th>
+                                <th>{{ t.history.table_confidence }}</th>
+                                <th>{{ t.history.table_status }}</th>
+                                <th>{{ t.history.table_date }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,10 +56,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ scan.matched_crop_name|default:"Unknown Species" }}</div>
+                                    <div class="fw-bold">{{ scan.localized_crop_name|default:"Unknown Species" }}</div>
                                     <small class="text-muted font-italic">{{ scan.identified_species }}</small>
-                                </td>
-                                <td style="text-transform: capitalize;">{{ scan.organ }}</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="progress flex-grow-1" style="height: 6px; background: rgba(0,0,0,0.05); max-width: 80px; border-radius: 10px;">
@@ -71,16 +68,16 @@
                                 </td>
                                 <td>
                                     {% if scan.is_healthy %}
-                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">Healthy</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.status_healthy }}</span>
                                     {% else %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">{{ scan.disease_identified|default:"Diseased" }}</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">{{ scan.disease_identified|default:t.history.status_diseased }}</span>
                                     {% endif %}
                                 </td>
                                 <td class="small text-muted">{{ scan.created_at|date:"Y-m-d H:i" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No diagnostic scans found. Upload a crop leaf photo to get started!</td>
+                                <td colspan="6" class="text-center text-muted py-4">{{ t.history.no_scans }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -92,15 +89,15 @@
         <!-- Tab 2: Queries & Searches History -->
         <div class="tab-pane fade" id="searches-panel" role="tabpanel">
             <div class="glass-panel p-4">
-                <h5 class="fw-bold mb-3">Search Log History</h5>
+                <h5 class="fw-bold mb-3">{{ t.history.search_title }}</h5>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover m-0">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--border-card);">
-                                <th>Query Type</th>
-                                <th>Searched Text</th>
-                                <th>Date & Time</th>
-                                <th>Action</th>
+                                <th>{{ t.history.table_query_type }}</th>
+                                <th>{{ t.history.table_searched_text }}</th>
+                                <th>{{ t.history.table_datetime }}</th>
+                                <th>{{ t.history.table_action }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -108,28 +105,28 @@
                             <tr style="border-bottom: 1px solid var(--border-card);">
                                 <td>
                                     {% if search.query_type == 'crop' %}
-                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style="border-radius: 6px;">Crop Catalog</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.qtype_crop }}</span>
                                     {% elif search.query_type == 'disease' %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">Disease & Symptoms</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.qtype_disease }}</span>
                                     {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">Weather Search</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.qtype_weather }}</span>
                                     {% endif %}
                                 </td>
                                 <td class="fw-bold">"{{ search.query_text }}"</td>
                                 <td class="small text-muted">{{ search.created_at|date:"Y-m-d H:i" }}</td>
                                 <td>
                                     {% if search.query_type == 'crop' %}
-                                    <a href="{% url 'crop_library' %}?q={{ search.query_text }}" class="btn btn-outline-primary btn-sm fw-bold">Search Again</a>
+                                    <a href="{% url 'crop_library' %}?q={{ search.query_text }}" class="btn btn-outline-primary btn-sm fw-bold">{{ t.history.action_search_again }}</a>
                                     {% elif search.query_type == 'disease' %}
-                                    <a href="{% url 'crop_library' %}?disease_q={{ search.query_text }}" class="btn btn-outline-danger btn-sm fw-bold">Search Again</a>
+                                    <a href="{% url 'crop_library' %}?disease_q={{ search.query_text }}" class="btn btn-outline-danger btn-sm fw-bold">{{ t.history.action_search_again }}</a>
                                     {% else %}
-                                    <a href="{% url 'weather_advisor' %}?city={{ search.query_text }}" class="btn btn-outline-warning btn-sm fw-bold">Check Weather</a>
+                                    <a href="{% url 'weather_advisor' %}?city={{ search.query_text }}" class="btn btn-outline-warning btn-sm fw-bold">{{ t.history.action_check_weather }}</a>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">No searches or queries logged yet.</td>
+                                <td colspan="4" class="text-center text-muted py-4">{{ t.history.no_searches }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -141,38 +138,38 @@
         <!-- Tab 3: Recovery Journeys -->
         <div class="tab-pane fade" id="journeys-panel" role="tabpanel">
             <div class="glass-panel p-4">
-                <h5 class="fw-bold mb-3">Plant Recovery Log</h5>
+                <h5 class="fw-bold mb-3">{{ t.history.recovery_title }}</h5>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover m-0">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--border-card);">
-                                <th>Plant Nickname</th>
-                                <th>Crop Type</th>
-                                <th>Start Date</th>
-                                <th>Phase Status</th>
-                                <th>Log Actions</th>
+                                <th>{{ t.history.table_nickname }}</th>
+                                <th>{{ t.history.table_crop_type }}</th>
+                                <th>{{ t.history.table_start_date }}</th>
+                                <th>{{ t.history.table_phase }}</th>
+                                <th>{{ t.history.table_log_actions }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for journey in journeys %}
                             <tr style="cursor: pointer; border-bottom: 1px solid var(--border-card);" onclick="location.href='{% url 'recovery_detail' journey.id %}'">
                                 <td class="fw-bold">{{ journey.plant_name }}</td>
-                                <td>{{ journey.crop_type|default:"General Plant" }}</td>
+                                <td>{{ journey.localized_crop_name|default:"General Plant" }}</td>
                                 <td>{{ journey.start_date|date:"Y-m-d" }}</td>
                                 <td>
                                     {% if journey.status == 'recovered' %}
-                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">Fully Healthy</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.phase_healthy }}</span>
                                     {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">Ongoing Recovery</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold px-2 py-1" style="border-radius: 6px;">{{ t.history.phase_ongoing }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-success btn-sm fw-bold">View Timeline</a>
+                                    <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-success btn-sm fw-bold">{{ t.history.action_view_timeline }}</a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">No active recovery journeys found. Create a journey from the Recovery Center!</td>
+                                <td colspan="5" class="text-center text-muted py-4">{{ t.history.no_journeys }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

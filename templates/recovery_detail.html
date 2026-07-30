@@ -9,7 +9,7 @@
                 <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small fw-bold">← Back to Dashboard</a>
             </div>
             <h1 class="fw-bold m-0 mt-1" style="font-size: 2rem;">{{ journey.plant_name }}</h1>
-            <p class="text-muted m-0">Crop Variety: <strong>{{ journey.crop_type|default:"General" }}</strong> | Started: {{ journey.start_date|date:"Y-m-d" }}</p>
+            <p class="text-muted m-0">Crop Variety: <strong>{{ journey.localized_crop_name|default:"General" }}</strong> | Started: {{ journey.start_date|date:"Y-m-d" }}</p>
         </div>
 
         <div class="d-flex gap-2">

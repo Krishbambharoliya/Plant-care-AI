@@ -2,47 +2,368 @@
 
 {% block extra_head %}
 <script>
-let geocodeTimeout = null;
-function lookupCityGPSAutomatic() {
-    clearTimeout(geocodeTimeout);
-    geocodeTimeout = setTimeout(lookupCityGPS, 600);
+let statesCitiesData = {};
+
+// Load Indian states and cities from the local JSON file on page load
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/static/data/indian_states_cities.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to load static JSON");
+            }
+            return response.json();
+        })
+        .then(data => {
+            statesCitiesData = data;
+            populateStates();
+            
+            // Parse existing value if any (e.g. from validation error postbacks)
+            const hiddenInput = document.getElementById('locationCityHiddenInput');
+            if (hiddenInput && hiddenInput.value) {
+                const parts = hiddenInput.value.split(',');
+                if (parts.length === 2) {
+                    const cityVal = parts[0].trim();
+                    const stateVal = parts[1].trim();
+                    
+                    const stateSelect = document.getElementById('stateSelect');
+                    stateSelect.value = stateVal;
+                    populateCities();
+                    
+                    const citySelect = document.getElementById('citySelect');
+                    citySelect.value = cityVal;
+                }
+            }
+        })
+        .catch(err => console.error("Failed to load states/cities data:", err));
+});
+
+// Populates the state select options
+function populateStates() {
+    const stateSelect = document.getElementById('stateSelect');
+    stateSelect.innerHTML = '<option value="">Select State</option>';
+    
+    // Sort states alphabetically
+    const states = Object.keys(statesCitiesData).sort();
+    states.forEach(state => {
+        const opt = document.createElement('option');
+        opt.value = state;
+        opt.textContent = state;
+        stateSelect.appendChild(opt);
+    });
 }
 
+// Populates the city select options based on selected state
+function populateCities() {
+    const stateSelect = document.getElementById('stateSelect');
+    const citySelect = document.getElementById('citySelect');
+    const selectedState = stateSelect.value;
+    
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    
+    if (selectedState && statesCitiesData[selectedState]) {
+        // Sort cities alphabetically
+        const cities = statesCitiesData[selectedState].sort();
+        cities.forEach(city => {
+            const opt = document.createElement('option');
+            opt.value = city;
+            opt.textContent = city;
+            citySelect.appendChild(opt);
+        });
+    }
+    updateLocationCityField();
+}
+
+// Updates the hidden location_city field to submit "City, State"
+function updateLocationCityField() {
+    const stateSelect = document.getElementById('stateSelect');
+    const citySelect = document.getElementById('citySelect');
+    const hiddenInput = document.getElementById('locationCityHiddenInput');
+    
+    if (citySelect.value && stateSelect.value) {
+        hiddenInput.value = `${citySelect.value}, ${stateSelect.value}`;
+        // Automatically fetch GPS coordinates for this city
+        lookupCityGPS();
+    } else {
+        hiddenInput.value = '';
+    }
+}
+
+// Reverse-resolves a selected city name to GPS coordinates
 function lookupCityGPS() {
-    const cityInput = document.querySelector('input[name="location_city"]');
+    const hiddenInput = document.getElementById('locationCityHiddenInput');
     const latInput = document.querySelector('input[name="latitude"]');
     const lonInput = document.querySelector('input[name="longitude"]');
     
-    if (!cityInput || !cityInput.value) {
-        return;
-    }
+    if (!hiddenInput || !hiddenInput.value) return;
     
-    const city = cityInput.value;
-    const apiKey = "be7bfd5d33099d1342756e8161d6449d";
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`;
+    // Extract only the city name (first part of "City, State")
+    const city = hiddenInput.value.split(',')[0].trim();
+    const url = `/api/weather/geocode/?city=${encodeURIComponent(city)}`;
     
     fetch(url)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('City not found');
+            return response.json();
+        })
         .then(data => {
-            if (data && data.length > 0) {
-                latInput.value = parseFloat(data[0].lat).toFixed(6);
-                lonInput.value = parseFloat(data[0].lon).toFixed(6);
+            if (data && data.lat !== undefined && data.lon !== undefined) {
+                latInput.value = parseFloat(data.lat).toFixed(6);
+                lonInput.value = parseFloat(data.lon).toFixed(6);
                 latInput.dispatchEvent(new Event('input'));
                 lonInput.dispatchEvent(new Event('input'));
             }
         })
-        .catch(err => {
-            console.error("Geocoding failed:", err);
-        });
+        .catch(err => console.error("Geocoding failed:", err));
+}
+
+// Fetch current location using browser Geolocation API
+function fetchSignupGPSLocation() {
+    const statusMsg = document.getElementById('gpsStatusMessage');
+    const latInput = document.querySelector('input[name="latitude"]');
+    const lonInput = document.querySelector('input[name="longitude"]');
+    
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+    
+    statusMsg.textContent = "{{ t.auth.gps_fetching }}";
+    statusMsg.classList.remove('d-none', 'text-success', 'text-danger');
+    statusMsg.classList.add('text-muted');
+    
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            latInput.value = lat.toFixed(6);
+            lonInput.value = lon.toFixed(6);
+            latInput.dispatchEvent(new Event('input'));
+            lonInput.dispatchEvent(new Event('input'));
+            
+            // Query reverse-geocoding API to resolve City and State name
+            fetch(`/api/weather/reverse-geocode/?lat=${lat}&lon=${lon}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Reverse geocoding failed");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.city) {
+                        statusMsg.textContent = "{{ t.auth.gps_resolved_city }} " + data.city;
+                        statusMsg.classList.replace('text-muted', 'text-success');
+                        
+                        // Select corresponding State and City in dropdowns if match exists
+                        const stateSelect = document.getElementById('stateSelect');
+                        const citySelect = document.getElementById('citySelect');
+                        const hiddenInput = document.getElementById('locationCityHiddenInput');
+                        
+                        let matchedState = "";
+                        if (data.state && statesCitiesData[data.state]) {
+                            matchedState = data.state;
+                        } else {
+                            // Fallback: look up state that contains the city
+                            for (let state in statesCitiesData) {
+                                if (statesCitiesData[state].includes(data.city)) {
+                                    matchedState = state;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!matchedState && data.state) {
+                            matchedState = data.state;
+                            // Add state option dynamically if it doesn't exist
+                            let stateExists = false;
+                            for (let i = 0; i < stateSelect.options.length; i++) {
+                                if (stateSelect.options[i].value === matchedState) {
+                                    stateExists = true;
+                                    break;
+                                }
+                            }
+                            if (!stateExists) {
+                                const opt = document.createElement('option');
+                                opt.value = matchedState;
+                                opt.textContent = matchedState;
+                                stateSelect.appendChild(opt);
+                            }
+                        }
+                        
+                        if (matchedState) {
+                            stateSelect.value = matchedState;
+                            populateCities();
+                            
+                            // Check if resolved city is in the rebuilt citySelect options
+                            let cityExists = false;
+                            for (let i = 0; i < citySelect.options.length; i++) {
+                                if (citySelect.options[i].value === data.city) {
+                                    cityExists = true;
+                                    break;
+                                }
+                            }
+                            if (!cityExists && data.city) {
+                                const opt = document.createElement('option');
+                                opt.value = data.city;
+                                opt.textContent = data.city;
+                                citySelect.appendChild(opt);
+                            }
+                            citySelect.value = data.city;
+                            hiddenInput.value = `${data.city}, ${matchedState}`;
+                        } else if (data.city) {
+                            // Fallback: append city option and select it
+                            let cityExists = false;
+                            for (let i = 0; i < citySelect.options.length; i++) {
+                                if (citySelect.options[i].value === data.city) {
+                                    cityExists = true;
+                                    break;
+                                }
+                            }
+                            if (!cityExists) {
+                                const opt = document.createElement('option');
+                                opt.value = data.city;
+                                opt.textContent = data.city;
+                                citySelect.appendChild(opt);
+                            }
+                            citySelect.value = data.city;
+                            hiddenInput.value = data.city;
+                        }
+                    } else {
+                        statusMsg.textContent = "{{ t.auth.gps_resolved }}";
+                        statusMsg.classList.replace('text-muted', 'text-success');
+                    }
+                })
+                .catch(err => {
+                    console.error("Reverse geocoding failed:", err);
+                    statusMsg.textContent = "{{ t.auth.gps_resolved }}";
+                    statusMsg.classList.replace('text-muted', 'text-success');
+                });
+        },
+        err => {
+            console.error("Geolocation failed:", err);
+            statusMsg.textContent = "{{ t.auth.gps_denied }}";
+            statusMsg.classList.replace('text-muted', 'text-danger');
+        }
+    );
 }
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center auth-fullscreen-bg" style="padding: 40px 20px;">
+<div class="d-flex align-items-center justify-content-center auth-fullscreen-bg" style="padding: 40px 20px; min-height: 100vh;">
     
+    {% if show_chooser %}
+    <!-- GORGEOUS PREFERENCE CHOOSER CARD -->
+    <div class="glass-panel p-5 fade-in-up" style="max-width: 460px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card); border-radius: var(--border-radius);">
+        <div class="text-center mb-4">
+            <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-3 auth-logo">
+            <h3 class="fw-extrabold m-0" style="font-size: 1.6rem; color: var(--text-primary);">
+                Choose Language & Theme
+            </h3>
+            <p class="text-muted mt-1 small">
+                ભાષા અને થીમ પસંદ કરો / भाषा और थीम चुनें
+            </p>
+        </div>
+
+        <!-- Forms for instant updates -->
+        <div class="d-flex flex-column gap-4">
+            <!-- Language selection form -->
+            <div>
+                <label class="form-label fw-bold mb-2" style="font-size: 0.92rem; color: var(--text-secondary);">
+                    Select Language / ભાષા પસંદ કરો / भाषा चुनें
+                </label>
+                <div class="d-flex flex-column gap-2">
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="en">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'en' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            English
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="gu">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'gu' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            ગુજરાતી (Gujarati)
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="hi">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'hi' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            हिन्दी (Hindi)
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Theme selection form -->
+            <div>
+                <label class="form-label fw-bold mb-2" style="font-size: 0.92rem; color: var(--text-secondary);">
+                    Select Theme / થીમ પસંદ કરો / थीम चुनें
+                </label>
+                <div class="d-flex gap-2">
+                    <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="theme_preference" value="light">
+                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'light' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                            ☀️ Light Mode
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="theme_preference" value="dark">
+                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'dark' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                            🌙 Dark Mode
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Continue button -->
+            <form method="post" action="{% url 'toggle_preference' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="continue" value="true">
+                <button type="submit" class="btn-custom-primary py-3 w-100 fw-bold" style="font-size: 1.05rem; border-radius: 12px;">
+                    {% if current_language == 'gu' %}ચાલુ રાખો (Continue) &rarr;{% elif current_language == 'hi' %}जारी रखें (Continue) &rarr;{% else %}Continue &rarr;{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <!-- REGULAR SIGNUP CARD WITH HEADER SWITCHER -->
     <div class="glass-panel p-5 fade-in-up" style="max-width: 800px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card);">
         
+        <!-- Subtle language & theme switcher bar at top -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-card);">
+            <!-- Language switch links -->
+            <div class="d-flex gap-2">
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="en">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'en' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">EN</button>
+                </form>
+                <span class="text-muted" style="font-size: 0.78rem;">|</span>
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="gu">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'gu' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">ગુજરાતી</button>
+                </form>
+                <span class="text-muted" style="font-size: 0.78rem;">|</span>
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="hi">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'hi' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">हिन्दी</button>
+                </form>
+            </div>
+            <!-- Theme toggle -->
+            <form method="post" action="{% url 'toggle_preference' %}">
+                {% csrf_token %}
+                <input type="hidden" name="theme_preference" value="{% if current_theme == 'dark' %}light{% else %}dark{% endif %}">
+                <button type="submit" class="btn btn-sm p-1 bg-none border-0 text-muted" style="font-size: 0.95rem; background: none; outline: none; box-shadow: none;">
+                    {% if current_theme == 'dark' %}☀️{% else %}🌙{% endif %}
+                </button>
+            </form>
+        </div>
+
         <!-- Brand Header -->
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
@@ -161,14 +482,37 @@ function lookupCityGPS() {
                         <input type="text" name="farm_name" class="form-control" value="{{ form.farm_name.value|default:'' }}">
                     </div>
 
-                    <div class="row g-2">
+                     <div class="row g-2">
                         <div class="col-6 form-group m-0">
                             <label class="form-label">{{ t.auth.farmSize }}</label>
                             <input type="number" step="0.01" name="farm_size_acres" class="form-control" value="{{ form.farm_size_acres.value|default:'' }}">
                         </div>
                         <div class="col-6 form-group m-0">
-                            <label class="form-label">{{ t.auth.city }}</label>
-                            <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}" placeholder="Enter your city" oninput="lookupCityGPSAutomatic()" onchange="lookupCityGPS()">
+                            <label class="form-label">{{ t.auth.state_label }}</label>
+                            <select id="stateSelect" class="form-select" onchange="populateCities()">
+                                <option value="">Select State</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6 form-group m-0">
+                            <label class="form-label">{{ t.auth.city_label }}</label>
+                            <select id="citySelect" class="form-select" onchange="updateLocationCityField()">
+                                <option value="">Select City</option>
+                            </select>
+                            <input type="hidden" name="location_city" id="locationCityHiddenInput" value="{{ form.location_city.value|default:'' }}">
+                        </div>
+                        <div class="col-6 form-group m-0 d-flex flex-column justify-content-end pb-1">
+                            <button type="button" class="btn btn-outline-success btn-sm w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-1" onclick="fetchSignupGPSLocation()" style="border-radius: 8px; font-size: 0.82rem; border-color: var(--primary); color: var(--primary);">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                                {{ t.auth.use_gps_btn }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <span id="gpsStatusMessage" class="text-success small fw-bold d-none">GPS Location resolved!</span>
                         </div>
                     </div>
 
@@ -200,5 +544,6 @@ function lookupCityGPS() {
         </form>
 
     </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -18,15 +18,19 @@ function lookupCityGPS() {
     }
     
     const city = cityInput.value;
-    const apiKey = "be7bfd5d33099d1342756e8161d6449d";
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`;
+    const url = `/api/weather/geocode/?city=${encodeURIComponent(city)}`;
     
     fetch(url)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('City not found');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data && data.length > 0) {
-                latInput.value = parseFloat(data[0].lat).toFixed(6);
-                lonInput.value = parseFloat(data[0].lon).toFixed(6);
+            if (data && data.lat !== undefined && data.lon !== undefined) {
+                latInput.value = parseFloat(data.lat).toFixed(6);
+                lonInput.value = parseFloat(data.lon).toFixed(6);
                 latInput.dispatchEvent(new Event('input'));
                 lonInput.dispatchEvent(new Event('input'));
             }

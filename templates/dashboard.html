@@ -155,7 +155,6 @@
                     <tr style="border-bottom: 2px solid var(--border-card);">
                         <th>{{ t.stats.photo }}</th>
                         <th>{{ t.stats.cropName }}</th>
-                        <th>{{ t.stats.scanOrgan }}</th>
                         <th>{{ t.stats.confidence }}</th>
                         <th>{{ t.stats.healthStatus }}</th>
                         <th>{{ t.stats.diagnosticDate }}</th>
@@ -175,20 +174,11 @@
                         </td>
                         <td>
                             <div class="fw-bold">
-                                {% if scan.matched_crop_name == 'Potato' %}{{ t.crop.potato }}
-                                {% elif scan.matched_crop_name == 'Tomato' %}{{ t.crop.tomato }}
-                                {% elif scan.matched_crop_name == 'Chili Pepper' or scan.matched_crop_name == 'Pepper' %}{{ t.crop.chili }}
-                                {% else %}{{ scan.matched_crop_name|default:"Unknown Species" }}{% endif %}
+                                {{ scan.localized_crop_name|default:"Unknown Species" }}
                             </div>
                             <small class="text-muted font-italic">{{ scan.identified_species }}</small>
                         </td>
-                        <td>
-                            {% if scan.organ == 'leaf' %}{{ t.scan.organ_leaf }}
-                            {% elif scan.organ == 'flower' %}{{ t.scan.organ_flower }}
-                            {% elif scan.organ == 'fruit' %}{{ t.scan.organ_fruit }}
-                            {% elif scan.organ == 'bark' %}{{ t.scan.organ_bark }}
-                            {% else %}{{ scan.organ }}{% endif %}
-                        </td>
+
                         <td>
                             <div class="fw-bold text-success">{% widthratio scan.confidence_score 1 100 %}%</div>
                         </td>

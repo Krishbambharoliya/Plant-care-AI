@@ -40,11 +40,14 @@ def login_view(request):
             error = "Invalid username or password."
     else:
         form = AuthenticationForm()
+        
+    show_chooser = not request.session.get('preferences_selected', False)
 
     return render(request, 'login.html', {
         'form': form,
         'error': error,
         'success_message': success_message,
+        'show_chooser': show_chooser,
     })
 
 def register_view(request):
@@ -103,7 +106,12 @@ def register_view(request):
     else:
         form = FarmerRegistrationForm()
 
-    return render(request, 'register.html', {'form': form, 'error': error})
+    show_chooser = not request.session.get('preferences_selected', False)
+    return render(request, 'register.html', {
+        'form': form,
+        'error': error,
+        'show_chooser': show_chooser,
+    })
 
 
 def verify_email_view(request):
@@ -386,6 +394,9 @@ def toggle_preference_view(request):
         if is_auth:
             request.user.save()
             
+        if request.POST.get('continue') == 'true':
+            request.session['preferences_selected'] = True
+            
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 # ==========================================
@@ -421,6 +432,10 @@ def dashboard_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    for scan in page_obj:
+        scan.localized_crop_name = get_localized_crop_name(scan.matched_crop_name or 'Unknown', lang)
+    
     # Auto-fetch weather from user's registered city
     weather_data = None
     user_city = request.user.location_city
@@ -432,6 +447,8 @@ def dashboard_view(request):
 
     from accounts.models import RecoveryTracker
     journeys = RecoveryTracker.objects.filter(user=request.user)
+    for journey in journeys:
+        journey.localized_crop_name = get_localized_crop_name(journey.crop_type or 'General', lang)
 
     context = {
         'total': total,
@@ -1771,6 +1788,10 @@ def support_view(request):
 def recovery_list_view(request):
     from accounts.models import RecoveryTracker
     journeys = RecoveryTracker.objects.filter(user=request.user)
+    lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    from plantcare.utils import get_localized_crop_name
+    for journey in journeys:
+        journey.localized_crop_name = get_localized_crop_name(journey.crop_type or 'General', lang)
     return render(request, 'recovery.html', {'journeys': journeys})
 
 
@@ -1824,6 +1845,10 @@ def recovery_detail_view(request, journey_id):
         "Fertilizing: Apply nitrogen-rich organic compost if leaves are pale, or potassium-rich sulfate of potash to support flowering/fruiting.",
         "Pest Control: Spray organic neem oil solution onto leaf surfaces (especially undersides) weekly if spotting is visible."
     ]
+    
+    lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    from plantcare.utils import get_localized_crop_name
+    journey.localized_crop_name = get_localized_crop_name(journey.crop_type or 'General', lang)
     
     return render(request, 'recovery_detail.html', {
         'journey': journey,
@@ -2007,6 +2032,13 @@ def history_view(request):
     scans = ScanHistory.objects.filter(user=request.user).order_by('-created_at')
     searches = SearchHistory.objects.filter(user=request.user).order_by('-created_at')
     journeys = RecoveryTracker.objects.filter(user=request.user).order_by('-created_at')
+    
+    lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    from plantcare.utils import get_localized_crop_name
+    for scan in scans:
+        scan.localized_crop_name = get_localized_crop_name(scan.matched_crop_name or 'Unknown', lang)
+    for journey in journeys:
+        journey.localized_crop_name = get_localized_crop_name(journey.crop_type or 'General', lang)
     
     return render(request, 'history.html', {
         'scans': scans,

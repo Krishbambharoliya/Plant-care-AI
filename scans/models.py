@@ -5,8 +5,6 @@ class ScanHistory(models.Model):
     ORGAN_CHOICES = [
         ('leaf', 'Leaf'),
         ('flower', 'Flower'),
-        ('fruit', 'Fruit'),
-        ('bark', 'Bark'),
     ]
 
     user = models.ForeignKey(
@@ -59,8 +57,6 @@ class FutureDataset(models.Model):
     ORGAN_CHOICES = [
         ('leaf', 'Leaf'),
         ('flower', 'Flower'),
-        ('fruit', 'Fruit'),
-        ('bark', 'Bark'),
     ]
  
     username = models.CharField(max_length=150, null=True, blank=True)

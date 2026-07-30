@@ -123,6 +123,11 @@ CROP_TRANSLATIONS = {
     'Turmeric': {'hi': 'हल्दी', 'gu': 'હળદર'},
     'Watermelon': {'hi': 'तरबूज', 'gu': 'તરબૂચ'},
     'Wheat': {'hi': 'गेहूं', 'gu': 'ઘઉં'},
+    'Chili Pepper': {'hi': 'मिर्च', 'gu': 'મરચું'},
+    'Citrus': {'hi': 'ખટ્ટા ફળો (Citrus)', 'gu': 'લીંબુ વર્ગના ફળો (Citrus)'},
+    'Peas': {'hi': 'मटर', 'gu': 'વટાણા'},
+    'Rosemary': {'hi': 'रोज़मेरी', 'gu': 'રોઝમેરી'},
+    'Plum': {'hi': 'आलूबुखारा', 'gu': 'આલુબુખારા'},
 }
 
 _DYNAMIC_TRANSLATION_CACHE = {}

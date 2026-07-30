@@ -27,16 +27,7 @@
                         <input type="file" id="imageInput" name="image" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" required>
                     </div>
 
-                    <!-- Organ Type Selector (Standard Dropdown) -->
-                    <div class="form-group m-0">
-                        <label class="form-label">{{ t.scan.organ }}</label>
-                        <select name="organ" class="form-select" required>
-                            <option value="leaf" selected>{{ t.scan.organ_leaf }}</option>
-                            <option value="flower">{{ t.scan.organ_flower }}</option>
-                            <option value="fruit">{{ t.scan.organ_fruit }}</option>
-                            <option value="bark">{{ t.scan.organ_bark }}</option>
-                        </select>
-                    </div>
+                    <input type="hidden" name="organ" value="leaf">
 
                     <!-- Geolocation Switcher -->
                     <div class="d-flex align-items-center gap-2 py-2">
@@ -138,42 +129,46 @@
                     <!-- AI Structured Treatment Recommendation -->
                     <div class="glass-panel p-3 border mb-1" style="background: rgba(59, 130, 246, 0.02); border-radius: 12px;">
                         <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--primary); font-size: 1.05rem;">
-                            <span>🤖</span> AI Treatment Directive (Dosage & Method)
+                            <span>🤖</span> {{ t.scan.ai_directive }}
                         </h6>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">Treatment Type:</strong>
-                                    <span class="fw-extrabold text-dark" style="font-size: 0.95rem;">{{ result.treatment_type|default:"None" }}</span>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.treatment_type_label }}</strong>
+                                    <span class="fw-extrabold text-dark" style="font-size: 0.95rem;">
+                                        {% if result.treatment_type == 'Organic' %}{{ t.scan.ttype_organic }}{% elif result.treatment_type == 'Chemical' %}{{ t.scan.ttype_chemical }}{% elif result.treatment_type == 'Organic & Chemical' %}{{ t.scan.ttype_both }}{% else %}{{ result.treatment_type|default:"None" }}{% endif %}
+                                    </span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">Pest/Disease Severity:</strong>
-                                    <span class="fw-extrabold {% if result.severity == 'Mild' %}text-success{% elif result.severity == 'Moderate' %}text-warning{% else %}text-danger{% endif %}" style="font-size: 0.95rem;">{{ result.severity|default:"N/A" }}</span>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.severity_label }}</strong>
+                                    <span class="fw-extrabold {% if result.severity == 'Mild' %}text-success{% elif result.severity == 'Moderate' %}text-warning{% else %}text-danger{% endif %}" style="font-size: 0.95rem;">
+                                        {% if result.severity == 'Mild' %}{{ t.scan.severity_mild }}{% elif result.severity == 'Moderate' %}{{ t.scan.severity_moderate }}{% elif result.severity == 'Severe' %}{{ t.scan.severity_severe }}{% else %}{{ result.severity|default:"N/A" }}{% endif %}
+                                    </span>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">☘ Organic Treatment Options (Neem oil, Trichoderma, Compost):</strong>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.organic_options_label }}</strong>
                                     <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_organic_recommendation|default:"None" }}</span>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">🧪 Chemical Treatment Options (Fungicides, Pesticides):</strong>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.chemical_options_label }}</strong>
                                     <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_chemical_recommendation|default:"None" }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">⚖ Recommended Dosage:</strong>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.dosage_label }}</strong>
                                     <span class="fw-extrabold text-success" style="font-size: 0.95rem;">{{ result.treatment_dosage|default:"As indicated" }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="p-3 rounded border" style="background-color: var(--bg-sidebar);">
-                                    <strong class="small text-secondary d-block mb-1">📢 Application Method:</strong>
+                                    <strong class="small text-secondary d-block mb-1">{{ t.scan.method_label }}</strong>
                                     <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ result.treatment_application_method|default:"Foliar spray" }}</span>
                                 </div>
                             </div>
@@ -184,7 +179,7 @@
                     <div class="mt-1">
                         <a href="{% url 'assistant' %}?crop={{ result.matched_crop_name }}&disease={{ result.disease_identified|default:'None' }}" class="btn-custom-primary text-decoration-none fw-bold w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" style="border-radius: 12px; font-size: 1rem;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-                            Discuss Treatment in AI Chatbot
+                            {{ t.scan.discuss_treatment }}
                         </a>
                     </div>
                     
@@ -279,7 +274,7 @@
                             <div class="glass-panel p-3 h-100" style="border: 1px solid var(--border-card); background: rgba(239, 68, 68, 0.01);">
                                 <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--text-primary); font-size: 1rem;">
                                     <span style="font-size: 1.25rem;">🛡️</span>
-                                    {% if current_language == 'hi' %}अनुशंसित कीटनाशक (Pesticide){% elif current_language == 'gu' %}ભલામણ કરેલ જંતુનાશકો (Pesticide){% else %}Recommended Pesticides{% endif %}
+                                    {{ t.scan.pesticides_header }}
                                 </h6>
                                 
                                 {% if pesticides_list %}
@@ -335,7 +330,7 @@
                                 </div>
                                 {% else %}
                                 <div class="p-3 text-center text-muted small rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card);">
-                                    {% if current_language == 'hi' %}कोई रासायनिक कीटनाशक आवश्यक नहीं है। जैविक उपचार का पालन करें।{% elif current_language == 'gu' %}કોઈ રાસાયણિક જંતુનાશક જરૂરી નથી. સેન્દ્રિય સારવાર અનુસરો.{% else %}No chemical pesticides required. Follow organic treatment.{% endif %}
+                                    {{ t.scan.no_pesticides_desc }}
                                 </div>
                                 {% endif %}
                             </div>

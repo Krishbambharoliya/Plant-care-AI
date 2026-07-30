@@ -672,16 +672,16 @@
                             <img src="/media/logo.png" alt="PlantCare Logo" width="24" height="24" style="border-radius: 4px; object-fit: cover;">
                             <span class="fw-bold" style="letter-spacing: -0.2px;">PlantCare AI</span>
                         </div>
-                        <p class="m-0 text-muted mt-1" style="font-size: 0.8rem;">© {% now "Y" %} PlantCare AI. All rights reserved.</p>
+                        <p class="m-0 text-muted mt-1" style="font-size: 0.8rem;">© {% now "Y" %} PlantCare AI. {{ t.footer.rights_suffix }}</p>
                     </div>
                     <div class="col-md-4 text-center">
-                        <span class="text-muted small">✉ Support: <a href="mailto:plantcare799@gmail.com" class="fw-bold text-decoration-none" style="color: var(--primary);">plantcare799@gmail.com</a></span>
+                        <span class="text-muted small">✉ {{ t.footer.support_label }} <a href="mailto:plantcare799@gmail.com" class="fw-bold text-decoration-none" style="color: var(--primary);">plantcare799@gmail.com</a></span>
                     </div>
                     <div class="col-md-4 text-center text-md-end">
                         <div class="d-flex gap-3 justify-content-center justify-content-md-end text-muted small">
-                            <a href="{% url 'support' %}" class="text-decoration-none text-muted fw-bold">Support Form</a>
+                            <a href="{% url 'support' %}" class="text-decoration-none text-muted fw-bold">{{ t.footer.support_form }}</a>
                             <span>•</span>
-                            <span>Language: <strong>{{ current_language|upper }}</strong></span>
+                            <span>{{ t.footer.language }} <strong>{{ current_language|upper }}</strong></span>
                         </div>
                     </div>
                 </div>

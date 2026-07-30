@@ -1,16 +1,129 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center auth-fullscreen-bg">
+<div class="d-flex align-items-center justify-content-center auth-fullscreen-bg" style="min-height: 100vh; padding: 2rem 0;">
     
+    {% if show_chooser %}
+    <!-- GORGEOUS PREFERENCE CHOOSER CARD -->
+    <div class="glass-panel p-5 fade-in-up" style="max-width: 460px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card); border-radius: var(--border-radius);">
+        <div class="text-center mb-4">
+            <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-3 auth-logo">
+            <h3 class="fw-extrabold m-0" style="font-size: 1.6rem; color: var(--text-primary);">
+                Choose Language & Theme
+            </h3>
+            <p class="text-muted mt-1 small">
+                ભાષા અને થીમ પસંદ કરો / भाषा और थीम चुनें
+            </p>
+        </div>
+
+        <!-- Forms for instant updates -->
+        <div class="d-flex flex-column gap-4">
+            <!-- Language selection form -->
+            <div>
+                <label class="form-label fw-bold mb-2" style="font-size: 0.92rem; color: var(--text-secondary);">
+                    Select Language / ભાષા પસંદ કરો / भाषा चुनें
+                </label>
+                <div class="d-flex flex-column gap-2">
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="en">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'en' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            English
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="gu">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'gu' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            ગુજરાતી (Gujarati)
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="hi">
+                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'hi' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                            हिन्दी (Hindi)
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Theme selection form -->
+            <div>
+                <label class="form-label fw-bold mb-2" style="font-size: 0.92rem; color: var(--text-secondary);">
+                    Select Theme / થીમ પસંદ કરો / थीम चुनें
+                </label>
+                <div class="d-flex gap-2">
+                    <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="theme_preference" value="light">
+                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'light' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                            ☀️ Light Mode
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="theme_preference" value="dark">
+                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'dark' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                            🌙 Dark Mode
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Continue button -->
+            <form method="post" action="{% url 'toggle_preference' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="continue" value="true">
+                <button type="submit" class="btn-custom-primary py-3 w-100 fw-bold" style="font-size: 1.05rem; border-radius: 12px;">
+                    {% if current_language == 'gu' %}ચાલુ રાખો (Continue) &rarr;{% elif current_language == 'hi' %}जारी रखें (Continue) &rarr;{% else %}Continue &rarr;{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <!-- REGULAR LOGIN CARD WITH HEADER SWITCHER -->
     <div class="glass-panel p-5 fade-in-up" style="max-width: 440px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card);">
         
+        <!-- Subtle language & theme switcher bar at top -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--border-card);">
+            <!-- Language switch links -->
+            <div class="d-flex gap-2">
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="en">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'en' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">EN</button>
+                </form>
+                <span class="text-muted" style="font-size: 0.78rem;">|</span>
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="gu">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'gu' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">ગુજરાતી</button>
+                </form>
+                <span class="text-muted" style="font-size: 0.78rem;">|</span>
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="hi">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'hi' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">हिन्दी</button>
+                </form>
+            </div>
+            <!-- Theme toggle -->
+            <form method="post" action="{% url 'toggle_preference' %}">
+                {% csrf_token %}
+                <input type="hidden" name="theme_preference" value="{% if current_theme == 'dark' %}light{% else %}dark{% endif %}">
+                <button type="submit" class="btn btn-sm p-1 bg-none border-0 text-muted" style="font-size: 0.95rem; background: none; outline: none; box-shadow: none;">
+                    {% if current_theme == 'dark' %}☀️{% else %}🌙{% endif %}
+                </button>
+            </form>
+        </div>
+
         <!-- Logo and brand -->
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
             <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">PlantCare</h2>
             <p class="text-muted mt-1" style="font-size: 0.95rem;">{{ t.auth.login }}</p>
         </div>
+        
         {% if error %}
         <div class="alert alert-danger text-center py-2" role="alert" style="border-radius: 10px; font-size: 0.9rem;">
             {{ error }}
@@ -53,15 +166,29 @@
         </div>
         <div class="text-center mt-2" style="font-size: 0.85rem;">
             <a href="{% url 'password_reset_request' %}" style="color: var(--text-secondary); text-decoration: none; font-weight: 600;">
-                Forgot / Change Password?
+                {{ t.auth.forgotPassword }}
             </a>
         </div>
         <div class="text-center mt-2" style="font-size: 0.85rem;">
             <a href="{% url 'find_username' %}" style="color: var(--text-secondary); text-decoration: none;">
-                Forgot Username?
+                {{ t.auth.forgotUsername }}
             </a>
         </div>
 
     </div>
+    {% endif %}
 </div>
+
+<script>
+function togglePasswordVisibility() {
+    const passwordInput = document.querySelector('input[name="password"]');
+    if (passwordInput) {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+        } else {
+            passwordInput.type = "password";
+        }
+    }
+}
+</script>
 {% endblock %}

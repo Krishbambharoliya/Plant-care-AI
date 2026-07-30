@@ -5,10 +5,10 @@
     <!-- Header title -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <p class="text-muted m-0">Track and monitor sick plants, upload weekly pictures, and follow care instructions to recover health</p>
+            <p class="text-muted m-0">{{ t.recovery.subtitle }}</p>
         </div>
         <a href="{% url 'recovery_start' %}" class="btn-custom-primary text-decoration-none d-flex align-items-center gap-2 fw-bold">
-            <span>➕</span> Start New Recovery Journey
+            <span>➕</span> {{ t.recovery.start_new }}
         </a>
     </div>
 
@@ -25,23 +25,23 @@
                         <small class="text-muted">Started: {{ journey.start_date|date:"Y-m-d" }}</small>
                     </div>
                     <h3 class="fw-bold m-0 mt-1" style="font-size: 1.35rem;">{{ journey.plant_name }}</h3>
-                    <p class="text-muted small mt-1">Crop Variety: <strong>{{ journey.crop_type|default:"General" }}</strong></p>
+                    <p class="text-muted small mt-1">Crop Variety: <strong>{{ journey.localized_crop_name|default:"General" }}</strong></p>
                     
                     <div class="mt-3">
-                        <div class="text-muted small"><strong>Recorded check-ins:</strong> {{ journey.checkins.count }} week(s)</div>
+                        <div class="text-muted small"><strong>{{ t.recovery.recorded_checkins }}</strong> {{ journey.checkins.count }} week(s)</div>
                         {% if journey.checkins.last %}
-                        <div class="text-muted small text-truncate"><strong>Latest check-in:</strong> {{ journey.checkins.last.checkin_date|date:"Y-m-d" }}</div>
+                        <div class="text-muted small text-truncate"><strong>{{ t.recovery.latest_checkin }}</strong> {{ journey.checkins.last.checkin_date|date:"Y-m-d" }}</div>
                         {% endif %}
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-2 w-100">
                     <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-success btn-sm flex-grow-1 fw-bold py-2" style="border-radius: 8px;">
-                        View Timeline
+                        {{ t.recovery.view_timeline }}
                     </a>
                     {% if journey.status != 'recovered' %}
                     <a href="{% url 'recovery_checkin' journey.id %}" class="btn-custom-primary btn-sm px-3 fw-bold py-2 text-decoration-none text-center" style="border-radius: 8px; font-size: 0.875rem;">
-                        Check-in
+                        {{ t.recovery.checkin_btn }}
                     </a>
                     {% endif %}
                 </div>
@@ -53,10 +53,10 @@
                 <div class="p-3 bg-success bg-opacity-5 rounded-circle text-success" style="width: 72px; height: 72px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
                     🩹
                 </div>
-                <h4 class="fw-bold m-0">No Recovery Journeys Found</h4>
-                <p class="text-muted m-0" style="max-width: 420px;">If you have a diseased crop or plant, start a recovery journey. You can track progress week-by-week, upload check-in photos, and download reports.</p>
+                <h4 class="fw-bold m-0">{{ t.recovery.no_journeys_found }}</h4>
+                <p class="text-muted m-0" style="max-width: 420px;">{{ t.recovery.no_journeys_desc }}</p>
                 <a href="{% url 'recovery_start' %}" class="btn-custom-primary text-decoration-none fw-bold mt-2">
-                    Start Your First Journey
+                    {{ t.recovery.start_first }}
                 </a>
             </div>
         </div>

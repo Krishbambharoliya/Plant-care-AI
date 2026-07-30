@@ -2,6 +2,29 @@
 
 {% block extra_head %}
 <script>
+// Fetches the user's current GPS location and redirects to load the weather for that location
+function fetchWeatherGPSLocation() {
+    const status = document.getElementById('weatherGpsStatus');
+    if (navigator.geolocation) {
+        status.textContent = "Resolving coordinates...";
+        status.classList.remove('d-none');
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                // Redirect immediately with coordinates
+                window.location.href = "{% url 'weather_advisor' %}?lat=" + lat + "&lon=" + lon;
+            },
+            function(err) {
+                status.textContent = "GPS access denied.";
+                alert("GPS access denied. Please use the search by city option.");
+            }
+        );
+    } else {
+        alert("Geolocation is not supported by your browser.");
+    }
+}
+
 let geocodeWeatherTimeout = null;
 function lookupWeatherCityGPSAutomatic() {
     clearTimeout(geocodeWeatherTimeout);
@@ -18,15 +41,19 @@ function lookupWeatherCityGPS() {
     }
     
     const city = cityInput.value;
-    const apiKey = "be7bfd5d33099d1342756e8161d6449d";
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`;
+    const url = `/api/weather/geocode/?city=${encodeURIComponent(city)}`;
     
     fetch(url)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('City not found');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data && data.length > 0) {
-                latInput.value = parseFloat(data[0].lat).toFixed(6);
-                lonInput.value = parseFloat(data[0].lon).toFixed(6);
+            if (data && data.lat !== undefined && data.lon !== undefined) {
+                latInput.value = parseFloat(data.lat).toFixed(6);
+                lonInput.value = parseFloat(data.lon).toFixed(6);
                 latInput.dispatchEvent(new Event('input'));
                 lonInput.dispatchEvent(new Event('input'));
             }
@@ -87,7 +114,7 @@ if (navigator.geolocation) {
 <div class="d-flex flex-column gap-4 fade-in-up">
     <!-- Header title -->
     <div>
-        <p class="text-muted m-0">Analyze current micro-climates and predict crop suitability indexes</p>
+        <p class="text-muted m-0">{{ t.weather.subtitle }}</p>
     </div>
 
     {% if error %}
@@ -117,18 +144,23 @@ if (navigator.geolocation) {
                 </form>
             </div>
             
-            <!-- Option 2: Search by Coordinates -->
+            <!-- Option 2: Fetch Current Location -->
             <div class="col-md-6">
-                <form method="get" class="d-flex flex-column gap-2 h-100 justify-content-between">
+                <div class="d-flex flex-column gap-2 h-100 justify-content-between">
                     <div>
-                        <label class="form-label fw-bold mb-1">{{ t.weather.searchCoordsLabel }}</label>
-                        <div class="d-flex gap-2">
-                            <input type="number" step="0.0001" name="lat" id="weatherLatInput" class="form-control" placeholder="{{ t.weather.latitudePlaceholder }}" value="{{ lat|default:'' }}" required>
-                            <input type="number" step="0.0001" name="lon" id="weatherLonInput" class="form-control" placeholder="{{ t.weather.longitudePlaceholder }}" value="{{ lon|default:'' }}" required>
-                            <button type="submit" class="btn-custom-primary text-nowrap px-4">{{ t.weather.loadWeatherBtn }}</button>
+                        <label class="form-label fw-bold mb-1">Get Local Weather</label>
+                        <div class="d-flex flex-column gap-2">
+                            <button type="button" class="btn btn-outline-success w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="fetchWeatherGPSLocation()" style="border-radius: 8px; border-color: var(--primary); color: var(--primary);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                                📍 Use Current GPS Location
+                            </button>
+                            <span id="weatherGpsStatus" class="text-muted small text-center fw-bold d-none">Requesting GPS...</span>
+                            <!-- Hidden inputs to satisfy javascript references -->
+                            <input type="hidden" name="lat" id="weatherLatInput" value="{{ lat|default:'' }}">
+                            <input type="hidden" name="lon" id="weatherLonInput" value="{{ lon|default:'' }}">
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
