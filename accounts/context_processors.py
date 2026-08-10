@@ -26,10 +26,8 @@ def translation_processor(request):
             current = current.setdefault(part, {})
         current[parts[-1]] = val
         
-    from accounts.constants import GUJARAT_CITIES
     return {
         't': nested,
         'current_language': lang,
-        'current_theme': theme,
-        'gujarat_cities': GUJARAT_CITIES
+        'current_theme': theme
     }

@@ -7,9 +7,9 @@
 
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
-            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Find Username</h2>
+            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">{{ t.find_username.title|default:"Find Username" }}</h2>
             <p class="text-muted mt-1" style="font-size: 0.9rem;">
-                Enter your registered email and we will send your username to you.
+                {{ t.find_username.subtitle|default:"Enter your registered email and we will send your username to you." }}
             </p>
         </div>
 
@@ -23,35 +23,35 @@
         {% if success %}
         <div class="alert text-center py-3" role="alert"
              style="border-radius: 10px; font-size: 0.95rem; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #4ade80; font-weight: 600;">
-            Your username has been sent to your email address. Please check your inbox.
+            {{ t.find_username.success_msg|default:"Your username has been sent to your email address. Please check your inbox." }}
         </div>
         <div class="text-center mt-3">
             <a href="{% url 'login' %}" class="btn-custom-primary py-2 px-4" style="font-size: 0.95rem; text-decoration: none; display: inline-block; border-radius: 10px;">
-                Go to Login
+                {{ t.find_username.go_to_login|default:"Go to Login" }}
             </a>
         </div>
         {% else %}
         <form method="post" id="find-username-form" class="d-flex flex-column gap-3">
             {% csrf_token %}
             <div class="form-group m-0">
-                <label class="form-label">Registered Email Address</label>
+                <label class="form-label">{{ t.find_username.email_label|default:"Registered Email Address" }}</label>
                 <input
                     type="email"
                     id="email-input"
                     name="email"
                     class="form-control"
-                    placeholder="you@example.com"
+                    placeholder="{{ t.find_username.email_placeholder|default:'you@example.com' }}"
                     required>
             </div>
             <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">
-                Send My Username
+                {{ t.find_username.submit_btn|default:"Send My Username" }}
             </button>
         </form>
         {% endif %}
 
         <div class="text-center mt-4" style="font-size: 0.85rem;">
             <a href="{% url 'login' %}" style="color: var(--text-secondary); text-decoration: none;">
-                &larr; Back to Login
+                &larr; {{ t.find_username.back_to_login|default:"Back to Login" }}
             </a>
         </div>
     </div>

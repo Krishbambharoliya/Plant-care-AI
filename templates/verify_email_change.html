@@ -8,9 +8,9 @@
         <!-- Icon & Brand -->
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
-            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Verify New Email</h2>
+            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">{{ t.verify_email_change.title|default:"Verify New Email" }}</h2>
             <p class="text-muted mt-1" style="font-size: 0.9rem;">
-                A 6-digit OTP has been sent to your new email address:<br>
+                {{ t.verify_email_change.subtitle|default:"A 6-digit OTP has been sent to your new email address:" }}<br>
                 <strong style="color: var(--primary);">{{ pending_email }}</strong>
             </p>
         </div>
@@ -25,7 +25,7 @@
         <form method="post" id="otp-email-change-form" class="d-flex flex-column gap-3">
             {% csrf_token %}
             <div class="form-group m-0">
-                <label class="form-label">Enter OTP</label>
+                <label class="form-label">{{ t.verify_email_change.enter_otp_label|default:"Enter OTP" }}</label>
                 <input
                     type="text"
                     id="otp-input"
@@ -41,13 +41,13 @@
             </div>
 
             <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">
-                Confirm Email Change
+                {{ t.verify_email_change.submit_btn|default:"Confirm Email Change" }}
             </button>
         </form>
 
         <div class="text-center mt-4" style="font-size: 0.85rem;">
             <a href="{% url 'profile_settings' %}" style="color: var(--text-secondary); text-decoration: none;">
-                &larr; Cancel &amp; Back to Profile
+                &larr; {{ t.verify_email_change.cancel_back|default:"Cancel &amp; Back to Profile" }}
             </a>
         </div>
     </div>

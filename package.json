@@ -1,0 +1,14 @@
+{
+  "name": "plant-care-ai",
+  "version": "1.0.0",
+  "description": "PlantCare AI is an intelligent plant health diagnostic and agricultural advisory web portal.",
+  "main": "manage.py",
+  "scripts": {
+    "start": "python manage.py runserver",
+    "test": "python manage.py test",
+    "migrate": "python manage.py migrate",
+    "makemigrations": "python manage.py makemigrations"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

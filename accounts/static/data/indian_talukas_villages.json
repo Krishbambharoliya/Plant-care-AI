@@ -1,0 +1,328 @@
+{
+  "Agra": {
+    "Agra": ["Agra City", "Sikandra", "Belanganj", "Shahganj", "Bichpuri"],
+    "Etmadpur": ["Etmadpur", "Kheragarh", "Runakta", "Fatehpur Sikri"],
+    "Fatehabad": ["Fatehabad", "Bichpuri", "Achnera"],
+    "Kheragarh": ["Kheragarh", "Samsabad", "Barhan"]
+  },
+  "Ahmedabad": {
+    "Daskroi": ["Aslali", "Bareja", "Bhuvaldi", "Bopal", "Ghuma", "Jetalpur", "Kathwada", "Lapkaman"],
+    "Sanand": ["Sanand", "Anadej", "Bhavanpura", "Chekhla", "Chharodi", "Godhavi", "Iyava", "Khoraj"],
+    "Bavla": ["Bavla", "Adroda", "Bhamsara", "Bhayla", "Devdholera", "Dhanwada"],
+    "Dhandhuka": ["Dhandhuka", "Akru", "Bajarda", "Bhatiya"],
+    "Dholka": ["Dholka", "Koth", "Saragwala", "Vautha", "Bariad"],
+    "Viramgam": ["Viramgam", "Mandal", "Detroj", "Rampura"],
+    "Ranpur": ["Ranpur", "Barvala", "Limbdi"],
+    "Sarkhej": ["Sarkhej", "Narol", "Vatva", "Odhav"],
+    "Detroj": ["Detroj", "Rampura", "Bhalej"]
+  },
+  "Amritsar": {
+    "Amritsar North": ["Golden Temple", "Ram Tirath", "Wagah", "Vallah"],
+    "Amritsar South": ["Sultanwind", "Chheharta", "Rayya"],
+    "Ajnala": ["Ajnala", "Lopoke", "Ramdas", "Gharinda"],
+    "Baba Bakala": ["Baba Bakala", "Tarsikka", "Batala", "Jandiala Guru"]
+  },
+  "Aurangabad": {
+    "Aurangabad City": ["Cidco", "Garkheda", "Waluj", "Chikalthana"],
+    "Paithan": ["Paithan", "Gangapur", "Vaijapur"],
+    "Kannad": ["Kannad", "Soegaon", "Sillod"],
+    "Phulambri": ["Phulambri", "Khuldabad", "Vaijapur"]
+  },
+  "Bangalore": {
+    "Bangalore North": ["Hebbal", "Yelahanka", "Devanahalli", "Doddaballapur", "Hesaraghatta"],
+    "Bangalore South": ["Jayanagar", "JP Nagar", "Kanakapura", "Uttarahalli"],
+    "Bangalore East": ["Whitefield", "Marathahalli", "KR Puram", "Hoskote", "Kadugodi"],
+    "Anekal": ["Anekal", "Sarjapur", "Chandapura", "Electronic City", "Jigani"],
+    "Ramanagara": ["Ramanagara", "Magadi", "Channapatna"],
+    "Nelamangala": ["Nelamangala", "Hesaraghatta", "Tumkur Road"],
+    "Bommanahalli": ["Bommanahalli", "HSR Layout", "Bellandur", "Sarjapur Road"]
+  },
+  "Bharuch": {
+    "Bharuch": ["Bharuch City", "Zadeshwar", "Amod", "Palej"],
+    "Anklesvar": ["Ankleshwar", "Jhagadia", "Netrang", "Vagra"],
+    "Jambusar": ["Jambusar", "Amod", "Hansot", "Valia"],
+    "Vagra": ["Vagra", "Dahej", "Bharuch Rural"]
+  },
+  "Bhavnagar": {
+    "Bhavnagar": ["Bhavnagar City", "Vadva", "Akwada", "Sartanpar"],
+    "Ghogha": ["Ghogha", "Mahua", "Talaja", "Gariadhar"],
+    "Palitana": ["Palitana", "Shihor", "Vallabhipur"]
+  },
+  "Bhopal": {
+    "Huzur": ["Bhopal City", "Kolar Road", "Ayodhya Nagar", "Karond"],
+    "Berasia": ["Berasia", "Budhni", "Ichhawar"],
+    "Phanda": ["Phanda", "Katara Hills", "Ratibad"],
+    "Sehore": ["Sehore", "Nasrullaganj", "Budni"]
+  },
+  "Chennai": {
+    "Chennai North": ["Tondiarpet", "Royapuram", "Madhavaram", "Manali"],
+    "Chennai South": ["Adyar", "Velachery", "Perungudi", "Sholinganallur"],
+    "Chennai Central": ["Egmore", "Nungambakkam", "Kilpauk", "Chetpet"],
+    "Tambaram": ["Tambaram", "Chromepet", "Pallavaram", "Selaiyur"],
+    "Ambattur": ["Ambattur", "Padi", "Mogappair", "Avadi"],
+    "Thiruvottiyur": ["Thiruvottiyur", "Ennore", "Kathivakkam"]
+  },
+  "Coimbatore": {
+    "Coimbatore North": ["Ukkadam", "Gandhipuram", "RS Puram", "Peelamedu"],
+    "Coimbatore South": ["Ganapathy", "Saibaba Colony", "Ramanathapuram"],
+    "Mettupalayam": ["Mettupalayam", "Sirumugai", "Kinathukadavu"],
+    "Pollachi": ["Pollachi", "Valparai", "Anaimalai", "Udumalpet"]
+  },
+  "Delhi": {
+    "Delhi North": ["Civil Lines", "Model Town", "Wazirabad", "Burari"],
+    "Delhi South": ["Hauz Khas", "Vasant Kunj", "Mehrauli", "Saket"],
+    "Delhi East": ["Laxmi Nagar", "Mayur Vihar", "Preet Vihar", "Patparganj"],
+    "Delhi West": ["Janakpuri", "Dwarka", "Uttam Nagar", "Vikaspuri"],
+    "Delhi Central": ["Chandni Chowk", "Daryaganj", "Paharganj", "Karol Bagh"],
+    "Shahdara": ["Shahdara", "Vivek Vihar", "Geeta Colony", "Gandhi Nagar"],
+    "New Delhi": ["Connaught Place", "Parliament Street", "Rajpath", "India Gate", "Lodhi Colony"]
+  },
+  "Faridabad": {
+    "Faridabad": ["NIT", "Ballabhgarh", "Old Faridabad", "Sector 21"],
+    "Ballabhgarh": ["Ballabhgarh", "Prithla", "Mohna", "Tigaon"]
+  },
+  "Gandhinagar": {
+    "Gandhinagar": ["Gandhinagar City", "Sector 11", "Sector 21", "Infocity", "Adalaj"],
+    "Mansa": ["Mansa", "Kadi", "Kalol"],
+    "Dehgam": ["Dehgam", "Bareja", "Vasan"]
+  },
+  "Ghaziabad": {
+    "Ghaziabad": ["Indirapuram", "Vaishali", "Kaushambi", "Raj Nagar"],
+    "Loni": ["Loni", "Muradnagar", "Sahibabad"],
+    "Modinagar": ["Modinagar", "Hapur", "Pilkhuwa"],
+    "Dasna": ["Dasna", "Tronica City", "Raj Nagar Extension"]
+  },
+  "Gondal": {
+    "Gondal": ["Gondal City", "Bhanvad", "Upleta", "Dhoraji"],
+    "Gondal Rural": ["Shapur", "Virpur", "Kotda Sangani"]
+  },
+  "Guwahati": {
+    "Kamrup": ["Jalukbari", "Hengrabari", "Dispur", "Ganeshguri"],
+    "Dispur": ["Dispur", "Basistha", "Hatigaon", "Khanapara"],
+    "Guwahati East": ["Noonmati", "Silpukhuri", "Paltan Bazar"],
+    "Guwahati West": ["Chandmari", "Narengi", "Beltola"]
+  },
+  "Hyderabad": {
+    "Hyderabad Central": ["Nampally", "Abids", "Koti", "Sultan Bazar", "Secunderabad"],
+    "Hyderabad South": ["Charminar", "Falaknuma", "Chandrayangutta", "Malakpet"],
+    "Hyderabad North": ["Malkajgiri", "Uppal", "Kapra", "Alwal"],
+    "Cyberabad": ["Madhapur", "Kondapur", "Gachibowli", "Hitech City", "Kukatpally"],
+    "Ranga Reddy": ["Mehdipatnam", "Rajendranagar", "Shamshabad", "Chevella", "Abdullapurmet"],
+    "Medchal": ["Medchal", "Kompally", "Alwal", "Medipally", "Keesara"]
+  },
+  "Indore": {
+    "Indore": ["Vijay Nagar", "Palasia", "Rau", "Rajwada", "Bicholi Mardana"],
+    "Mhow": ["Mhow", "Pithampur", "Limbodagri"],
+    "Depalpur": ["Depalpur", "Hatod", "Sanwer"],
+    "Manpur": ["Manpur", "Gautampura", "Palda"]
+  },
+  "Jaipur": {
+    "Jaipur": ["Mansarovar", "Vaishali Nagar", "Jagatpura", "Malviya Nagar", "Tonk Road"],
+    "Sanganer": ["Sanganer", "Pratap Nagar", "Murlipura", "Sitapura"],
+    "Amber": ["Amber", "Amer", "Govindgarh", "Chomu"],
+    "Chaksu": ["Chaksu", "Malpura", "Phagi", "Bassi"],
+    "Shahpura": ["Shahpura", "Kotputli", "Viratnagar"],
+    "Jamwa Ramgarh": ["Jamwa Ramgarh", "Achrol", "Kukas"]
+  },
+  "Jamnagar": {
+    "Jamnagar": ["Jamnagar City", "Khambhalia", "Dhrol"],
+    "Lalpur": ["Lalpur", "Kalavad", "Jam Jodhpur"],
+    "Bhanvad": ["Bhanvad", "Dwarka", "Salaya"]
+  },
+  "Jodhpur": {
+    "Jodhpur": ["Shastri Nagar", "Pal Road", "Chopasni", "Sardarpura"],
+    "Bilara": ["Bilara", "Phalodi", "Shergarh"],
+    "Osian": ["Osian", "Bhopalgarh", "Tinwari"],
+    "Mandore": ["Mandore", "Balesar", "Bap"]
+  },
+  "Junagadh": {
+    "Junagadh": ["Junagadh City", "Keshod", "Vanthali"],
+    "Visavadar": ["Visavadar", "Mendarda", "Bhesan"],
+    "Mangrol": ["Mangrol", "Kodinar", "Una"]
+  },
+  "Kanpur": {
+    "Kanpur Nagar": ["Kidwai Nagar", "Kalyanpur", "Govind Nagar", "Kakadeo", "Swarup Nagar"],
+    "Bilhaur": ["Bilhaur", "Bhitargaon", "Sikandra"],
+    "Ghatampur": ["Ghatampur", "Pukhrayan", "Rasoolabad"],
+    "Chaubepur": ["Chaubepur", "Bindki", "Fatehpur"]
+  },
+  "Kochi": {
+    "Kanayannur": ["Ernakulam", "Edappally", "Maradu", "Kalamassery", "Vytilla"],
+    "Fort Kochi": ["Fort Kochi", "Mattancherry", "Willingdon Island"],
+    "Aluva": ["Aluva", "Angamaly", "Perumbavoor", "Muvattupuzha"],
+    "Thrikkakara": ["Thrikkakara", "Kakkanad", "Vyttila", "Palarivattom"]
+  },
+  "Kolkata": {
+    "Kolkata North": ["Shyambazar", "Belgachia", "Sinthi", "Nager Bazar"],
+    "Kolkata South": ["Alipore", "Tollygunge", "Behala", "Jadavpur"],
+    "Kolkata East": ["Salt Lake", "New Town", "Rajarhat", "Bidhannagar"],
+    "Kolkata West": ["Howrah", "Shibpur", "Liluah", "Domjur"],
+    "Barrackpore": ["Barrackpore", "Titagarh", "Khardah", "Garulia"],
+    "Baranagar": ["Baranagar", "Kamarhati", "Panihati", "Sodpur"]
+  },
+  "Lucknow": {
+    "Lucknow": ["Gomti Nagar", "Aliganj", "Alambagh", "Hazratganj", "Aminabad"],
+    "Bakshi Ka Talab": ["Bakshi Ka Talab", "Mohanlalganj", "Kakori"],
+    "Sarojini Nagar": ["Sarojini Nagar", "Indira Nagar", "Mahanagar"],
+    "Chinhat": ["Chinhat", "Gosainganj", "Bhowali", "Malihabad"]
+  },
+  "Ludhiana": {
+    "Ludhiana East": ["Civil Lines", "Sarabha Nagar", "Model Town", "BRS Nagar"],
+    "Ludhiana West": ["Giaspura", "Focal Point", "Millerganj", "Haibowal"],
+    "Samrala": ["Samrala", "Machhiwara", "Maloud"],
+    "Raikot": ["Raikot", "Jagraon", "Khanna"]
+  },
+  "Madurai": {
+    "Madurai North": ["Anna Nagar", "Alagarkoil Road", "Palanganatham"],
+    "Madurai South": ["KK Nagar", "Tallakulam", "Thirunagar"],
+    "Melur": ["Melur", "Thirumangalam", "Tirumayam"],
+    "Usilampatti": ["Usilampatti", "Peraiyur", "Chellampatti"]
+  },
+  "Mehsana": {
+    "Mehsana": ["Mehsana City", "Visnagar", "Kadi", "Unjha"],
+    "Visnagar": ["Visnagar", "Siddhpur", "Patan"],
+    "Becharaji": ["Becharaji", "Harij", "Sami"],
+    "Kheralu": ["Kheralu", "Vadnagar", "Vijapur"]
+  },
+  "Morbi": {
+    "Morbi": ["Morbi City", "Wankaner", "Tankara"],
+    "Halvad": ["Halvad", "Dhrangadhra", "Wadhwan"]
+  },
+  "Mumbai": {
+    "Mumbai City": ["Colaba", "Fort", "Nariman Point", "Marine Lines", "Churchgate", "Dadar"],
+    "Mumbai Suburban": ["Bandra", "Andheri", "Borivali", "Malad", "Kandivali", "Goregaon"],
+    "Kurla": ["Kurla", "Ghatkopar", "Vikhroli", "Kanjurmarg", "Bhandup"],
+    "Thane": ["Mulund", "Bhandup", "Nahur", "Airoli"],
+    "Borivali": ["Dahisar", "Mira Road", "Bhayander", "Vasai"],
+    "Andheri": ["Andheri East", "Andheri West", "Jogeshwari", "Vile Parle", "Santacruz"]
+  },
+  "Mysore": {
+    "Mysore North": ["Vijayanagar", "Kuvempunagar", "Hebbal"],
+    "Mysore South": ["Bannimantap", "Yadavagiri", "Dattagalli"],
+    "Hunsur": ["Hunsur", "Periyapatna", "HD Kote"],
+    "Nanjangud": ["Nanjangud", "TN Pura", "Kollegal"]
+  },
+  "Nadiad": {
+    "Nadiad": ["Nadiad City", "Anand", "Petlad"],
+    "Borsad": ["Borsad", "Khambhat", "Anklav"],
+    "Mahudha": ["Mahudha", "Kapadvanj", "Thasra"]
+  },
+  "Nagpur": {
+    "Nagpur City": ["Dharampeth", "Ramdaspeth", "Civil Lines", "Sitabuldi", "Sadar"],
+    "Kamptee": ["Kamptee", "Kanhan", "Mouda"],
+    "Ramtek": ["Ramtek", "Savner", "Parseoni"],
+    "Hingna": ["Hingna", "Butibori", "Kalmeshwar"]
+  },
+  "Nashik": {
+    "Nashik": ["Cidco", "Satpur", "Ambad", "Panchavati"],
+    "Deolali": ["Deolali", "Niphad", "Dindori"],
+    "Igatpuri": ["Igatpuri", "Ghoti", "Trimbak"],
+    "Sinnar": ["Sinnar", "Yeola", "Nandgaon"]
+  },
+  "Navsari": {
+    "Navsari": ["Navsari City", "Jalalpore", "Khergam", "Vansda"],
+    "Chikhli": ["Chikhli", "Gandevi", "Bansda"],
+    "Jalalpore": ["Jalalpore", "Maroli", "Bilimora"]
+  },
+  "New Delhi": {
+    "New Delhi": ["Connaught Place", "Parliament Street", "Rajpath", "India Gate"],
+    "South Delhi": ["Saket", "Hauz Khas", "Greater Kailash", "Defence Colony"],
+    "North Delhi": ["Civil Lines", "Kamla Nagar", "GTB Nagar"],
+    "West Delhi": ["Janakpuri", "Rajouri Garden", "Paschim Vihar"],
+    "East Delhi": ["Laxmi Nagar", "Preet Vihar", "Krishna Nagar"]
+  },
+  "Patan": {
+    "Patan": ["Patan City", "Radhanpur", "Sami", "Harij"],
+    "Chanasma": ["Chanasma", "Unjha", "Kankrej"],
+    "Sidhpur": ["Sidhpur", "Kadi", "Mehsana Rural"]
+  },
+  "Patna": {
+    "Patna City": ["Patna Sahib", "Khagaul", "Danapur", "Paliganj"],
+    "Maner": ["Maner", "Bikram", "Bihta"],
+    "Barh": ["Barh", "Mokama", "Punaura"],
+    "Fatuha": ["Fatuha", "Bakhtiyarpur", "Athmalgola"]
+  },
+  "Porbandar": {
+    "Porbandar": ["Porbandar City", "Ranavav", "Chhaya"],
+    "Kutiyana": ["Kutiyana", "Bilkha", "Mangrol"]
+  },
+  "Pune": {
+    "Pune City": ["Shivajinagar", "Deccan", "Kothrud", "Pimpri-Chinchwad", "Wakad"],
+    "Haveli": ["Khadki", "Hadapsar", "Wagholi", "Manjri", "Fursungi"],
+    "Mulshi": ["Mulshi", "Pirangut", "Lavale", "Nanded"],
+    "Bhor": ["Bhor", "Velhe", "Nira"],
+    "Khed": ["Khed", "Rajgurunagar", "Chakan"],
+    "Junnar": ["Junnar", "Otur", "Narayangaon", "Alephata"]
+  },
+  "Rajkot": {
+    "Rajkot": ["Mavdi", "Raiya", "Metoda", "Sadhuvasvdi", "Bhaktinagar"],
+    "Kotda Sangani": ["Kotda Sangani", "Paddhari", "Jasdan"],
+    "Gondal": ["Gondal", "Virpur", "Dhoraji"],
+    "Lodhika": ["Lodhika", "Shapar", "Veraval"]
+  },
+  "Ranchi": {
+    "Ranchi": ["Kanke", "Nagri", "Ormanjhi", "Hatia", "Doranda"],
+    "Bundu": ["Bundu", "Tamar", "Silli"],
+    "Mandar": ["Mandar", "Ratu", "Angara"],
+    "Khunti": ["Khunti", "Torpa", "Murhu"]
+  },
+  "Surat": {
+    "Chorasi": ["Bhatpor", "Bhatha", "Saroli", "Bhesan", "Bharthana", "Kavas", "Malgama"],
+    "Kamrej": ["Abrama", "Kholvad", "Valak", "Laskana", "Navagam", "Vav", "Kamrej"],
+    "Palsana": ["Antroli", "Vareli", "Haripura", "Sedhav", "Niyol", "Vankaneda"],
+    "Olpad": ["Gothan", "Olpad", "Sherdi", "Kosam", "Vadod", "Sayan"],
+    "Bardoli": ["Bardoli", "Kikwad", "Baben", "Sarabhan", "Ten", "Uva"],
+    "Mandvi": ["Mandvi", "Areth", "Goddha", "Kevdi", "Salaiya"],
+    "Mangrol": ["Mangrol", "Kosamba", "Vankal", "Zankhvav"],
+    "Umarpada": ["Umarpada", "Ghantoli", "Kevdi"],
+    "Surat City": ["Adajan", "Udhna", "Katargam", "Varachha", "Majura", "Athwa", "Nanpura", "Rander"],
+    "Mahuva": ["Mahuva", "Sihor", "Palitana"]
+  },
+  "Surendranagar": {
+    "Surendranagar": ["Surendranagar City", "Wadhwan", "Chotila"],
+    "Dasada": ["Dasada", "Halvad", "Patdi"],
+    "Lakhtar": ["Lakhtar", "Sayla", "Muli"]
+  },
+  "Thane": {
+    "Thane": ["Wagle Estate", "Kopri", "Manpada", "Kolshet", "Majiwada"],
+    "Kalyan": ["Kalyan", "Dombivli", "Ambarnath", "Badlapur"],
+    "Ulhasnagar": ["Ulhasnagar", "Ambernath", "Titwala"],
+    "Bhiwandi": ["Bhiwandi", "Shahad", "Kulgaon", "Narpoli"]
+  },
+  "Thiruvananthapuram": {
+    "Thiruvananthapuram": ["Pattom", "Karamana", "Vattiyoorkavu", "Kowdiar"],
+    "Nedumangad": ["Nedumangad", "Varkala", "Attingal"],
+    "Chirayinkeezhu": ["Chirayinkeezhu", "Kilimanoor", "Parassala"],
+    "Neyyattinkara": ["Neyyattinkara", "Balaramapuram", "Anchuthengu"]
+  },
+  "Vadodara": {
+    "Vadodara": ["Manjalpur", "Nizampura", "Fatehgunj", "Alkapuri", "Sayajiganj"],
+    "Karjan": ["Karjan", "Vaghodia", "Savli"],
+    "Padra": ["Padra", "Dabhoi", "Waghodia"],
+    "Dabhoi": ["Dabhoi", "Sinor", "Tilakwada"],
+    "Baroda Rural": ["Ajwa", "Gotri", "Sama", "Subhanpura"]
+  },
+  "Varanasi": {
+    "Varanasi": ["Cantonment", "Sarnath", "Ramnagar", "Lanka", "Sigra"],
+    "Pindra": ["Pindra", "Baragaon", "Sewapuri"],
+    "Arajiline": ["Arajiline", "Harahua", "Kashi Vidyapeeth"],
+    "Cholapur": ["Cholapur", "Chiraigaon", "Kapsethi"]
+  },
+  "Vijayawada": {
+    "Vijayawada": ["Auto Nagar", "Patamata", "Benz Circle", "Suryaraopet"],
+    "Gannavaram": ["Gannavaram", "Vuyyuru", "Gampalagudem"],
+    "Nandigama": ["Nandigama", "Tiruvur", "Jaggayyapeta"],
+    "Mylavaram": ["Mylavaram", "Kanchikacherla", "Penuganchiprolu"]
+  },
+  "Visakhapatnam": {
+    "Visakhapatnam": ["Gajuwaka", "Bheemunipatnam", "Anakapalle", "MVP Colony"],
+    "Bheemunipatnam": ["Bheemunipatnam", "Anandapuram", "Padmanabham"],
+    "Atchutapuram": ["Atchutapuram", "Nakkapalli", "Yelamanchili"],
+    "Sabbavaram": ["Sabbavaram", "Munagapaka", "Rambilli"]
+  },
+  "Valsad": {
+    "Valsad": ["Valsad City", "Vapi", "Dharampur"],
+    "Pardi": ["Pardi", "Umbergaon", "Bilimora"],
+    "Dharampur": ["Dharampur", "Kaprada", "Ahwa"]
+  }
+}

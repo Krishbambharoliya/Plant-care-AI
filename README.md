@@ -12,7 +12,6 @@ The application is built on a robust Django architecture integrating external se
 graph TD
     User([User's Browser]) <--> DjangoApp[Django MVT Web Server]
     DjangoApp <--> DB_Default[(Default SQLite DB)]
-    DjangoApp <--> DB_Future[(FUTUREDATASET SQLite DB)]
     DjangoApp <--> PlantNet[PlantNet API]
     DjangoApp <--> OpenWeather[OpenWeatherMap API]
     DjangoApp <--> OpenMeteo[Open-Meteo Historical Archive API]
@@ -72,20 +71,13 @@ Handles user accounts, session states, profile settings, search logs, scan histo
 * **EmailOTP**: Handles registration and password reset verification codes.
 * **RecoveryTracker & RecoveryCheckIn**: Manages weekly check-in logs and images.
 
-### 2. ML Dataset Database (`FUTUREDATASET.db`)
-Accumulates crop scans and identification outputs to serve as clean datasets for training agricultural classification models.
-* **FutureDataset Model**: Replicates all successful scans (uploader's username, image name, organ type, identified species, confidence, health labels, matched diseases, geolocational coordinates, and timestamp).
-* **Cascade Deletion Isolation**: This database is decoupled from the core User ForeignKey relationship. If a farmer deletes their account, their ScanHistory is deleted from the default database, but their ML scan records inside `FUTUREDATASET.db` remain intact, preserving high-quality training datasets.
-
----
-
 ## 4. Performance & UX Optimizations
 
 1. **Automatic Debounced Geocoding**:
    - The blocking "Resolve GPS via API" buttons have been removed from the Registration, Profile, and Weather pages.
    - Geocoding is now triggered **automatically** in the background using debounced `oninput` (600ms) and `onchange` events on the City input, silently populating coordinates without page freezes or manual clicks.
 2. **Database Query Acceleration**:
-   - Database indexes (`db_index=True`) have been added to frequently searched and sorted fields (`Disease.name`, `Disease.affected_part`, `SearchHistory.created_at`, `RecoveryTracker.status`, `RecoveryTracker.created_at`, `RecoveryCheckIn.week_number`, `ScanHistory.created_at`, `FutureDataset.created_at`).
+   - Database indexes (`db_index=True`) have been added to frequently searched and sorted fields (`Disease.name`, `Disease.affected_part`, `SearchHistory.created_at`, `RecoveryTracker.status`, `RecoveryTracker.created_at`, `RecoveryCheckIn.week_number`, `ScanHistory.created_at`).
 3. **Robust Case-Insensitive Translation**:
    - Crop name translation supports exact lookup, case-insensitive match (e.g. `chilli` -> `Chilli`), and substring matching (e.g. `Chili Pepper` -> `Chilli`).
    - Integrates dynamic Gemini API translation fallbacks for unknown crop names with memory caching.

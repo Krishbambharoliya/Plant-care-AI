@@ -36,25 +36,77 @@ class FarmerRegistrationForm(UserCreationForm):
             'preferred_language'
         )
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if username:
+            active_exists = User.objects.filter(username__iexact=username, is_active=True).exists()
+            if active_exists:
+                raise forms.ValidationError("This username is already taken.")
+            # Delete inactive user with this username to prevent registration blocking
+            User.objects.filter(username__iexact=username, is_active=False).delete()
+        return username
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name', '').strip()
+        if not first_name:
+            raise forms.ValidationError("First name is required.")
+        if len(first_name) < 2:
+            raise forms.ValidationError("First name must be at least 2 characters long.")
+        import re
+        if not re.match(r'^[a-zA-Z]+$', first_name):
+            raise forms.ValidationError("First name must contain only letters.")
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name', '').strip()
+        if not last_name:
+            raise forms.ValidationError("Last name is required.")
+        if len(last_name) < 2:
+            raise forms.ValidationError("Last name must be at least 2 characters long.")
+        import re
+        if not re.match(r'^[a-zA-Z]+$', last_name):
+            raise forms.ValidationError("Last name must contain only letters.")
+        return last_name
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
             email = email.strip().lower()
-            if User.objects.filter(email__iexact=email).exists():
+            active_exists = User.objects.filter(email__iexact=email, is_active=True).exists()
+            if active_exists:
                 raise forms.ValidationError("This email address is already registered. Please use a different email.")
+            # Delete inactive user with this email to prevent registration blocking
+            User.objects.filter(email__iexact=email, is_active=False).delete()
         return email
 
+    def clean_phone_number(self):
+        phone_number = (self.cleaned_data.get('phone_number') or '').strip()
+        if phone_number:
+            if not phone_number.isdigit():
+                raise forms.ValidationError("Phone number must contain only digits.")
+            if len(phone_number) != 10:
+                raise forms.ValidationError("Phone number must be exactly 10 digits long.")
+        return phone_number or None
+
     def clean_location_city(self):
-        # Retrieve the location city value from the form
         city = (self.cleaned_data.get('location_city') or '').strip()
-        if city:
-            from weather.services import OpenWeatherClient
-            # If the location is formatted as "City, State", extract just the city name for API verification
-            city_name = city.split(',')[0].strip()
-            lat, lon = OpenWeatherClient.geocode_city(city_name)
-            if lat is None or lon is None:
-                raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
+        if not city:
+            raise forms.ValidationError("Location is required. Please select State, District, Taluka, and Village.")
+        parts = [p.strip() for p in city.split(',') if p.strip()]
+        if len(parts) < 4:
+            raise forms.ValidationError("Location is incomplete. Please select State, District, Taluka, and Village.")
+        
+        from weather.services import OpenWeatherClient
+        lat, lon = OpenWeatherClient.geocode_city(city)
+        if lat is None or lon is None:
+            raise forms.ValidationError("The location could not be geocoded. Please enter a valid location.")
         return city
+
+    def clean_farm_size_acres(self):
+        size = self.cleaned_data.get('farm_size_acres')
+        if size is not None and size < 0:
+            raise forms.ValidationError("Farm size cannot be negative.")
+        return size
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -72,6 +124,9 @@ class FarmerRegistrationForm(UserCreationForm):
         return user
 
 class FarmerProfileForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=30, required=True, label="First Name")
+    last_name = forms.CharField(max_length=30, required=True, label="Last Name")
+
     class Meta:
         model = User
         fields = [
@@ -86,6 +141,28 @@ class FarmerProfileForm(forms.ModelForm):
             'farm_size_acres'
         ]
 
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name', '').strip()
+        if not first_name:
+            raise forms.ValidationError("First name is required.")
+        if len(first_name) < 2:
+            raise forms.ValidationError("First name must be at least 2 characters long.")
+        import re
+        if not re.match(r'^[a-zA-Z]+$', first_name):
+            raise forms.ValidationError("First name must contain only letters.")
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name', '').strip()
+        if not last_name:
+            raise forms.ValidationError("Last name is required.")
+        if len(last_name) < 2:
+            raise forms.ValidationError("Last name must be at least 2 characters long.")
+        import re
+        if not re.match(r'^[a-zA-Z]+$', last_name):
+            raise forms.ValidationError("Last name must contain only letters.")
+        return last_name
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
@@ -93,21 +170,39 @@ class FarmerProfileForm(forms.ModelForm):
             qs = User.objects.filter(email__iexact=email)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
+            # Only check active users or others (exclude self)
+            if qs.filter(is_active=True).exists():
                 raise forms.ValidationError("This email address is already used by another account.")
         return email
 
+    def clean_phone_number(self):
+        phone_number = (self.cleaned_data.get('phone_number') or '').strip()
+        if phone_number:
+            if not phone_number.isdigit():
+                raise forms.ValidationError("Phone number must contain only digits.")
+            if len(phone_number) != 10:
+                raise forms.ValidationError("Phone number must be exactly 10 digits long.")
+        return phone_number or None
+
     def clean_location_city(self):
-        # Retrieve location city value from the form
         city = (self.cleaned_data.get('location_city') or '').strip()
-        if city:
-            from weather.services import OpenWeatherClient
-            # If the location is formatted as "City, State", extract just the city name for API verification
-            city_name = city.split(',')[0].strip()
-            lat, lon = OpenWeatherClient.geocode_city(city_name)
-            if lat is None or lon is None:
-                raise forms.ValidationError("The city name does not match. Please enter a valid city name.")
+        if not city:
+            raise forms.ValidationError("Location is required. Please select State, District, Taluka, and Village.")
+        parts = [p.strip() for p in city.split(',') if p.strip()]
+        if len(parts) < 4:
+            raise forms.ValidationError("Location is incomplete. Please select State, District, Taluka, and Village.")
+        
+        from weather.services import OpenWeatherClient
+        lat, lon = OpenWeatherClient.geocode_city(city)
+        if lat is None or lon is None:
+            raise forms.ValidationError("The location could not be geocoded. Please enter a valid location.")
         return city
+
+    def clean_farm_size_acres(self):
+        size = self.cleaned_data.get('farm_size_acres')
+        if size is not None and size < 0:
+            raise forms.ValidationError("Farm size cannot be negative.")
+        return size
 
 
     def save(self, commit=True):
@@ -131,8 +226,7 @@ def _resolve_user_coordinates(user, city, lat, lon):
     """
     if city and (lat is None or lon is None):
         from weather.services import OpenWeatherClient
-        # Extract just the city name for OpenWeather geocoding
-        city_name = city.split(',')[0].strip()
-        res_lat, res_lon = OpenWeatherClient.geocode_city(city_name)
+        # Pass full location string to allow fallback geocoding
+        res_lat, res_lon = OpenWeatherClient.geocode_city(city)
         if res_lat is not None and res_lon is not None:
             user.latitude, user.longitude = res_lat, res_lon

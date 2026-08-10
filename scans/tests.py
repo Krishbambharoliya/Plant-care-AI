@@ -149,7 +149,6 @@ class ScansTests(APITestCase):
         self.assertEqual(response.data['results'][0]['identified_species'], 'Sp1')
 
     def test_history_ordered_newest_first(self):
-        import time
         from django.utils import timezone
         scan1 = ScanHistory.objects.create(
             user=self.user1, image='scans/1.jpg', organ='leaf',

@@ -148,6 +148,39 @@
         color: #000000 !important;
         border-color: #ffffff !important;
     }
+
+    /* ── Sync Weather GPS Button: dark mode fix ── */
+    .btn-sync-weather {
+        background: transparent;
+        color: var(--text-primary);
+        border: 1.5px solid var(--border-card);
+        transition: all 0.2s ease;
+    }
+    .btn-sync-weather:hover {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+    }
+    html.dark .btn-sync-weather {
+        background: transparent;
+        color: #ffffff !important;
+        border-color: rgba(255,255,255,0.25) !important;
+    }
+    html.dark .btn-sync-weather:hover {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-color: #ffffff !important;
+    }
+
+    /* ── Back button: dark mode fix ── */
+    html.dark .btn-outline-secondary {
+        color: #ffffff !important;
+        border-color: rgba(255,255,255,0.3) !important;
+    }
+    html.dark .btn-outline-secondary:hover {
+        background: rgba(255,255,255,0.1) !important;
+        color: #ffffff !important;
+    }
 </style>
 
 <div class="d-flex flex-column gap-4 fade-in-up">
@@ -206,8 +239,8 @@
                                 <label class="form-label fw-bold mb-0">{{ t.assistant.q1_label }}</label>
                             </div>
                             <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
-                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
-                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% elif current_language == 'mr' %}संबंधित पीक:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% elif current_language == 'mr' %}निवडत आहे...{% else %}Selecting...{% endif %}</strong>
                             </div>
                             <input type="text" id="cropSearchInput" class="form-control mb-2 py-2"
                                    placeholder="🔍 {{ t.assistant.q1_placeholder }}"
@@ -231,7 +264,7 @@
                         </div>
                         <div class="d-flex justify-content-end mt-3">
                             <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
-                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% elif current_language == 'mr' %}पुढे{% else %}Next{% endif %} &rarr;
                             </button>
                         </div>
                     </div>
@@ -248,8 +281,8 @@
                                 <label class="form-label fw-bold mb-0">{{ t.assistant.q2_label }}</label>
                             </div>
                             <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
-                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
-                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% elif current_language == 'mr' %}संबंधित पीक:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% elif current_language == 'mr' %}निवडत आहे...{% else %}Selecting...{% endif %}</strong>
                             </div>
                             <input type="hidden" name="soil_type" id="soilTypeSelectValue" required>
                             <div class="d-flex flex-column gap-2">
@@ -282,10 +315,10 @@
                         </div>
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px;">
-                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}पीछे{% else %}Back{% endif %}
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}पीछे{% elif current_language == 'mr' %}मागे{% else %}Back{% endif %}
                             </button>
                             <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
-                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% elif current_language == 'mr' %}पुढे{% else %}Next{% endif %} &rarr;
                             </button>
                         </div>
                     </div>
@@ -302,8 +335,8 @@
                                 <label class="form-label fw-bold mb-0">{{ t.assistant.q3_label }}</label>
                             </div>
                             <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
-                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
-                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% else %}Selecting...{% endif %}</strong>
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% elif current_language == 'mr' %}संबंधित पीक:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}चुन रहे हैं...{% elif current_language == 'mr' %}निवडत आहे...{% else %}Selecting...{% endif %}</strong>
                             </div>
                             <input type="hidden" name="stage" id="stageSelectValue" required>
                             <div class="d-flex flex-column gap-2">
@@ -336,10 +369,10 @@
                         </div>
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px;">
-                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}પીછે{% else %}Back{% endif %}
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}પીછે{% elif current_language == 'mr' %}मागे{% else %}Back{% endif %}
                             </button>
                             <button type="button" class="btn btn-outline-dark fw-bold px-4" onclick="nextStep()" style="border-radius: 8px;">
-                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% else %}Next{% endif %} &rarr;
+                                {% if current_language == 'gu' %}આગળ{% elif current_language == 'hi' %}आगे{% elif current_language == 'mr' %}पुढे{% else %}Next{% endif %} &rarr;
                             </button>
                         </div>
                     </div>
@@ -356,45 +389,45 @@
                                 <label class="form-label fw-bold mb-0">{{ t.assistant.q4_label }}</label>
                             </div>
                             <div class="d-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-3" style="background: var(--bg-card); border: 1px solid var(--border-card); font-size: 0.85rem;">
-                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% else %}Related Crop:{% endif %}</span>
-                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}ચુન રહે હૈં...{% else %}Selecting...{% endif %}</strong>
+                                <span class="text-muted">{% if current_language == 'gu' %}સંબંધિત પાક:{% elif current_language == 'hi' %}संबंधित फसल:{% elif current_language == 'mr' %}संबंधित पीक:{% else %}Related Crop:{% endif %}</span>
+                                <strong class="selected-crop-label-placeholder text-success">{% if current_language == 'gu' %}પસંદ કરી રહ્યા છીએ...{% elif current_language == 'hi' %}ચુન રહે હૈં...{% elif current_language == 'mr' %}निवडत आहे...{% else %}Selecting...{% endif %}</strong>
                             </div>
                             <input type="hidden" name="weather" id="weatherSelectValue" required>
                             <div class="d-flex flex-column gap-2">
                                 <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
                                      style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
                                      data-value="Hot &amp; Dry (32°C - 38°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
-                                    ☀️ {{ t.assistant.q4_hot }}
+                                     ☀️ {{ t.assistant.q4_hot }}
                                 </div>
                                 <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
                                      style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
                                      data-value="Mild &amp; Cloudy (24°C - 28°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
-                                    ⛅ {{ t.assistant.q4_mild }}
+                                     ⛅ {{ t.assistant.q4_mild }}
                                 </div>
                                 <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
                                      style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
                                      data-value="Rainy &amp; Wet (Warm &amp; Humid)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
-                                    🌧️ {{ t.assistant.q4_rainy }}
+                                     🌧️ {{ t.assistant.q4_rainy }}
                                 </div>
                                 <div class="custom-list-option weather-option px-3 py-2 border rounded-3 text-start"
                                      style="cursor: pointer; font-size: 0.88rem; color: var(--text-primary); border-color: var(--border-card) !important; background: var(--bg-card); transition: all 0.2s;"
                                      data-value="Cold &amp; Humid (12°C - 18°C)" onclick="selectCustomOption('weatherSelectValue', 'weather-option', this)">
-                                    ❄️ {{ t.assistant.q4_cold }}
+                                     ❄️ {{ t.assistant.q4_cold }}
                                 </div>
                             </div>
                             
                             <!-- Live GPS Weather Sync Button -->
                             <div class="mt-3 mb-1">
-                                <button type="button" class="btn btn-outline-success btn-sm w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-1" onclick="fetchChatbotWeatherGPS()" style="border-radius: 8px; font-size: 0.85rem; border-color: var(--primary); color: var(--primary);">
+                                <button type="button" class="btn btn-sync-weather btn-sm w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="fetchChatbotWeatherGPS()" style="border-radius: 8px; font-size: 0.85rem;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
                                     📍 Sync Live Local Weather
                                 </button>
-                                <span id="chatbotWeatherStatus" class="text-success small fw-bold d-none text-center d-block mt-1"></span>
+                                <span id="chatbotWeatherStatus" class="small fw-bold d-none text-center d-block mt-1"></span>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3 gap-3">
                             <button type="button" class="btn btn-outline-secondary fw-bold px-4" onclick="prevStep()" style="border-radius: 8px; max-width: 120px;">
-                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}પીછે{% else %}Back{% endif %}
+                                &larr; {% if current_language == 'gu' %}પાછળ{% elif current_language == 'hi' %}पीछे{% elif current_language == 'mr' %}मागे{% else %}Back{% endif %}
                             </button>
                             <button type="submit" class="btn btn-bw fw-bold w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; font-size: 1rem;">
                                 {{ t.assistant.submit_btn }}

@@ -4,59 +4,89 @@
 <div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
     <div class="glass-panel p-4 w-100" style="max-width: 520px; border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
         <div class="text-center mb-4">
-            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Weekly Plant Check-in</h2>
-            <p class="text-muted small mt-1">Upload a photo of {{ journey.plant_name }} to log its current growth status</p>
+            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">
+                {% if current_language == 'gu' %}અઠવાડિક છોડ ચેક-ઇન{% elif current_language == 'hi' %}साप्ताहिक पौधा चेक-इन{% else %}Weekly Plant Check-in{% endif %}
+            </h2>
+            <p class="text-muted small mt-1">
+                {% if current_language == 'gu' %}{{ journey.plant_name }} ની ફોટો અપલોડ કરો, વર્તમાન વૃદ્ધિ સ્થિતિ નોંધવા{% elif current_language == 'hi' %}{{ journey.plant_name }} की फोटो अपलोड करें, वर्तमान वृद्धि स्थिति दर्ज करने के लिए{% else %}Upload a photo of {{ journey.plant_name }} to log its current growth status{% endif %}
+            </p>
         </div>
 
         <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
             {% csrf_token %}
             
             <div class="form-group">
-                <label class="form-label fw-bold">Plant Photo *</label>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}છોડ ની ફોટો *{% elif current_language == 'hi' %}पौधे की फोटो *{% else %}Plant Photo *{% endif %}
+                </label>
                 <input type="file" name="image" class="form-control" accept="image/*" required>
-                <small class="text-muted">Take a clear picture of the leaves or stem of the plant</small>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}છોડ ના પાન અથવા ડાળ ની સ્પષ્ટ તસ્વીર લો{% elif current_language == 'hi' %}पौधे की पत्तियों या तने की स्पष्ट तस्वीर लें{% else %}Take a clear picture of the leaves or stem of the plant{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Visible Symptoms / Plant State</label>
-                <textarea name="symptoms" class="form-control" rows="2" placeholder="e.g. Pale yellow spots appearing on bottom leaves, wilting stems, dry soil edges"></textarea>
-                <small class="text-muted">Describe the symptoms or general appearance of the plant today</small>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}દૃશ્યમાન લક્ષણો / છોડ ની સ્થિતિ{% elif current_language == 'hi' %}दिखाई देने वाले लक्षण / पौधे की अवस्था{% else %}Visible Symptoms / Plant State{% endif %}
+                </label>
+                <textarea name="symptoms" class="form-control" rows="2" placeholder="{% if current_language == 'gu' %}દા.ત. નીચેના પાન પર પીળા ટપકા, ઝૂલતી ડાળ, સૂકી ધૂળ{% elif current_language == 'hi' %}जैसे: नीचे की पत्तियों पर पीले धब्बे, मुरझाए तने, सूखी मिट्टी{% else %}e.g. Pale yellow spots appearing on bottom leaves, wilting stems, dry soil edges{% endif %}"></textarea>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આજ ના છોડ ના લક્ષણ અથવા સ્વરૂપ વર્ણવો{% elif current_language == 'hi' %}आज पौधे के लक्षण या सामान्य रूप का वर्णन करें{% else %}Describe the symptoms or general appearance of the plant today{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Farmer Observations / Custom Notes</label>
-                <textarea name="farmer_notes" class="form-control" rows="2" placeholder="e.g. Added mulch, sprayed neem oil, noticed new sprout growth"></textarea>
-                <small class="text-muted">Any specific observations or activities performed today</small>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}ખેડૂત અવલોકન / વ્યક્તિગત નોંધ{% elif current_language == 'hi' %}किसान का अवलोकन / विशेष नोट{% else %}Farmer Observations / Custom Notes{% endif %}
+                </label>
+                <textarea name="farmer_notes" class="form-control" rows="2" placeholder="{% if current_language == 'gu' %}દા.ત. લીમડાનું તેલ છાંટ્યું, નવી ડૂંઠ દેખાઈ{% elif current_language == 'hi' %}जैसे: मल्च डाली, नीम का तेल छिड़का, नई कल्ले दिखे{% else %}e.g. Added mulch, sprayed neem oil, noticed new sprout growth{% endif %}"></textarea>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આજ ની કોઈ ખાસ ગતિવિધિ અથવા અવલોકન{% elif current_language == 'hi' %}आज किए गए विशेष अवलोकन या गतिविधियाँ{% else %}Any specific observations or activities performed today{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
                 <label class="form-label fw-bold d-flex justify-content-between">
-                    <span>Recovery Progress (%)</span>
+                    <span>{% if current_language == 'gu' %}સ્વસ્થ થવાની પ્રગતિ (%){% elif current_language == 'hi' %}रिकवरी प्रगति (%){% else %}Recovery Progress (%){% endif %}</span>
                     <span id="sliderValueText" class="text-success fw-bold">0%</span>
                 </label>
-                <input type="range" name="recovery_percentage" class="form-range" min="0" max="100" value="0" id="recoveryProgressSlider" oninput="document.getElementById('sliderValueText').innerText = this.value + '%'; if(this.value == 100) { document.getElementById('isHealthyCheck').checked = true; } else { document.getElementById('isHealthyCheck').checked = false; }">
-                <small class="text-muted">Estimate how recovered/healthy the plant looks compared to starting phase</small>
+                <input type="range" name="recovery_percentage" class="form-range" min="0" max="100" value="0" id="recoveryProgressSlider"
+                    oninput="document.getElementById('sliderValueText').innerText = this.value + '%'; if(this.value == 100) { document.getElementById('isHealthyCheck').checked = true; } else { document.getElementById('isHealthyCheck').checked = false; }">
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}શરૂઆત ની સ્થિતિ ની સરખામણી માં છોડ કેટલો સ્વસ્થ દેખાય છે{% elif current_language == 'hi' %}शुरुआती अवस्था की तुलना में पौधा कितना स्वस्थ दिखता है{% else %}Estimate how recovered/healthy the plant looks compared to starting phase{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Pest Activity Level</label>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}જીવાત ની પ્રવૃત્તિ સ્તર{% elif current_language == 'hi' %}कीट गतिविधि स्तर{% else %}Pest Activity Level{% endif %}
+                </label>
                 <select name="pest_activity" class="form-select">
-                    <option value="None" selected>None / કોઈ જીવાત નથી</option>
-                    <option value="Low">Low / ઓછી</option>
-                    <option value="Medium">Medium / મધ્યમ</option>
-                    <option value="High">High / વધારે</option>
+                    <option value="None" selected>{% if current_language == 'gu' %}કોઈ જીવાત નથી{% elif current_language == 'hi' %}कोई कीट नहीं{% else %}None{% endif %}</option>
+                    <option value="Low">{% if current_language == 'gu' %}ઓછી{% elif current_language == 'hi' %}कम{% else %}Low{% endif %}</option>
+                    <option value="Medium">{% if current_language == 'gu' %}મધ્યમ{% elif current_language == 'hi' %}मध्यम{% else %}Medium{% endif %}</option>
+                    <option value="High">{% if current_language == 'gu' %}વધારે{% elif current_language == 'hi' %}अधिक{% else %}High{% endif %}</option>
                 </select>
-                <small class="text-muted">Presence of bugs or insects on the plant</small>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}છોડ પર જંતુ-જીવાત ની હાજરી{% elif current_language == 'hi' %}पौधे पर कीड़े-मकोड़ों की उपस्थिति{% else %}Presence of bugs or insects on the plant{% endif %}
+                </small>
             </div>
 
             <div class="form-group form-check mt-1">
-                <input type="checkbox" name="is_healthy" id="isHealthyCheck" class="form-check-input" onchange="if(this.checked) { document.getElementById('recoveryProgressSlider').value = 100; document.getElementById('sliderValueText').innerText = '100%'; } else if (document.getElementById('recoveryProgressSlider').value == 100) { document.getElementById('recoveryProgressSlider').value = 0; document.getElementById('sliderValueText').innerText = '0%'; }">
-                <label for="isHealthyCheck" class="form-check-label fw-bold small">This plant has fully recovered and is healthy now!</label>
+                <input type="checkbox" name="is_healthy" id="isHealthyCheck" class="form-check-input"
+                    onchange="if(this.checked) { document.getElementById('recoveryProgressSlider').value = 100; document.getElementById('sliderValueText').innerText = '100%'; } else if (document.getElementById('recoveryProgressSlider').value == 100) { document.getElementById('recoveryProgressSlider').value = 0; document.getElementById('sliderValueText').innerText = '0%'; }">
+                <label for="isHealthyCheck" class="form-check-label fw-bold small">
+                    {% if current_language == 'gu' %}આ છોડ સંપૂર્ણ સ્વસ્થ થઈ ગયો છે!{% elif current_language == 'hi' %}यह पौधा पूरी तरह स्वस्थ हो गया है!{% else %}This plant has fully recovered and is healthy now!{% endif %}
+                </label>
             </div>
 
             <div class="d-flex gap-2 mt-3 w-100">
-                <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
-                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">Submit Log</button>
+                <a href="{% url 'recovery_detail' journey.id %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">
+                    {% if current_language == 'gu' %}રદ કરો{% elif current_language == 'hi' %}रद्द करें{% else %}Cancel{% endif %}
+                </a>
+                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">
+                    {% if current_language == 'gu' %}લૉગ સબમિટ કરો{% elif current_language == 'hi' %}लॉग सबमिट करें{% else %}Submit Log{% endif %}
+                </button>
             </div>
         </form>
     </div>

@@ -281,7 +281,7 @@ class AccountsTests(APITestCase):
             'last_name': 'User',
             'email': 'existinguser@example.com',  # same as self.test_user
             'phone_number': '',
-            'location_city': 'Ahmedabad',
+            'location_city': 'Village, Taluka, Surat, Gujarat',
             'farm_name': 'Old Farm',
             'farm_size_acres': 5.0,
             'latitude': 23.0225,
@@ -304,7 +304,7 @@ class AccountsTests(APITestCase):
             'last_name': 'Name',
             'email': 'existinguser@example.com',  # same email, just other field changes
             'phone_number': '9999999999',
-            'location_city': 'Surat',
+            'location_city': 'Village, Taluka, Surat, Gujarat',
             'farm_name': 'New Farm',
             'farm_size_acres': 8.0,
             'latitude': 21.1702,
@@ -323,7 +323,7 @@ class AccountsTests(APITestCase):
         pending = {
             'first_name': 'Krish', 'last_name': 'B',
             'email': 'existinguser@example.com',
-            'phone_number': '8888888888', 'location_city': 'Surat',
+            'phone_number': '8888888888', 'location_city': 'Village, Taluka, Surat, Gujarat',
             'farm_name': 'Krish Farm', 'farm_size_acres': 12.0,
             'latitude': 21.1702, 'longitude': 72.8311,
         }
@@ -338,7 +338,7 @@ class AccountsTests(APITestCase):
 
         self.test_user.refresh_from_db()
         self.assertEqual(self.test_user.first_name, 'Krish')
-        self.assertEqual(self.test_user.location_city, 'Surat')
+        self.assertEqual(self.test_user.location_city, 'Village, Taluka, Surat, Gujarat')
 
     def test_profile_update_otp_with_email_change(self):
         """Valid OTP also commits email change if new email is unique."""
@@ -351,7 +351,7 @@ class AccountsTests(APITestCase):
         pending = {
             'first_name': 'Krish', 'last_name': 'B',
             'email': new_email,   # <-- email is changing
-            'phone_number': '', 'location_city': 'Ahmedabad',
+            'phone_number': '', 'location_city': 'Village, Taluka, Surat, Gujarat',
             'farm_name': 'Test', 'farm_size_acres': None,
             'latitude': None, 'longitude': None,
         }
@@ -580,7 +580,7 @@ class AccountsTests(APITestCase):
         """Test starting a recovery journey, checkin weekly, and mark recovered."""
         from django.test import Client
         from django.core.files.uploadedfile import SimpleUploadedFile
-        from accounts.models import RecoveryTracker, RecoveryCheckIn
+        from accounts.models import RecoveryTracker
         
         client = Client()
         client.force_login(self.test_user)
@@ -732,7 +732,7 @@ class AccountsTests(APITestCase):
     def test_partwise_disease_references_and_pdf(self):
         """Verify diseases are grouped by plant part and the catalog PDF downloads."""
         from django.test import Client
-        from library.models import Crop, Disease
+        from library.models import Crop
         from django.core.management import call_command
         call_command('seed_crops')
         
@@ -805,6 +805,14 @@ class AccountsTests(APITestCase):
         client = Client()
         client.force_login(self.test_user)
 
+        # Set up active chat session context
+        session = client.session
+        session['assistant_crop'] = 'Potato'
+        session['assistant_soil_type'] = 'Loamy Soil'
+        session['assistant_stage'] = 'Vegetative'
+        session['assistant_weather'] = 'Mild & Cloudy'
+        session.save()
+
         queries = [
             "Why did my crop become yellow?",
             "Which fertilizer should I use?",
@@ -818,8 +826,107 @@ class AccountsTests(APITestCase):
             "General advice for winter crop watering"
         ]
 
-        for q in queries:
-            response = client.post('/assistant/', {'question': q})
-            self.assertEqual(response.status_code, 200)
-            # Check for a language-independent element (the robot SVG used in the assistant page header)
-            self.assertContains(response, 'submit_interview')
+        from unittest.mock import patch
+        from unittest.mock import MagicMock
+
+        # Mock requests.post to avoid hitting actual Gemini API in test environment
+        with patch('requests.post') as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {
+                'candidates': [{
+                    'content': {
+                        'parts': [{
+                            'text': 'Mocked advisor response.'
+                        }]
+                    }
+                }]
+            }
+            mock_post.return_value = mock_resp
+
+            for q in queries:
+                response = client.post('/assistant/', {'submit_chat': '1', 'question': q})
+                self.assertEqual(response.status_code, 302) # Redirects back to assistant
+
+    def test_multilingual_chatbot_instructions(self):
+        """Verify the chatbot generates correct prompt instructions matching the user's selected language."""
+        from django.test import Client
+        from unittest.mock import patch, MagicMock
+        
+        # Test Hindi
+        self.test_user.preferred_language = 'hi'
+        self.test_user.save()
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        session = client.session
+        session['assistant_crop'] = 'Potato'
+        session['assistant_soil_type'] = 'Loamy Soil'
+        session['assistant_stage'] = 'Vegetative'
+        session['assistant_weather'] = 'Mild & Cloudy'
+        session.save()
+        
+        with patch('requests.post') as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {
+                'candidates': [{
+                    'content': {
+                        'parts': [{
+                            'text': 'हिंदी में उत्तर'
+                        }]
+                    }
+                }]
+            }
+            mock_post.return_value = mock_resp
+            
+            client.post('/assistant/', {'submit_chat': '1', 'question': 'टमाटर में रोग कैसे ठीक करें?'})
+            
+            # Verify the call to Gemini API contained the Hindi systemInstruction
+            self.assertTrue(mock_post.called)
+            call_kwargs = mock_post.call_args[1]
+            payload = call_kwargs['json']
+            
+            # Check systemInstruction contains Hindi constraint
+            system_instruction_text = payload['systemInstruction']['parts'][0]['text']
+            self.assertIn('Devanagari script', system_instruction_text)
+            self.assertIn('strictly in Hindi', system_instruction_text)
+
+        # Test Gujarati
+        self.test_user.preferred_language = 'gu'
+        self.test_user.save()
+        
+        client = Client()
+        client.force_login(self.test_user)
+        
+        session = client.session
+        session['assistant_crop'] = 'Potato'
+        session['assistant_soil_type'] = 'Loamy Soil'
+        session['assistant_stage'] = 'Vegetative'
+        session['assistant_weather'] = 'Mild & Cloudy'
+        session.save()
+        
+        with patch('requests.post') as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {
+                'candidates': [{
+                    'content': {
+                        'parts': [{
+                            'text': 'ગુજરાતી ઉત્તર'
+                        }]
+                    }
+                }]
+            }
+            mock_post.return_value = mock_resp
+            
+            client.post('/assistant/', {'submit_chat': '1', 'question': 'કપાસના પાકમાં ખાતર ક્યારે નાખવું?'})
+            
+            self.assertTrue(mock_post.called)
+            call_kwargs = mock_post.call_args[1]
+            payload = call_kwargs['json']
+            
+            system_instruction_text = payload['systemInstruction']['parts'][0]['text']
+            self.assertIn('Gujarati script', system_instruction_text)
+            self.assertIn('strictly in Gujarati', system_instruction_text)

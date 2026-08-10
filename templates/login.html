@@ -6,6 +6,69 @@
     {% if show_chooser %}
     <!-- GORGEOUS PREFERENCE CHOOSER CARD -->
     <div class="glass-panel p-5 fade-in-up" style="max-width: 460px; width: 100%; border: 1px solid var(--border-card); background: var(--bg-card); border-radius: var(--border-radius);">
+    <style>
+        .lang-option-btn {
+            background: transparent;
+            border: 1.5px solid var(--border-card);
+            color: var(--text-secondary);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .lang-option-btn:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: var(--primary-glow);
+        }
+        .lang-option-btn.selected {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+        html.dark .lang-option-btn.selected {
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            color: #111827 !important;
+        }
+        .theme-option-btn {
+            background: transparent;
+            border: 1.5px solid var(--border-card);
+            color: var(--text-secondary);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .theme-option-btn:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: var(--primary-glow);
+        }
+        .theme-option-btn.selected {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+        html.dark .theme-option-btn.selected {
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            color: #111827 !important;
+        }
+    </style>
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-3 auth-logo">
             <h3 class="fw-extrabold m-0" style="font-size: 1.6rem; color: var(--text-primary);">
@@ -27,22 +90,29 @@
                     <form method="post" action="{% url 'toggle_preference' %}">
                         {% csrf_token %}
                         <input type="hidden" name="preferred_language" value="en">
-                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'en' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                        <button type="submit" class="lang-option-btn {% if current_language == 'en' %}selected{% endif %}">
                             English
                         </button>
                     </form>
                     <form method="post" action="{% url 'toggle_preference' %}">
                         {% csrf_token %}
                         <input type="hidden" name="preferred_language" value="gu">
-                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'gu' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                        <button type="submit" class="lang-option-btn {% if current_language == 'gu' %}selected{% endif %}">
                             ગુજરાતી (Gujarati)
                         </button>
                     </form>
                     <form method="post" action="{% url 'toggle_preference' %}">
                         {% csrf_token %}
                         <input type="hidden" name="preferred_language" value="hi">
-                        <button type="submit" class="btn w-100 text-start py-2.5 px-3 {% if current_language == 'hi' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 500; font-size: 0.95rem;">
+                        <button type="submit" class="lang-option-btn {% if current_language == 'hi' %}selected{% endif %}">
                             हिन्दी (Hindi)
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'toggle_preference' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="preferred_language" value="mr">
+                        <button type="submit" class="lang-option-btn {% if current_language == 'mr' %}selected{% endif %}">
+                            मराठी (Marathi)
                         </button>
                     </form>
                 </div>
@@ -57,14 +127,14 @@
                     <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
                         {% csrf_token %}
                         <input type="hidden" name="theme_preference" value="light">
-                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'light' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                        <button type="submit" class="theme-option-btn {% if current_theme == 'light' %}selected{% endif %}">
                             ☀️ Light Mode
                         </button>
                     </form>
                     <form method="post" action="{% url 'toggle_preference' %}" class="flex-grow-1">
                         {% csrf_token %}
                         <input type="hidden" name="theme_preference" value="dark">
-                        <button type="submit" class="btn w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 {% if current_theme == 'dark' %}btn-dark active{% else %}btn-outline-dark{% endif %}" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
+                        <button type="submit" class="theme-option-btn {% if current_theme == 'dark' %}selected{% endif %}">
                             🌙 Dark Mode
                         </button>
                     </form>
@@ -76,7 +146,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="continue" value="true">
                 <button type="submit" class="btn-custom-primary py-3 w-100 fw-bold" style="font-size: 1.05rem; border-radius: 12px;">
-                    {% if current_language == 'gu' %}ચાલુ રાખો (Continue) &rarr;{% elif current_language == 'hi' %}जारी रखें (Continue) &rarr;{% else %}Continue &rarr;{% endif %}
+                    {% if current_language == 'gu' %}ચાલુ રાખો (Continue) &rarr;{% elif current_language == 'hi' %}जारी रखें (Continue) &rarr;{% elif current_language == 'mr' %}पुढे चालू ठेवा (Continue) &rarr;{% else %}Continue &rarr;{% endif %}
                 </button>
             </form>
         </div>
@@ -92,19 +162,25 @@
                 <form method="post" action="{% url 'toggle_preference' %}">
                     {% csrf_token %}
                     <input type="hidden" name="preferred_language" value="en">
-                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'en' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">EN</button>
+                    <button type="submit" class="btn btn-sm p-1 fw-bold" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none; color: {% if current_language == 'en' %}var(--text-primary){% else %}var(--text-secondary){% endif %};">EN</button>
                 </form>
                 <span class="text-muted" style="font-size: 0.78rem;">|</span>
                 <form method="post" action="{% url 'toggle_preference' %}">
                     {% csrf_token %}
                     <input type="hidden" name="preferred_language" value="gu">
-                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'gu' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">ગુજરાતી</button>
+                    <button type="submit" class="btn btn-sm p-1 fw-bold" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none; color: {% if current_language == 'gu' %}var(--text-primary){% else %}var(--text-secondary){% endif %};">ગુજરાતી</button>
                 </form>
                 <span class="text-muted" style="font-size: 0.78rem;">|</span>
                 <form method="post" action="{% url 'toggle_preference' %}">
                     {% csrf_token %}
                     <input type="hidden" name="preferred_language" value="hi">
-                    <button type="submit" class="btn btn-sm p-1 fw-bold {% if current_language == 'hi' %}text-dark{% else %}text-muted{% endif %}" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none;">हिन्दी</button>
+                    <button type="submit" class="btn btn-sm p-1 fw-bold" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none; color: {% if current_language == 'hi' %}var(--text-primary){% else %}var(--text-secondary){% endif %};">हिन्दी</button>
+                </form>
+                <span class="text-muted" style="font-size: 0.78rem;">|</span>
+                <form method="post" action="{% url 'toggle_preference' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="mr">
+                    <button type="submit" class="btn btn-sm p-1 fw-bold" style="font-size: 0.78rem; background: none; border: none; outline: none; box-shadow: none; color: {% if current_language == 'mr' %}var(--text-primary){% else %}var(--text-secondary){% endif %};">मराठी</button>
                 </form>
             </div>
             <!-- Theme toggle -->
@@ -149,7 +225,7 @@
                 <div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" id="showPasswordCheck" onclick="togglePasswordVisibility()">
                     <label class="form-check-label text-muted small" for="showPasswordCheck" style="cursor: pointer;">
-                        Show Password / પાસવર્ડ બતાવો / पासवर्ड दिखाएं
+                        {% if current_language == 'gu' %}પાસવર્ડ બતાવો{% elif current_language == 'hi' %}पासवर्ड दिखाएं{% else %}Show Password{% endif %}
                     </label>
                 </div>
             </div>

@@ -7,12 +7,12 @@
 
         <div class="text-center mb-4">
             <img src="/media/logo.png" alt="PlantCare Logo" width="80" height="80" class="mb-2 auth-logo">
-            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">Confirm Update</h2>
+            <h2 class="fw-extrabold m-0" style="font-size: 1.8rem; letter-spacing: -0.5px;">{{ t.verify_profile.title|default:"Confirm Update" }}</h2>
             <p class="text-muted mt-1" style="font-size: 0.9rem;">
-                A 6-digit OTP has been sent to:<br>
+                {{ t.verify_profile.subtitle|default:"A 6-digit OTP has been sent to:" }}<br>
                 <strong style="color: var(--primary);">{{ current_email }}</strong>
             </p>
-            <p class="text-muted" style="font-size: 0.82rem;">Enter the OTP to confirm your profile changes.</p>
+            <p class="text-muted" style="font-size: 0.82rem;">{{ t.verify_profile.confirm_msg|default:"Enter the OTP to confirm your profile changes." }}</p>
         </div>
 
         {% if error %}
@@ -25,7 +25,7 @@
         <form method="post" id="otp-profile-update-form" class="d-flex flex-column gap-3">
             {% csrf_token %}
             <div class="form-group m-0">
-                <label class="form-label">Enter OTP</label>
+                <label class="form-label">{{ t.verify_profile.enter_otp_label|default:"Enter OTP" }}</label>
                 <input
                     type="text"
                     id="otp-input"
@@ -41,13 +41,13 @@
             </div>
 
             <button type="submit" class="btn-custom-primary w-100 py-3 mt-2" style="font-size: 1.05rem;">
-                Confirm & Save Changes
+                {{ t.verify_profile.submit_btn|default:"Confirm &amp; Save Changes" }}
             </button>
         </form>
 
         <div class="text-center mt-4" style="font-size: 0.85rem;">
             <a href="{% url 'profile_settings' %}" style="color: var(--text-secondary); text-decoration: none;">
-                &larr; Cancel &amp; Back to Profile
+                &larr; {{ t.verify_profile.cancel_back|default:"Cancel &amp; Back to Profile" }}
             </a>
         </div>
     </div>

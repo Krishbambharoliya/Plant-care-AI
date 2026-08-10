@@ -101,11 +101,7 @@
                 <div class="d-flex flex-wrap gap-3 py-2 border-top border-bottom border-card" style="font-size: 0.9rem;">
                     <div>
                         <strong class="text-dark">🌱 {{ t.library.soil|default:"Soil Type" }}:</strong>
-                        <span class="text-muted">
-                            {% if current_language == 'hi' %}{{ selected_crop.soil_type_hi|default:selected_crop.soil_type }}
-                            {% elif current_language == 'gu' %}{{ selected_crop.soil_type_gu|default:selected_crop.soil_type }}
-                            {% else %}{{ selected_crop.soil_type_en|default:selected_crop.soil_type }}{% endif %}
-                        </span>
+                        <span class="text-muted">{{ selected_crop.soil_type }}</span>
                     </div>
                     <div>
                         <strong class="text-dark">🦠 {{ t.library.diseasesCount|default:"Diseases" }}:</strong>
@@ -120,26 +116,20 @@
                         <input type="hidden" name="plant_name" value="My {{ selected_crop.name }}">
                         <input type="hidden" name="crop_type" value="{{ selected_crop.name }}">
                         <button type="submit" class="btn btn-outline-success btn-sm w-100 fw-bold py-2" style="border-radius: 8px;">
-                            🩹 Start Plant Recovery Journey
+                            🩹 {% if current_language == 'gu' %}વનસ્પતિ પુનઃપ્રાપ્તિ પ્રક્રિયા શરૂ કરો{% elif current_language == 'hi' %}पौधा सुधार यात्रा शुरू करें{% elif current_language == 'mr' %}वनस्पती सुधारणा प्रवास सुरू करा{% else %}Start Plant Recovery Journey{% endif %}
                         </button>
                     </form>
                     
                     <div class="w-100">
                         <a href="{% url 'single_crop_pdf' selected_crop.id %}" class="btn btn-sm btn-success w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-1 text-white" style="border-radius: 8px; font-size: 0.85rem;">
-                            <span>📄</span> Download Crop PDF
+                            <span>📄</span> {% if current_language == 'gu' %}પાક પીડીએફ ડાઉનલોડ કરો{% elif current_language == 'hi' %}फसल पीडीएफ डाउनलोड करें{% elif current_language == 'mr' %}पीक पीडीएफ डाउनलोड करा{% else %}Download Crop PDF{% endif %}
                         </a>
                     </div>
                 </div>
 
                 <!-- Description -->
                 <p class="text-muted m-0" style="line-height: 1.6;">
-                    {% if current_language == 'hi' %}
-                        {{ selected_crop.description_hi|default:selected_crop.description }}
-                    {% elif current_language == 'gu' %}
-                        {{ selected_crop.description_gu|default:selected_crop.description }}
-                    {% else %}
-                        {{ selected_crop.description_en|default:selected_crop.description }}
-                    {% endif %}
+                    {{ selected_crop.description }}
                 </p>
 
                 <!-- Ideal Environmental parameter boxes -->
@@ -171,20 +161,20 @@
 
                 <!-- Soil Requirements Details -->
                 <div class="glass-panel p-3" style="background: rgba(16, 124, 65, 0.02); border-radius: 12px;">
-                    <strong class="text-dark d-block mb-1" style="font-size: 0.95rem;">🪨 Optimal Soil Requirements:</strong>
+                    <strong class="text-dark d-block mb-1" style="font-size: 0.95rem;">🪨 {{ t.library.soil_req_title }}:</strong>
                     <p class="text-muted small m-0" style="line-height: 1.5;">
-                        The ideal soil for cultivating <strong>{{ selected_crop.name }}</strong> is <strong>{{ selected_crop.soil_type }}</strong>. 
-                        This variety thrives best in fertile, deep sandy loam or well-drained alluvial soil textures rich in organic humus. Ensuring a balanced pH level between 6.0 and 7.5 helps optimize nutrient uptake.
+                        {{ t.library.ideal_soil_for }} <strong>{{ selected_crop.localized_name|default:selected_crop.name }}</strong> {{ t.library.is }} <strong>{{ selected_crop.soil_type }}</strong>. 
+                        {{ t.library.soil_desc }}
                     </p>
                 </div>
 
                 <!-- Disease Control Guidelines -->
                 <div class="glass-panel p-3" style="background: rgba(239, 68, 68, 0.02); border-radius: 12px;">
-                    <strong class="text-dark d-block mb-1" style="font-size: 0.95rem;">🛡 How to Remove &amp; Control Diseases:</strong>
+                    <strong class="text-dark d-block mb-1" style="font-size: 0.95rem;">🛡 {{ t.library.control_diseases_title }}:</strong>
                     <ul class="text-muted small m-0 ps-3" style="line-height: 1.5;">
-                        <li><strong>Foliage Pruning:</strong> Prune infected leaves, stems, or fruits immediately and dispose of them outside the farm to prevent pathogen spread.</li>
-                        <li><strong>Humidity Management:</strong> Irrigate at the soil base early in the morning. Avoid sprinkler systems that leave water standing on leaves.</li>
-                        <li><strong>Organic Spray Treatments:</strong> Spray neem oil solution or horticultural copper soaps weekly to clear fungal spores and check pests.</li>
+                        <li><strong>{{ t.library.foliage_pruning }}:</strong> {{ t.library.foliage_pruning_desc }}</li>
+                        <li><strong>{{ t.library.humidity_management }}:</strong> {{ t.library.humidity_management_desc }}</li>
+                        <li><strong>{{ t.library.organic_sprays }}:</strong> {{ t.library.organic_sprays_desc }}</li>
                     </ul>
                 </div>
 
@@ -195,7 +185,7 @@
                     <div class="d-flex flex-column gap-3">
                         <!-- Leaf Diseases Section -->
                         <div class="glass-panel p-3">
-                            <h6 class="fw-bold mb-2 text-primary" style="font-size: 0.95rem;">🍃 Leaf Diseases</h6>
+                            <h6 class="fw-bold mb-2 text-primary" style="font-size: 0.95rem;">🍃 {% if current_language == 'gu' %}પાંદડાના રોગો{% elif current_language == 'hi' %}पत्ती के रोग{% elif current_language == 'mr' %}पानांचे रोग{% else %}Leaf Diseases{% endif %}</h6>
                             <div class="accordion" id="leafAccordion">
                                 {% for disease in selected_crop.diseases.all %}
                                     {% if disease.affected_part == 'leaf' %}
@@ -207,11 +197,11 @@
                                             </h2>
                                             <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#leafAccordion">
                                                 <div class="accordion-body p-2 text-muted small">
-                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
-                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
-                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    <div class="mb-1"><strong class="text-danger">{{ t.library.symptoms }}:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>{{ t.library.causes }}:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">{{ t.library.treatment }}:</strong> {{ disease.treatment }}</div>
                                                     {% if disease.pesticides_recommended %}
-                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    <div><strong class="text-info">{% if current_language == 'gu' %}જંતુનાશકો{% elif current_language == 'hi' %}कीटनाशक{% elif current_language == 'mr' %}कीटकनाशके{% else %}Pesticides{% endif %}:</strong> {{ disease.pesticides_recommended }}</div>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -223,7 +213,7 @@
 
                         <!-- Fruit Diseases Section -->
                         <div class="glass-panel p-3">
-                            <h6 class="fw-bold mb-2 text-warning" style="font-size: 0.95rem;">🍎 Fruit Diseases</h6>
+                            <h6 class="fw-bold mb-2 text-warning" style="font-size: 0.95rem;">🍎 {% if current_language == 'gu' %}ફળના રોગો{% elif current_language == 'hi' %}फल के रोग{% elif current_language == 'mr' %}फळांचे रोग{% else %}Fruit Diseases{% endif %}</h6>
                             <div class="accordion" id="fruitAccordion">
                                 {% for disease in selected_crop.diseases.all %}
                                     {% if disease.affected_part == 'fruit' %}
@@ -235,11 +225,11 @@
                                             </h2>
                                             <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#fruitAccordion">
                                                 <div class="accordion-body p-2 text-muted small">
-                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
-                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
-                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    <div class="mb-1"><strong class="text-danger">{{ t.library.symptoms }}:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>{{ t.library.causes }}:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">{{ t.library.treatment }}:</strong> {{ disease.treatment }}</div>
                                                     {% if disease.pesticides_recommended %}
-                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    <div><strong class="text-info">{% if current_language == 'gu' %}જંતુનાશકો{% elif current_language == 'hi' %}कीटनाशक{% elif current_language == 'mr' %}कीटकनाशके{% else %}Pesticides{% endif %}:</strong> {{ disease.pesticides_recommended }}</div>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -251,7 +241,7 @@
 
                         <!-- Stem/Branch Diseases Section -->
                         <div class="glass-panel p-3">
-                            <h6 class="fw-bold mb-2 text-info" style="font-size: 0.95rem;">🪵 Stem &amp; Branch Diseases</h6>
+                            <h6 class="fw-bold mb-2 text-info" style="font-size: 0.95rem;">🪵 {% if current_language == 'gu' %}દાંડી અને ડાળીઓના રોગો{% elif current_language == 'hi' %}तना और शाखा रोग{% elif current_language == 'mr' %}खोड आणि फांद्यांचे रोग{% else %}Stem &amp; Branch Diseases{% endif %}</h6>
                             <div class="accordion" id="stemAccordion">
                                 {% for disease in selected_crop.diseases.all %}
                                     {% if disease.affected_part == 'branch_stem' %}
@@ -263,11 +253,11 @@
                                             </h2>
                                             <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#stemAccordion">
                                                 <div class="accordion-body p-2 text-muted small">
-                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
-                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
-                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    <div class="mb-1"><strong class="text-danger">{{ t.library.symptoms }}:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>{{ t.library.causes }}:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">{{ t.library.treatment }}:</strong> {{ disease.treatment }}</div>
                                                     {% if disease.pesticides_recommended %}
-                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    <div><strong class="text-info">{% if current_language == 'gu' %}જંતુનાશકો{% elif current_language == 'hi' %}कीटनाशक{% elif current_language == 'mr' %}कीटकनाशके{% else %}Pesticides{% endif %}:</strong> {{ disease.pesticides_recommended }}</div>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -279,7 +269,7 @@
 
                         <!-- Root Diseases Section -->
                         <div class="glass-panel p-3">
-                            <h6 class="fw-bold mb-2 text-danger" style="font-size: 0.95rem;">🕸 Root Diseases</h6>
+                            <h6 class="fw-bold mb-2 text-danger" style="font-size: 0.95rem;">🕸 {% if current_language == 'gu' %}મૂળના રોગો{% elif current_language == 'hi' %}જડ કે રોગ{% elif current_language == 'mr' %}मुळांचे रोग{% else %}Root Diseases{% endif %}</h6>
                             <div class="accordion" id="rootAccordion">
                                 {% for disease in selected_crop.diseases.all %}
                                     {% if disease.affected_part == 'root' %}
@@ -291,11 +281,11 @@
                                             </h2>
                                             <div id="collapse{{ disease.id }}" class="accordion-collapse collapse" data-bs-parent="#rootAccordion">
                                                 <div class="accordion-body p-2 text-muted small">
-                                                    <div class="mb-1"><strong class="text-danger">Symptoms:</strong> {{ disease.symptoms }}</div>
-                                                    <div class="mb-1"><strong>Causes:</strong> {{ disease.causes }}</div>
-                                                    <div class="mb-1"><strong class="text-success">Treatment:</strong> {{ disease.treatment }}</div>
+                                                    <div class="mb-1"><strong class="text-danger">{{ t.library.symptoms }}:</strong> {{ disease.symptoms }}</div>
+                                                    <div class="mb-1"><strong>{{ t.library.causes }}:</strong> {{ disease.causes }}</div>
+                                                    <div class="mb-1"><strong class="text-success">{{ t.library.treatment }}:</strong> {{ disease.treatment }}</div>
                                                     {% if disease.pesticides_recommended %}
-                                                    <div><strong class="text-info">Pesticides:</strong> {{ disease.pesticides_recommended }}</div>
+                                                    <div><strong class="text-info">{% if current_language == 'gu' %}જંતુનાશકો{% elif current_language == 'hi' %}कीटनाशक{% elif current_language == 'mr' %}कीटकनाशके{% else %}Pesticides{% endif %}:</strong> {{ disease.pesticides_recommended }}</div>
                                                     {% endif %}
                                                 </div>
                                             </div>

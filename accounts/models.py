@@ -6,6 +6,7 @@ class User(AbstractUser):
         ('en', 'English'),
         ('hi', 'Hindi'),
         ('gu', 'Gujarati'),
+        ('mr', 'Marathi'),
     ]
     THEME_CHOICES = [
         ('light', 'Light'),
@@ -100,7 +101,8 @@ class RecoveryTracker(models.Model):
     watering_frequency = models.CharField(max_length=50, default='Once a day')
     estimated_recovery_weeks = models.IntegerField(default=4)
     light_requirement = models.CharField(max_length=50, default='Direct Sunlight')
-    start_date = models.DateField(auto_now_add=True)
+    from django.utils import timezone
+    start_date = models.DateField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:

@@ -1,0 +1,369 @@
+{
+  "state": "Gujarat",
+  "districts": [
+    "Ahmedabad", "Amreli", "Anand", "Arvalli", "Banaskantha", "Bharuch",
+    "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhumi Dwarka",
+    "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
+    "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal",
+    "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar",
+    "Tapi", "Valsad", "Vadodara"
+  ],
+  "talukas": {
+    "Ahmedabad": ["Ahmedabad City", "Daskroi", "Sanand", "Bavla", "Dholka", "Dhandhuka", "Mandal", "Viramgam", "Detroj-Rampura", "Barwala"],
+    "Amreli": ["Amreli", "Babra", "Bagasara", "Dhari", "Jafrabad", "Khambha", "Kunkavav-Vadia", "Lathi", "Liliya", "Rajula", "Savarkundla"],
+    "Anand": ["Anand", "Anklav", "Borsad", "Khambhat", "Petlad", "Sojitra", "Tarapur", "Umreth"],
+    "Arvalli": ["Bayad", "Bhiloda", "Dhansura", "Malpur", "Meghraj", "Modasa"],
+    "Banaskantha": ["Amirgadh", "Bhabhar", "Danta", "Dantiwada", "Deesa", "Deodar", "Dhanera", "Kankrej", "Lakhani", "Palanpur", "Suigam", "Tharad", "Vav", "Vadgam"],
+    "Bharuch": ["Amod", "Ankleshwar", "Bharuch", "Hansot", "Jambusar", "Netrang", "Tilakwada", "Vagra", "Valia", "Jhagadia"],
+    "Bhavnagar": ["Bhavnagar", "Gariadhar", "Ghogha", "Jesar", "Mahuva", "Palitana", "Shihor", "Talaja", "Umrala", "Vallabhipur"],
+    "Botad": ["Barwala", "Botad", "Gadhada", "Ranpur"],
+    "Chhota Udaipur": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+    "Dahod": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod", "Limkheda", "Sanjeli", "Zalod"],
+    "Dang": ["Ahwa", "Subir", "Waghai"],
+    "Devbhumi Dwarka": ["Bhanvad", "Dwarka", "Kalyanpur", "Khambhalia"],
+    "Gandhinagar": ["Dahegam", "Gandhinagar", "Kalol", "Mansa"],
+    "Gir Somnath": ["Kodinar", "Sutrapada", "Talala", "Una", "Veraval", "Prabhas Patan"],
+    "Jamnagar": ["Dhrol", "Jamnagar", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur", "Okhamandal"],
+    "Junagadh": ["Bhesan", "Junagadh", "Keshod", "Mangrol", "Manavadar", "Mendarda", "Vanthali", "Visavadar"],
+    "Kheda": ["Balasinor", "Kapadvanj", "Kathlal", "Kheda", "Matar", "Mehmedabad", "Nadiad", "Thasra", "Mahudha", "Vaso"],
+    "Kutch": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Gandhidham", "Lakhpat", "Mandvi", "Mundra", "Nakhatrana", "Rapar"],
+    "Mahisagar": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+    "Mehsana": ["Becharaji", "Jotana", "Kadi", "Kheralu", "Mehsana", "Satlasana", "Sidhpur", "Unjha", "Vadnagar", "Vijapur", "Visnagar"],
+    "Morbi": ["Halvad", "Maliya", "Morbi", "Tankara", "Wankaner"],
+    "Narmada": ["Dediyapada", "Garudeshwar", "Nandod", "Sagbara", "Tilakwada"],
+    "Navsari": ["Chikhli", "Gandevi", "Jalalpore", "Khergam", "Navsari", "Vansda"],
+    "Panchmahal": ["Godhra", "Ghoghamba", "Halol", "Jambughoda", "Kalol", "Morva Hadaf", "Shahera", "Shehera"],
+    "Patan": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Santalpur", "Saraswati", "Sidhpur", "Shankheshwar"],
+    "Porbandar": ["Kutiyana", "Porbandar", "Ranavav"],
+    "Rajkot": ["Gondal", "Jasdan", "Jetpur", "Kotda Sangani", "Lodhika", "Paddhari", "Rajkot", "Upleta", "Vinchhiya", "Wankaner"],
+    "Sabarkantha": ["Bayad", "Himmatnagar", "Idar", "Khedbrahma", "Meghraj", "Prantij", "Talod", "Vadali"],
+    "Surat": ["Bardoli", "Chorasi", "Kamrej", "Mandvi", "Mangrol", "Mahuva", "Olpad", "Palsana", "Umarpada", "Surat City"],
+    "Surendranagar": ["Chotila", "Dasada", "Dhrangadhra", "Halvad", "Lakhtar", "Limbdi", "Muli", "Patdi", "Sayla", "Surendranagar", "Thangadh", "Wadhwan"],
+    "Tapi": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Uchchhal", "Valod", "Vyara"],
+    "Valsad": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi"],
+    "Vadodara": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Shinor", "Vadodara City", "Vaghodia"]
+  },
+  "villages": {
+    "Ahmedabad": {
+      "Ahmedabad City": ["Adajan", "Amraiwadi", "Asarwa", "Bapunagar", "Chandkheda", "Ghodasar", "Gomtipur", "Isanpur", "Jivraj Park", "Maninagar", "Naroda", "Narol", "Nikol", "Odhav", "Rakhial", "Satellite", "Thaltej", "Vatva"],
+      "Daskroi": ["Aslali", "Bareja", "Bhuvaldi", "Bilasiya", "Bopal", "Ghuma", "Hansol", "Jaspur", "Jetalpur", "Kathwada", "Lapkaman", "Odhav", "Shilaj", "Vatva"],
+      "Sanand": ["Anadej", "Bhavanpura", "Bol", "Chandrasan", "Chekhla", "Chharodi", "Godhavi", "Iyava", "Kalana", "Kaneti", "Khoraj", "Narsanda", "Rancharda", "Sanand", "Shela"],
+      "Bavla": ["Adroda", "Bavla", "Bhayla", "Devdholera", "Dhanwada", "Ghadiyali", "Jolva", "Panathwada", "Santhal"],
+      "Dholka": ["Bariad", "Dholka", "Koth", "Lothal", "Rangpur", "Saragwala", "Vautha", "Vilasa"],
+      "Dhandhuka": ["Bhadra", "Dhandhuka", "Dhundhli", "Kagdadi", "Kathada", "Samadhiyala", "Vanthali"],
+      "Mandal": ["Bokhira", "Charad", "Dholavira", "Khanu", "Mandal", "Masuda", "Pirana", "Sihora"],
+      "Viramgam": ["Badalpur", "Becharaji", "Gadhad", "Gyaspur", "Nani Vav", "Viramgam"],
+      "Detroj-Rampura": ["Bhalej", "Detroj", "Iswaripur", "Kotda", "Rampura", "Vasna"],
+      "Barwala": ["Barwala", "Kothamba", "Nandej", "Samadhiyala", "Vasai"]
+    },
+    "Amreli": {
+      "Amreli": ["Amreli City", "Bharatnagar", "Dudhavav", "Fulbaria", "Gadh", "Kalavad", "Lakhanka", "Makhiyala", "Rampur", "Vadla"],
+      "Babra": ["Babra", "Devli", "Khirasara", "Khredi", "Savar", "Vavdi"],
+      "Bagasara": ["Bagasara", "Babariya", "Charkhadi", "Khadsaliya", "Makhiyala", "Nagvadala", "Rajpara"],
+      "Dhari": ["Bhanduri", "Dhari", "Hadmatiya", "Kundarkhi", "Nava Navagam", "Sariya"],
+      "Jafrabad": ["Chanch", "Jafrabad", "Jalia", "Khadsaliya", "Moka", "Nava Navagam"],
+      "Khambha": ["Bagdana", "Chhatardi", "Devgana", "Khambha", "Khirasara", "Malekpur"],
+      "Kunkavav-Vadia": ["Ashapuri", "Galiyakot", "Kunkavav", "Miyali", "Vadia"],
+      "Lathi": ["Galiyakot", "Jiyapur", "Kalyanpur", "Lathi", "Makhiyala", "Shivlaj"],
+      "Liliya": ["Charkhadi", "Jodiya", "Khirasara", "Liliya", "Makhiyala", "Rajpara"],
+      "Rajula": ["Dalkhania", "Jafrabad", "Jalia", "Kolak", "Rajula", "Sivargadh"],
+      "Savarkundla": ["Chhachhai", "Halvad", "Kadod", "Savarkundla", "Tarapur", "Vatadhari"]
+    },
+    "Anand": {
+      "Anand": ["Anand City", "Bhalej", "Boriavi", "Karamsad", "Khambholaj", "Lambhvel", "Navlakhi", "Samarkha", "Vallabh Vidyanagar", "Vithal Udyognagar"],
+      "Anklav": ["Anklav", "Bhadran", "Chaklasi", "Gothej", "Khadol", "Mahemadpur", "Mogri"],
+      "Borsad": ["Borsad", "Dabhou", "Dantali", "Kathlal", "Khadol", "Khambhat", "Mogri", "Pilol", "Sojitra"],
+      "Khambhat": ["Asodar", "Bhadarva", "Dhuvaran", "Khambhat", "Lothal", "Mahemadpur", "Vadnagar"],
+      "Petlad": ["Amod", "Anklav", "Bhadran", "Kathana", "Nalini", "Petlad", "Sojitra", "Vadtal"],
+      "Sojitra": ["Bhathitha", "Malataj", "Napa", "Sojitra", "Tundel", "Vasad"],
+      "Tarapur": ["Ambaliyasan", "Boriavi", "Devadha", "Mota Borizad", "Tarapur", "Undel"],
+      "Umreth": ["Delol", "Dhuvaran", "Gamdi", "Pansora", "Tundel", "Umreth", "Vatrak"]
+    },
+    "Arvalli": {
+      "Bayad": ["Bayad", "Bhadli", "Mehsana", "Mogri", "Nar"],
+      "Bhiloda": ["Bhiloda", "Dantrai", "Imaliya", "Juna Deesa", "Khedbrahma", "Meghraj"],
+      "Dhansura": ["Dhansura", "Borsad", "Limbdi", "Mesar", "Ransipur"],
+      "Malpur": ["Atkot", "Karola", "Malpur", "Nava Navagam", "Vina"],
+      "Meghraj": ["Borsad", "Karola", "Meghraj", "Ransipur", "Vina"],
+      "Modasa": ["Modasa", "Bayad", "Borsad", "Khambha", "Limbdi", "Mesar", "Ransipur"]
+    },
+    "Banaskantha": {
+      "Amirgadh": ["Amirgadh", "Bharatpur", "Dantiwada", "Deesa", "Khimana", "Mori"],
+      "Bhabhar": ["Bhabhar", "Chandia", "Dantiwada", "Gadhada", "Kutch", "Mori"],
+      "Danta": ["Ambaji", "Danta", "Danthal", "Gadh", "Joravarnagar", "Khedbrahma"],
+      "Dantiwada": ["Dantiwada", "Deesa", "Gadhada", "Kamli", "Kotda", "Mori"],
+      "Deesa": ["Deesa", "Dhanera", "Gadhada", "Kotda", "Mori", "Patan"],
+      "Deodar": ["Deodar", "Gadhada", "Kamli", "Kotda", "Mori", "Patan"],
+      "Dhanera": ["Bhabhar", "Dhanera", "Kankrej", "Kotda", "Mori", "Tharad"],
+      "Kankrej": ["Gadh", "Kankrej", "Kotda", "Lakhani", "Mori", "Palanpur"],
+      "Lakhani": ["Dhanera", "Gadhada", "Kamli", "Kotda", "Lakhani", "Mori"],
+      "Palanpur": ["Dhanera", "Gadhada", "Kamli", "Kotda", "Lakhani", "Palanpur", "Patan"],
+      "Suigam": ["Gadh", "Kamli", "Kotda", "Mori", "Patan", "Suigam"],
+      "Tharad": ["Dhanera", "Gadhada", "Kotda", "Mori", "Patan", "Tharad"],
+      "Vav": ["Gadhada", "Kamli", "Kotda", "Mori", "Patan", "Vav"],
+      "Vadgam": ["Dhanera", "Gadh", "Gadhada", "Kamli", "Kotda", "Mori", "Vadgam"]
+    },
+    "Bharuch": {
+      "Amod": ["Amod", "Bhadriya", "Dahej", "Hansot", "Kalamod", "Kasad"],
+      "Ankleshwar": ["Ankleshwar", "Dahej", "Hansot", "Jhagadia", "Kalamod", "Kasad"],
+      "Bharuch": ["Bharuch City", "Dahej", "Jambusar", "Kalamod", "Kasad", "Padra", "Valia", "Zadeshwar"],
+      "Hansot": ["Amod", "Bhadriya", "Dahej", "Hansot", "Kalamod", "Kasad"],
+      "Jambusar": ["Amod", "Bhadriya", "Dahej", "Jambusar", "Kalamod", "Kasad"],
+      "Netrang": ["Amod", "Bhadriya", "Dahej", "Kalamod", "Kasad", "Netrang"],
+      "Tilakwada": ["Amod", "Bhadriya", "Dahej", "Kalamod", "Kasad", "Tilakwada"],
+      "Vagra": ["Amod", "Bhadriya", "Dahej", "Kalamod", "Kasad", "Vagra"],
+      "Valia": ["Amod", "Bhadriya", "Dahej", "Kalamod", "Kasad", "Valia"],
+      "Jhagadia": ["Dahej", "Hansot", "Jhagadia", "Kalamod", "Kasad", "Valia"]
+    },
+    "Bhavnagar": {
+      "Bhavnagar": ["Bhavnagar City", "Akwada", "Mahuva", "Palitana", "Sartanpar", "Vadva"],
+      "Gariadhar": ["Gariadhar", "Ghogha", "Jesar", "Mahuva", "Palitana", "Shihor"],
+      "Ghogha": ["Ghogha", "Gogha", "Kansari", "Nagram", "Shiyal", "Vadva"],
+      "Jesar": ["Gariadhar", "Jesar", "Mahuva", "Palitana", "Shihor", "Talaja"],
+      "Mahuva": ["Ghantali", "Mahuva", "Rajula", "Shihor", "Talaja", "Timbdi"],
+      "Palitana": ["Ghogha", "Mahuva", "Palitana", "Shihor", "Talaja", "Vallabhipur"],
+      "Shihor": ["Ghogha", "Mahuva", "Shihor", "Talaja", "Umrala", "Vallabhipur"],
+      "Talaja": ["Ghogha", "Mahuva", "Shihor", "Talaja", "Timbdi", "Umrala"],
+      "Umrala": ["Ghogha", "Mahuva", "Shihor", "Talaja", "Umrala", "Vallabhipur"],
+      "Vallabhipur": ["Ghogha", "Mahuva", "Shihor", "Talaja", "Umrala", "Vallabhipur"]
+    },
+    "Botad": {
+      "Barwala": ["Barwala", "Gadhada", "Kothamba", "Nandej", "Ranpur", "Samadhiyala"],
+      "Botad": ["Botad", "Gadhada", "Kothamba", "Ranpur", "Samadhiyala", "Wadhwan"],
+      "Gadhada": ["Botad", "Gadhada", "Kothamba", "Nandej", "Ranpur", "Samadhiyala"],
+      "Ranpur": ["Barwala", "Botad", "Gadhada", "Kothamba", "Ranpur", "Samadhiyala"]
+    },
+    "Chhota Udaipur": {
+      "Bodeli": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+      "Chhota Udaipur": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+      "Jetpur Pavi": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+      "Kawant": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+      "Naswadi": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"],
+      "Sankheda": ["Bodeli", "Chhota Udaipur", "Jetpur Pavi", "Kawant", "Naswadi", "Sankheda"]
+    },
+    "Dahod": {
+      "Dahod": ["Dahod City", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Devgadbaria": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Dhanpur": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Fatepura": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Garbada": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Jhalod": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Jhalod"],
+      "Limkheda": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Limkheda"],
+      "Sanjeli": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Sanjeli"],
+      "Zalod": ["Dahod", "Devgadbaria", "Dhanpur", "Fatepura", "Garbada", "Zalod"]
+    },
+    "Dang": {
+      "Ahwa": ["Ahwa", "Saputara", "Subir", "Waghai"],
+      "Subir": ["Ahwa", "Saputara", "Subir", "Waghai"],
+      "Waghai": ["Ahwa", "Saputara", "Subir", "Waghai"]
+    },
+    "Devbhumi Dwarka": {
+      "Bhanvad": ["Bhanvad", "Dwarka", "Kalyanpur", "Khambhalia", "Salaya"],
+      "Dwarka": ["Bhanvad", "Dwarka", "Kalyanpur", "Khambhalia", "Okha"],
+      "Kalyanpur": ["Bhanvad", "Dwarka", "Kalyanpur", "Khambhalia", "Salaya"],
+      "Khambhalia": ["Bhanvad", "Dwarka", "Kalyanpur", "Khambhalia", "Salaya"]
+    },
+    "Gandhinagar": {
+      "Dahegam": ["Dahegam", "Gandhinagar", "Kalol", "Mansa", "Sargasan"],
+      "Gandhinagar": ["Gandhinagar City", "Adalaj", "Chandkheda", "Infocity", "Pethapur", "Sargasan", "Sector 1", "Sector 7", "Sector 11", "Sector 21", "Sector 30"],
+      "Kalol": ["Chandkheda", "Gandhinagar", "Kalol", "Mansa", "Pethapur"],
+      "Mansa": ["Gandhinagar", "Kalol", "Mansa", "Pethapur", "Sargasan"]
+    },
+    "Gir Somnath": {
+      "Kodinar": ["Gadh", "Kodinar", "Sutrapada", "Talala", "Una", "Veraval"],
+      "Sutrapada": ["Gadh", "Kodinar", "Sutrapada", "Talala", "Una", "Veraval"],
+      "Talala": ["Gadh", "Kodinar", "Sutrapada", "Talala", "Una", "Veraval"],
+      "Una": ["Gadh", "Kodinar", "Sutrapada", "Talala", "Una", "Veraval"],
+      "Veraval": ["Gadh", "Kodinar", "Prabhas Patan", "Somnath", "Sutrapada", "Talala", "Una", "Veraval"],
+      "Prabhas Patan": ["Somnath", "Prabhas Patan", "Sutrapada", "Talala", "Una", "Veraval"]
+    },
+    "Jamnagar": {
+      "Dhrol": ["Dhrol", "Jamnagar", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur"],
+      "Jamnagar": ["Jamnagar City", "Khambhalia", "Lalpur", "Salaya", "Vadinar"],
+      "Jam Jodhpur": ["Dhrol", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur"],
+      "Jodia": ["Dhrol", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur"],
+      "Kalavad": ["Dhrol", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur"],
+      "Lalpur": ["Dhrol", "Jam Jodhpur", "Jodia", "Kalavad", "Lalpur"],
+      "Okhamandal": ["Beyt Dwarka", "Mithapur", "Okha", "Okhamandal", "Salaya"]
+    },
+    "Junagadh": {
+      "Bhesan": ["Bhesan", "Junagadh", "Keshod", "Mangrol", "Mendarda", "Vanthali"],
+      "Junagadh": ["Junagadh City", "Kabha", "Kavant", "Manavadar", "Vanthali", "Visavadar"],
+      "Keshod": ["Bhesan", "Junagadh", "Keshod", "Mangrol", "Mendarda", "Vanthali"],
+      "Mangrol": ["Bhesan", "Junagadh", "Keshod", "Mangrol", "Mendarda", "Vanthali"],
+      "Manavadar": ["Bhesan", "Junagadh", "Keshod", "Manavadar", "Mendarda", "Vanthali"],
+      "Mendarda": ["Bhesan", "Junagadh", "Keshod", "Mendarda", "Vanthali", "Visavadar"],
+      "Vanthali": ["Bhesan", "Junagadh", "Keshod", "Mendarda", "Vanthali", "Visavadar"],
+      "Visavadar": ["Bhesan", "Junagadh", "Keshod", "Mendarda", "Vanthali", "Visavadar"]
+    },
+    "Kheda": {
+      "Balasinor": ["Balasinor", "Kapadvanj", "Kathlal", "Kheda", "Matar"],
+      "Kapadvanj": ["Balasinor", "Kapadvanj", "Kathlal", "Kheda", "Matar"],
+      "Kathlal": ["Balasinor", "Kapadvanj", "Kathlal", "Kheda", "Matar"],
+      "Kheda": ["Balasinor", "Kapadvanj", "Kathlal", "Kheda", "Matar"],
+      "Matar": ["Balasinor", "Kathlal", "Kheda", "Matar", "Nadiad"],
+      "Mehmedabad": ["Balasinor", "Kathlal", "Kheda", "Matar", "Mehmedabad", "Nadiad"],
+      "Nadiad": ["Balasinor", "Kathlal", "Kheda", "Matar", "Nadiad", "Petlad"],
+      "Thasra": ["Balasinor", "Kathlal", "Kheda", "Matar", "Thasra"],
+      "Mahudha": ["Balasinor", "Kathlal", "Kheda", "Mahudha", "Matar"],
+      "Vaso": ["Balasinor", "Kathlal", "Kheda", "Matar", "Vaso"]
+    },
+    "Kutch": {
+      "Abdasa": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Mandvi"],
+      "Anjar": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Mundra"],
+      "Bhachau": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Rapar"],
+      "Bhuj": ["Abdasa", "Anjar", "Bhachau", "Bhuj City", "Dholavira", "Lakhpat", "Mandvi"],
+      "Gandhidham": ["Anjar", "Bhachau", "Bhuj", "Gandhidham", "Mundra"],
+      "Lakhpat": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Nakhatrana"],
+      "Mandvi": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Mandvi"],
+      "Mundra": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Gandhidham", "Mundra"],
+      "Nakhatrana": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Nakhatrana"],
+      "Rapar": ["Abdasa", "Anjar", "Bhachau", "Bhuj", "Lakhpat", "Rapar"]
+    },
+    "Mahisagar": {
+      "Balasinor": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+      "Kadana": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+      "Khanpur": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+      "Lunawada": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+      "Santrampur": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"],
+      "Virpur": ["Balasinor", "Kadana", "Khanpur", "Lunawada", "Santrampur", "Virpur"]
+    },
+    "Mehsana": {
+      "Becharaji": ["Becharaji", "Harij", "Kadi", "Mehsana", "Sami", "Unjha"],
+      "Jotana": ["Becharaji", "Jotana", "Kadi", "Mehsana", "Unjha", "Visnagar"],
+      "Kadi": ["Becharaji", "Jotana", "Kadi", "Kalol", "Mehsana", "Unjha"],
+      "Kheralu": ["Becharaji", "Kheralu", "Mehsana", "Unjha", "Vadnagar", "Visnagar"],
+      "Mehsana": ["Mehsana City", "Becharaji", "Kadi", "Kheralu", "Sidhpur", "Unjha", "Vadnagar", "Vijapur", "Visnagar"],
+      "Satlasana": ["Becharaji", "Kheralu", "Mehsana", "Satlasana", "Unjha", "Visnagar"],
+      "Sidhpur": ["Becharaji", "Kheralu", "Mehsana", "Patan", "Sidhpur", "Unjha"],
+      "Unjha": ["Becharaji", "Kheralu", "Mehsana", "Sidhpur", "Unjha", "Visnagar"],
+      "Vadnagar": ["Becharaji", "Kheralu", "Mehsana", "Sidhpur", "Unjha", "Vadnagar"],
+      "Vijapur": ["Becharaji", "Kheralu", "Mehsana", "Sidhpur", "Unjha", "Vijapur"],
+      "Visnagar": ["Becharaji", "Kheralu", "Mehsana", "Sidhpur", "Unjha", "Visnagar"]
+    },
+    "Morbi": {
+      "Halvad": ["Dharangadhra", "Halvad", "Maliya", "Morbi", "Tankara", "Wankaner"],
+      "Maliya": ["Halvad", "Maliya", "Morbi", "Tankara", "Wankaner"],
+      "Morbi": ["Morbi City", "Halvad", "Maliya", "Tankara", "Wankaner"],
+      "Tankara": ["Halvad", "Maliya", "Morbi", "Tankara", "Wankaner"],
+      "Wankaner": ["Halvad", "Maliya", "Morbi", "Tankara", "Wankaner"]
+    },
+    "Narmada": {
+      "Dediyapada": ["Dediyapada", "Garudeshwar", "Nandod", "Rajpipla", "Sagbara", "Tilakwada"],
+      "Garudeshwar": ["Dediyapada", "Garudeshwar", "Nandod", "Rajpipla", "Sagbara"],
+      "Nandod": ["Dediyapada", "Garudeshwar", "Nandod", "Rajpipla", "Sagbara"],
+      "Sagbara": ["Dediyapada", "Garudeshwar", "Nandod", "Rajpipla", "Sagbara"],
+      "Tilakwada": ["Dediyapada", "Garudeshwar", "Nandod", "Rajpipla", "Sagbara", "Tilakwada"]
+    },
+    "Navsari": {
+      "Chikhli": ["Bilimora", "Chikhli", "Daman", "Gandevi", "Jalalpore", "Khergam"],
+      "Gandevi": ["Bilimora", "Chikhli", "Gandevi", "Jalalpore", "Khergam", "Navsari"],
+      "Jalalpore": ["Bilimora", "Chikhli", "Gandevi", "Jalalpore", "Khergam", "Maroli", "Navsari"],
+      "Khergam": ["Bilimora", "Chikhli", "Gandevi", "Jalalpore", "Khergam", "Navsari"],
+      "Navsari": ["Bilimora", "Chikhli", "Gandevi", "Jalalpore", "Khergam", "Navsari City"],
+      "Vansda": ["Chikhli", "Gandevi", "Jalalpore", "Khergam", "Navsari", "Vansda"]
+    },
+    "Panchmahal": {
+      "Godhra": ["Godhra City", "Ghoghamba", "Halol", "Jambughoda", "Kalol", "Lunawada"],
+      "Ghoghamba": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shahera"],
+      "Halol": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shahera"],
+      "Jambughoda": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shahera"],
+      "Kalol": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shahera"],
+      "Morva Hadaf": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Morva Hadaf"],
+      "Shahera": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shahera"],
+      "Shehera": ["Ghoghamba", "Godhra", "Halol", "Jambughoda", "Kalol", "Shehera"]
+    },
+    "Patan": {
+      "Chanasma": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Sidhpur"],
+      "Harij": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Sidhpur"],
+      "Patan": ["Patan City", "Chanasma", "Harij", "Radhanpur", "Sami", "Shankheshwar", "Sidhpur"],
+      "Radhanpur": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Sidhpur"],
+      "Sami": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Sidhpur"],
+      "Santalpur": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Santalpur"],
+      "Saraswati": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Saraswati"],
+      "Sidhpur": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Sidhpur"],
+      "Shankheshwar": ["Chanasma", "Harij", "Patan", "Radhanpur", "Sami", "Shankheshwar"]
+    },
+    "Porbandar": {
+      "Kutiyana": ["Barda", "Chhaya", "Kutiyana", "Porbandar", "Ranavav"],
+      "Porbandar": ["Barda", "Chhaya", "Kutiyana", "Porbandar City", "Ranavav"],
+      "Ranavav": ["Barda", "Chhaya", "Kutiyana", "Porbandar", "Ranavav"]
+    },
+    "Rajkot": {
+      "Gondal": ["Gondal", "Jasdan", "Jetpur", "Kotda Sangani", "Paddhari", "Virpur"],
+      "Jasdan": ["Gondal", "Jasdan", "Jetpur", "Kotda Sangani", "Paddhari"],
+      "Jetpur": ["Dhoraji", "Gondal", "Jasdan", "Jetpur", "Vinchhiya"],
+      "Kotda Sangani": ["Gondal", "Jasdan", "Kotda Sangani", "Lodhika", "Paddhari", "Shapar"],
+      "Lodhika": ["Gondal", "Kotda Sangani", "Lodhika", "Paddhari", "Rajkot", "Shapar"],
+      "Paddhari": ["Gondal", "Jasdan", "Kotda Sangani", "Lodhika", "Paddhari", "Shapar"],
+      "Rajkot": ["Rajkot City", "Bhaktinagar", "Kotda Sangani", "Lodhika", "Mavdi", "Metoda", "Raiya", "Shapar"],
+      "Upleta": ["Dhoraji", "Gondal", "Jetpur", "Upleta", "Vinchhiya"],
+      "Vinchhiya": ["Gondal", "Jetpur", "Upleta", "Vinchhiya"],
+      "Wankaner": ["Gondal", "Jasdan", "Kotda Sangani", "Paddhari", "Wankaner"]
+    },
+    "Sabarkantha": {
+      "Bayad": ["Bayad", "Dhansura", "Himmatnagar", "Meghraj", "Modasa", "Nar"],
+      "Himmatnagar": ["Bayad", "Dhansura", "Himmatnagar", "Idar", "Modasa", "Nar"],
+      "Idar": ["Bayad", "Dhansura", "Idar", "Khedbrahma", "Modasa", "Nar"],
+      "Khedbrahma": ["Bayad", "Dhansura", "Idar", "Khedbrahma", "Meghraj", "Nar"],
+      "Meghraj": ["Bayad", "Dhansura", "Idar", "Khedbrahma", "Meghraj", "Modasa"],
+      "Prantij": ["Bayad", "Dhansura", "Idar", "Meghraj", "Modasa", "Prantij"],
+      "Talod": ["Bayad", "Dhansura", "Idar", "Meghraj", "Modasa", "Talod"],
+      "Vadali": ["Bayad", "Dhansura", "Idar", "Meghraj", "Modasa", "Vadali"]
+    },
+    "Surat": {
+      "Bardoli": ["Bardoli", "Baben", "Kikwad", "Sarabhan", "Ten", "Uva"],
+      "Chorasi": ["Bhatpor", "Bhatha", "Saroli", "Bhesan", "Bharthana", "Kavas", "Malgama", "Pal", "Varachha Road"],
+      "Kamrej": ["Abrama", "Kholvad", "Valak", "Laskana", "Navagam", "Vav", "Kamrej", "Kim", "Sayan"],
+      "Mandvi": ["Areth", "Goddha", "Kevdi", "Mandvi", "Salaiya", "Songadh"],
+      "Mangrol": ["Kosamba", "Mangrol", "Vankal", "Zankhvav"],
+      "Mahuva": ["Ghantali", "Mahuva", "Palitana", "Shihor", "Timbdi"],
+      "Olpad": ["Gothan", "Kosam", "Olpad", "Sayan", "Sherdi", "Vadod"],
+      "Palsana": ["Antroli", "Haripura", "Niyol", "Sedhav", "Vareli", "Vankaneda"],
+      "Umarpada": ["Ghantoli", "Kevdi", "Umarpada", "Zankhvav"],
+      "Surat City": ["Adajan", "Althan", "Athwa", "Dindoli", "Katargam", "Limbayat", "Majura", "Nanpura", "Rander", "Udhna", "Varachha", "Vesu"]
+    },
+    "Surendranagar": {
+      "Chotila": ["Chotila", "Dhrangadhra", "Lakhtar", "Limbdi", "Sayla"],
+      "Dasada": ["Dasada", "Dhrangadhra", "Lakhtar", "Patdi", "Surendranagar"],
+      "Dhrangadhra": ["Chotila", "Dasada", "Dhrangadhra", "Halvad", "Wadhwan"],
+      "Halvad": ["Chotila", "Dasada", "Dhrangadhra", "Halvad", "Surendranagar"],
+      "Lakhtar": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Muli"],
+      "Limbdi": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Limbdi"],
+      "Muli": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Limbdi", "Muli"],
+      "Patdi": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Limbdi", "Patdi"],
+      "Sayla": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Limbdi", "Sayla"],
+      "Surendranagar": ["Surendranagar City", "Chotila", "Dasada", "Dhrangadhra", "Wadhwan"],
+      "Thangadh": ["Chotila", "Dasada", "Dhrangadhra", "Lakhtar", "Limbdi", "Thangadh"],
+      "Wadhwan": ["Chotila", "Dasada", "Dhrangadhra", "Surendranagar", "Wadhwan"]
+    },
+    "Tapi": {
+      "Dolvan": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara"],
+      "Kukarmunda": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara"],
+      "Mandvi": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara"],
+      "Nizar": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara"],
+      "Songadh": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara"],
+      "Uchchhal": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Uchchhal"],
+      "Valod": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Valod"],
+      "Vyara": ["Dolvan", "Kukarmunda", "Mandvi", "Nizar", "Songadh", "Vyara City"]
+    },
+    "Valsad": {
+      "Dharampur": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi"],
+      "Kaprada": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi"],
+      "Pardi": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi"],
+      "Umbergaon": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi"],
+      "Valsad": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad City", "Vapi"],
+      "Vapi": ["Dharampur", "Kaprada", "Pardi", "Umbergaon", "Valsad", "Vapi City"]
+    },
+    "Vadodara": {
+      "Dabhoi": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Shinor"],
+      "Desar": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Vadodara"],
+      "Karjan": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Shinor"],
+      "Padra": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Shinor"],
+      "Savli": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Shinor"],
+      "Shinor": ["Dabhoi", "Desar", "Karjan", "Padra", "Shinor", "Tilakwada"],
+      "Vadodara City": ["Akota", "Alkapuri", "Fatehgunj", "Gotri", "Harni", "Karelibaug", "Manjalpur", "Nizampura", "Sayajiganj", "Subhanpura", "Vasna"],
+      "Vaghodia": ["Dabhoi", "Desar", "Karjan", "Padra", "Savli", "Vaghodia"]
+    }
+  }
+}

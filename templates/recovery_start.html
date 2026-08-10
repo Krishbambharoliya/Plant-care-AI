@@ -4,22 +4,38 @@
 <div class="d-flex justify-content-center align-items-center py-4 fade-in-up">
     <div class="glass-panel p-4 w-100" style="max-width: 520px; border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
         <div class="text-center mb-4">
-            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Start Recovery Journey</h2>
-            <p class="text-muted small mt-1">Initiate week-by-week monitoring to help your diseased crop recover</p>
+            <h2 class="fw-bold m-0" style="font-size: 1.8rem;">
+                {% if current_language == 'gu' %}રિકવરી જર્ની શરૂ કરો{% elif current_language == 'hi' %}रिकवरी यात्रा शुरू करें{% else %}Start Recovery Journey{% endif %}
+            </h2>
+            <p class="text-muted small mt-1">
+                {% if current_language == 'gu' %}અઠવાડિયા-દર-અઠવાડિયા નિગરાની શરૂ કરો, બીમાર પાકને સ્વસ્થ કરવા{% elif current_language == 'hi' %}सप्ताह-दर-सप्ताह निगरानी शुरू करें, रोगग्रस्त फसल को स्वस्थ करने के लिए{% else %}Initiate week-by-week monitoring to help your diseased crop recover{% endif %}
+            </p>
         </div>
+
+        {% if error %}
+        <div class="alert alert-danger text-center small mb-3 py-2 px-3" role="alert" style="border-radius: 10px;">
+            {{ error }}
+        </div>
+        {% endif %}
 
         <form method="post" class="d-flex flex-column gap-3">
             {% csrf_token %}
             
             <div class="form-group">
-                <label class="form-label fw-bold">Plant Nickname / Location *</label>
-                <input type="text" name="plant_name" class="form-control" placeholder="e.g. Backyard Tomatoes, Field Section A" required>
-                <small class="text-muted">A friendly name to identify this specific plant in your list</small>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}છોડ નું નામ / સ્થળ *{% elif current_language == 'hi' %}पौधे का नाम / स्थान *{% else %}Plant Nickname / Location *{% endif %}
+                </label>
+                <input type="text" name="plant_name" class="form-control" value="{{ plant_name|default:'' }}" placeholder="{% if current_language == 'gu' %}દા.ત. પછીતે ટામેટા, ખેત વિભાગ A{% elif current_language == 'hi' %}जैसे: पिछले आँगन के टमाटर, खेत खंड A{% else %}e.g. Backyard Tomatoes, Field Section A{% endif %}" required>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આ છોડ ઓળખવા માટે એક મૈત્રીપૂર્ણ નામ{% elif current_language == 'hi' %}इस पौधे को पहचानने के लिए एक सरल नाम{% else %}A friendly name to identify this specific plant in your list{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Crop Variety (Optional)</label>
-                <input type="text" name="crop_type" class="form-control" placeholder="e.g. Tomato, Potato, Chili" list="cropSuggestions">
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}પાક વિવિધતા (વૈકલ્પિક){% elif current_language == 'hi' %}फसल किस्म (वैकल्पिक){% else %}Crop Variety (Optional){% endif %}
+                </label>
+                <input type="text" name="crop_type" class="form-control" value="{{ crop_type|default:'' }}" placeholder="{% if current_language == 'gu' %}દા.ત. ટામેટા, બટેટા, મરચું{% elif current_language == 'hi' %}जैसे: टमाटर, आलू, मिर्च{% else %}e.g. Tomato, Potato, Chili{% endif %}" list="cropSuggestions">
                 <datalist id="cropSuggestions">
                     <option value="Tomato">
                     <option value="Potato">
@@ -28,40 +44,68 @@
                     <option value="Rice">
                     <option value="Wheat">
                 </datalist>
-                <small class="text-muted">Specify the crop type to receive better care recommendations</small>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}વધુ સારી ભલામણ માટે પાક પ્રકાર દર્શાવો{% elif current_language == 'hi' %}बेहतर सलाह के लिए फसल का प्रकार बताएं{% else %}Specify the crop type to receive better care recommendations{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Watering Frequency</label>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}પાણી આપવાની આવર્તન{% elif current_language == 'hi' %}सिंचाई की आवृत्ति{% else %}Watering Frequency{% endif %}
+                </label>
                 <select name="watering_frequency" class="form-select">
-                    <option value="Once a day" selected>Once a day / દિવસમાં એક વાર</option>
-                    <option value="Twice a day">Twice a day / દિવસમાં બે વાર</option>
-                    <option value="Every 2 days">Every 2 days / દર બે દિવસે</option>
-                    <option value="Twice a week">Twice a week / અઠવાડિયામાં બે વાર</option>
-                    <option value="Once a week">Once a week / અઠવાડિયામાં એક વાર</option>
+                    <option value="Once a day" {% if watering_frequency == 'Once a day' or not watering_frequency %}selected{% endif %}>{% if current_language == 'gu' %}દિવસમાં એક વાર{% elif current_language == 'hi' %}दिन में एक बार{% else %}Once a day{% endif %}</option>
+                    <option value="Twice a day" {% if watering_frequency == 'Twice a day' %}selected{% endif %}>{% if current_language == 'gu' %}દિવસમાં બે વાર{% elif current_language == 'hi' %}दिन में दो बार{% else %}Twice a day{% endif %}</option>
+                    <option value="Every 2 days" {% if watering_frequency == 'Every 2 days' %}selected{% endif %}>{% if current_language == 'gu' %}દર બે દિવસે{% elif current_language == 'hi' %}हर 2 दिन में{% else %}Every 2 days{% endif %}</option>
+                    <option value="Twice a week" {% if watering_frequency == 'Twice a week' %}selected{% endif %}>{% if current_language == 'gu' %}અઠવાડિયામાં બે વાર{% elif current_language == 'hi' %}सप्ताह में दो बार{% else %}Twice a week{% endif %}</option>
+                    <option value="Once a week" {% if watering_frequency == 'Once a week' %}selected{% endif %}>{% if current_language == 'gu' %}અઠવાડિયામાં એક વાર{% elif current_language == 'hi' %}सप्ताह में एक बार{% else %}Once a week{% endif %}</option>
                 </select>
-                <small class="text-muted">How often does this plant require watering?</small>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આ છોડને કેટલી વાર પાણીની જરૂર છે?{% elif current_language == 'hi' %}इस पौधे को कितनी बार पानी की ज़रूरत है?{% else %}How often does this plant require watering?{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Light Requirement</label>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}પ્રકાશ જરૂરિયાત{% elif current_language == 'hi' %}प्रकाश की आवश्यकता{% else %}Light Requirement{% endif %}
+                </label>
                 <select name="light_requirement" class="form-select">
-                    <option value="Direct Sunlight" selected>Direct Sunlight / સીધો સૂર્યપ્રકાશ</option>
-                    <option value="Partial Shade">Partial Shade / અંશતઃ છાયડો</option>
-                    <option value="Full Shade">Full Shade / પૂરેપૂરો છાયડો</option>
+                    <option value="Direct Sunlight" {% if light_requirement == 'Direct Sunlight' or not light_requirement %}selected{% endif %}>{% if current_language == 'gu' %}સીધો સૂર્યપ્રકાશ{% elif current_language == 'hi' %}सीधी धूप{% else %}Direct Sunlight{% endif %}</option>
+                    <option value="Partial Shade" {% if light_requirement == 'Partial Shade' %}selected{% endif %}>{% if current_language == 'gu' %}આંશિક છાયો{% elif current_language == 'hi' %}आंशिक छाया{% else %}Partial Shade{% endif %}</option>
+                    <option value="Full Shade" {% if light_requirement == 'Full Shade' %}selected{% endif %}>{% if current_language == 'gu' %}સંપૂર્ણ છાયો{% elif current_language == 'hi' %}पूर्ण छाया{% else %}Full Shade{% endif %}</option>
                 </select>
-                <small class="text-muted">Optimal sunlight level for this plant</small>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આ છોડ માટે શ્રેષ્ઠ સૂર્યપ્રકાશ સ્તર{% elif current_language == 'hi' %}इस पौधे के लिए उचित धूप स्तर{% else %}Optimal sunlight level for this plant{% endif %}
+                </small>
             </div>
 
             <div class="form-group">
-                <label class="form-label fw-bold">Estimated Recovery Timeframe (Weeks)</label>
-                <input type="number" name="estimated_recovery_weeks" class="form-control" min="1" max="16" value="4" required>
-                <small class="text-muted">Target timeframe in weeks for full recovery</small>
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}શરૂઆતની તારીખ *{% elif current_language == 'hi' %}प्रारंभ तिथि *{% else %}Start Date *{% endif %}
+                </label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date_value|default:today_date_str }}" required>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}આજની અથવા રોગ દેખાવાની તાજેતરની તારીખ{% elif current_language == 'hi' %}आज की या रोग दिखने की हाल की तारीख{% else %}Today or recent date of disease occurrence{% endif %}
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label fw-bold">
+                    {% if current_language == 'gu' %}અંદાજિત સ્વસ્થ થવાનો સમય (અઠવાડિયા){% elif current_language == 'hi' %}अनुमानित रिकवरी समय (सप्ताह){% else %}Estimated Recovery Timeframe (Weeks){% endif %}
+                </label>
+                <input type="number" name="estimated_recovery_weeks" class="form-control" min="1" max="16" value="{{ estimated_recovery_weeks|default:4 }}" required>
+                <small class="text-muted">
+                    {% if current_language == 'gu' %}સંપૂર્ણ સ્વસ્થ થવા માટે અઠવાડિયાઓ{% elif current_language == 'hi' %}पूर्ण रिकवरी के लिए लक्षित समयसीमा{% else %}Target timeframe in weeks for full recovery{% endif %}
+                </small>
             </div>
 
             <div class="d-flex gap-2 mt-3 w-100">
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">Cancel</a>
-                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">Start Journey</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-50 fw-bold py-2" style="border-radius: 8px;">
+                    {% if current_language == 'gu' %}રદ કરો{% elif current_language == 'hi' %}रद्द करें{% else %}Cancel{% endif %}
+                </a>
+                <button type="submit" class="btn-custom-primary w-50 fw-bold py-2" style="border-radius: 8px;">
+                    {% if current_language == 'gu' %}જર્ની શરૂ કરો{% elif current_language == 'hi' %}यात्रा शुरू करें{% else %}Start Journey{% endif %}
+                </button>
             </div>
         </form>
     </div>

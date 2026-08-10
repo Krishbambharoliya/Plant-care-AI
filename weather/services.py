@@ -1,4 +1,3 @@
-import os
 import requests
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -101,51 +100,155 @@ class OpenWeatherClient:
             return None, None
         
         url = "https://api.openweathermap.org/geo/1.0/direct"
-        params = {
-            'q': city_name,
-            'limit': 1,
-            'appid': api_key
-        }
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                if data:
-                    return float(data[0]['lat']), float(data[0]['lon'])
-        except Exception:
-            pass
+        
+        # Clean parts and filter out empty strings
+        parts = [p.strip() for p in city_name.split(',') if p.strip()]
+        
+        # Try progressively less specific combinations (e.g. Village+Taluka+City+State -> Taluka+City+State -> City+State)
+        for i in range(len(parts)):
+            query_parts = parts[i:]
+            query_str = ", ".join(query_parts)
+            if "india" not in query_str.lower():
+                query_str += ", India"
+                
+            params = {
+                'q': query_str,
+                'limit': 1,
+                'appid': api_key
+            }
+            try:
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data:
+                        res_country = data[0].get('country', '')
+                        res_state = data[0].get('state', '').lower()
+                        
+                        # We want to make sure it's in India
+                        if res_country == 'IN':
+                            # If Gujarat is in our query, we want to prefer Gujarat
+                            if 'gujarat' in city_name.lower() and 'gujarat' not in res_state:
+                                continue
+                            return float(data[0]['lat']), float(data[0]['lon'])
+            except Exception:
+                pass
+                
+        # Final fallback: just try the first part if it's a known city in India
+        if len(parts) > 0:
+            params = {
+                'q': parts[0] + ", India",
+                'limit': 1,
+                'appid': api_key
+            }
+            try:
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data:
+                        return float(data[0]['lat']), float(data[0]['lon'])
+            except Exception:
+                pass
+                
         return None, None
 
     @staticmethod
     def reverse_geocode(lat, lon):
         """
-        Reverse geocodes GPS coordinates (latitude and longitude) into City and State 
-        names using OpenWeather's Reverse Geocoding API.
-        """
-        # Fetch the api key or fallback to default
-        api_key = getattr(settings, 'OPENWEATHER_API_KEY', None) or 'be7bfd5d33099d1342756e8161d6449d'
-        if not api_key:
-            return None, None
+        Reverse geocodes GPS coordinates into village, taluka, city, and state
+        names. Uses OpenStreetMap Nominatim as primary (rich address data) and
+        OpenWeather Geo API as fallback.
         
-        # OpenWeather reverse geocode endpoint
-        url = "https://api.openweathermap.org/geo/1.0/reverse"
-        params = {
-            'lat': lat,
-            'lon': lon,
-            'limit': 1,
-            'appid': api_key
-        }
+        Returns a dict with keys: village, taluka, city, state
+        """
+        result = {'village': '', 'taluka': '', 'city': '', 'state': ''}
+
+        # --- Primary: OpenStreetMap Nominatim (richer address data) ---
         try:
-            response = requests.get(url, params=params, timeout=10)
+            nominatim_url = "https://nominatim.openstreetmap.org/reverse"
+            headers = {'User-Agent': 'PlantCareApp/1.0 (plant-care-india)'}
+            params = {
+                'lat': lat,
+                'lon': lon,
+                'format': 'json',
+                'addressdetails': 1,
+                'zoom': 16,
+            }
+            response = requests.get(nominatim_url, params=params, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                if data:
-                    city = data[0].get('name')
-                    state = data[0].get('state')
-                    return city, state
+                addr = data.get('address', {})
+
+                # Village: try most specific first
+                village = (
+                    addr.get('village') or
+                    addr.get('hamlet') or
+                    addr.get('neighbourhood') or
+                    addr.get('suburb') or
+                    addr.get('quarter') or
+                    ''
+                )
+
+                # Taluka: Nominatim returns "Kamrej Taluka" or "KamrejTaluka" in county for India
+                # Strip "Taluka" suffix (with or without space) if present
+                import re
+                raw_taluka = (
+                    addr.get('county') or
+                    addr.get('sub_district') or
+                    ''
+                )
+                taluka = re.sub(r'\s*[Tt]aluka$', '', raw_taluka).strip()
+
+                # City: use state_district as primary for Indian addresses
+                # (Nominatim puts district city there e.g. "Surat", "Ahmedabad")
+                raw_city = (
+                    addr.get('state_district') or
+                    addr.get('city') or
+                    addr.get('town') or
+                    addr.get('municipality') or
+                    addr.get('district') or
+                    ''
+                )
+                # Strip " District" or " Suburban District" suffixes
+                city = re.sub(r'\s*(Suburban\s+)?District$', '', raw_city, flags=re.IGNORECASE).strip()
+
+
+                # State
+                state = addr.get('state', '')
+
+                # Return if we have at least state (Indian addresses often lack city field)
+                if state or city or village:
+                    result['village'] = village
+                    result['taluka'] = taluka
+                    result['city'] = city
+                    result['state'] = state
+                    return result
         except Exception:
             pass
-        return None, None
+
+        # --- Fallback: OpenWeather Reverse Geocoding API ---
+        try:
+            api_key = getattr(settings, 'OPENWEATHER_API_KEY', None)
+            if api_key:
+                url = "https://api.openweathermap.org/geo/1.0/reverse"
+                params = {
+                    'lat': lat,
+                    'lon': lon,
+                    'limit': 5,
+                    'appid': api_key
+                }
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data:
+                        best = data[0]
+                        result['city'] = best.get('name', '')
+                        result['state'] = best.get('state', '')
+                        return result
+        except Exception:
+            pass
+
+        return result
+
 
     @staticmethod
     def get_rain_prediction(lat, lon):

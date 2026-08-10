@@ -2,29 +2,301 @@
 
 {% block extra_head %}
 <script>
-let geocodeTimeout = null;
-function lookupCityGPSAutomatic() {
-    clearTimeout(geocodeTimeout);
-    geocodeTimeout = setTimeout(lookupCityGPS, 600);
+const TRANSLATIONS = {
+    'en': {
+        'state': 'Select State',
+        'district': 'Select District / City',
+        'taluka': 'Select Taluka',
+        'village': 'Select Village'
+    },
+    'gu': {
+        'state': 'રાજ્ય પસંદ કરો',
+        'district': 'જિલ્લો પસંદ કરો',
+        'taluka': 'તાલુકો પસંદ કરો',
+        'village': 'ગામ પસંદ કરો'
+    },
+    'hi': {
+        'state': 'राज्य चुनें',
+        'district': 'जिला चुनें',
+        'taluka': 'तालुका चुनें',
+        'village': 'गाँव चुनें'
+    }
+};
+
+function getTranslation(key) {
+    const lang = getSelectedLang();
+    const dict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+    return dict[key] || TRANSLATIONS['en'][key];
 }
 
+function getSelectedLang() {
+    return '{{ current_language }}';
+}
+
+function loadStates() {
+    const stateSelect = document.getElementById('stateSelect');
+    if (!stateSelect) return;
+    stateSelect.innerHTML = `<option value="">${getTranslation('state')}</option>`;
+    stateSelect.disabled = false;
+    stateSelect.style.opacity = '1';
+    stateSelect.style.cursor = 'default';
+    
+    const lang = getSelectedLang();
+    fetch(`/api/accounts/locations/states/?lang=${lang}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.states) {
+                data.states.forEach(state => {
+                    const opt = document.createElement('option');
+                    opt.value = state.en;
+                    opt.textContent = state.trans;
+                    stateSelect.appendChild(opt);
+                });
+            }
+            restoreSavedLocation();
+        })
+        .catch(err => console.error('Failed to load states:', err));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadStates();
+});
+
+// Restores location when form reloads or initial load
+function restoreSavedLocation() {
+    const hiddenInput = document.getElementById('locationCityHiddenInput');
+    if (!hiddenInput || !hiddenInput.value) return;
+
+    const parts = hiddenInput.value.split(',').map(p => p.trim());
+    if (parts.length < 2) return;
+
+    const stateVal = parts[parts.length - 1];
+    const districtVal = parts[parts.length - 2];
+    const talukaVal = parts.length >= 3 ? parts[parts.length - 3] : '';
+    const villageVal = parts.length >= 4 ? parts[0] : '';
+
+    const stateSelect = document.getElementById('stateSelect');
+    if (stateSelect) {
+        stateSelect.value = stateVal;
+        
+        const lang = getSelectedLang();
+        fetch(`/api/accounts/locations/districts/?state=${encodeURIComponent(stateVal)}&lang=${lang}`)
+            .then(r => r.json())
+            .then(distData => {
+                const districtSelect = document.getElementById('districtSelect');
+                if (districtSelect && distData.districts) {
+                    districtSelect.innerHTML = `<option value="">${getTranslation('district')}</option>`;
+                    distData.districts.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.en; opt.textContent = d.trans;
+                        districtSelect.appendChild(opt);
+                    });
+                    districtSelect.value = districtVal;
+
+                    if (talukaVal) {
+                        fetch(`/api/accounts/locations/subdistricts/?state=${encodeURIComponent(stateVal)}&district=${encodeURIComponent(districtVal)}&lang=${lang}`)
+                            .then(r => r.json())
+                            .then(talukaData => {
+                                const talukaContainer = document.getElementById('talukaContainer');
+                                if (talukaData.subdistricts && talukaData.subdistricts.length > 0) {
+                                    talukaContainer.innerHTML = `<select id="talukaSelect" class="form-select" onchange="onTalukaChange()" required><option value="">${getTranslation('taluka')}</option></select>`;
+                                    const talukaSelect = document.getElementById('talukaSelect');
+                                    talukaData.subdistricts.forEach(t => {
+                                        const opt = document.createElement('option');
+                                        opt.value = t.en; opt.textContent = t.trans;
+                                        talukaSelect.appendChild(opt);
+                                    });
+                                    talukaSelect.value = talukaVal;
+
+                                    if (villageVal) {
+                                        fetch(`/api/accounts/locations/villages/?state=${encodeURIComponent(stateVal)}&district=${encodeURIComponent(districtVal)}&subdistrict=${encodeURIComponent(talukaVal)}&lang=${lang}`)
+                                            .then(r => r.json())
+                                            .then(villageData => {
+                                                const villageContainer = document.getElementById('villageContainer');
+                                                if (villageData.villages && villageData.villages.length > 0) {
+                                                    villageContainer.innerHTML = `<select id="villageSelect" class="form-select" onchange="updateLocationCityField()" required><option value="">${getTranslation('village')}</option></select>`;
+                                                    const villageSelect = document.getElementById('villageSelect');
+                                                    villageData.villages.forEach(v => {
+                                                        const opt = document.createElement('option');
+                                                        opt.value = v.en; opt.textContent = v.trans;
+                                                        villageSelect.appendChild(opt);
+                                                    });
+                                                    villageSelect.value = villageVal;
+                                                } else {
+                                                    villageContainer.innerHTML = `<input type="text" id="villageInput" class="form-control" value="${villageVal}" oninput="updateLocationCityField()" required>`;
+                                                }
+                                            });
+                                    }
+                                } else {
+                                    talukaContainer.innerHTML = `<input type="text" id="talukaInput" class="form-control" value="${talukaVal}" oninput="updateLocationCityField()" required>`;
+                                    if (villageVal) {
+                                        const villageContainer = document.getElementById('villageContainer');
+                                        villageContainer.innerHTML = `<input type="text" id="villageInput" class="form-control" value="${villageVal}" oninput="updateLocationCityField()" required>`;
+                                    }
+                                }
+                            });
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+    }
+}
+
+// State selected → fetch Districts
+function onStateChange() {
+    const stateSelect = document.getElementById('stateSelect');
+    const districtSelect = document.getElementById('districtSelect');
+    const talukaContainer = document.getElementById('talukaContainer');
+    const villageContainer = document.getElementById('villageContainer');
+
+    const state = stateSelect.value;
+    const lang = getSelectedLang();
+    
+    districtSelect.innerHTML = `<option value="">${getTranslation('district')}</option>`;
+    talukaContainer.innerHTML = `<select id="talukaSelect" class="form-select" onchange="onTalukaChange()" required><option value="">${getTranslation('taluka')}</option></select>`;
+    villageContainer.innerHTML = `<select id="villageSelect" class="form-select" onchange="updateLocationCityField()" required><option value="">${getTranslation('village')}</option></select>`;
+
+    if (!state) {
+        updateLocationCityField();
+        return;
+    }
+
+    fetch(`/api/accounts/locations/districts/?state=${encodeURIComponent(state)}&lang=${lang}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.districts) {
+                data.districts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.en; opt.textContent = d.trans;
+                    districtSelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(err => console.error('Failed to load districts:', err));
+    
+    updateLocationCityField();
+}
+
+// District selected → fetch Talukas
+function onDistrictChange() {
+    const stateSelect = document.getElementById('stateSelect');
+    const districtSelect = document.getElementById('districtSelect');
+    const talukaContainer = document.getElementById('talukaContainer');
+    const villageContainer = document.getElementById('villageContainer');
+
+    const state = stateSelect.value;
+    const district = districtSelect.value;
+    const lang = getSelectedLang();
+
+    talukaContainer.innerHTML = `<select id="talukaSelect" class="form-select" onchange="onTalukaChange()" required><option value="">${getTranslation('taluka')}</option></select>`;
+    villageContainer.innerHTML = `<select id="villageSelect" class="form-select" onchange="updateLocationCityField()" required><option value="">${getTranslation('village')}</option></select>`;
+
+    if (!state || !district) {
+        updateLocationCityField();
+        return;
+    }
+
+    fetch(`/api/accounts/locations/subdistricts/?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&lang=${lang}`)
+        .then(r => r.json())
+        .then(data => {
+            const talukaSelect = document.getElementById('talukaSelect');
+            if (data.subdistricts && data.subdistricts.length > 0) {
+                data.subdistricts.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.en; opt.textContent = t.trans;
+                    talukaSelect.appendChild(opt);
+                });
+            } else {
+                talukaContainer.innerHTML = `<input type="text" id="talukaInput" class="form-control" placeholder="Enter Taluka" oninput="updateLocationCityField()" required>`;
+                villageContainer.innerHTML = `<input type="text" id="villageInput" class="form-control" placeholder="Enter Village" oninput="updateLocationCityField()" required>`;
+            }
+        })
+        .catch(err => console.error('Failed to load subdistricts:', err));
+
+    updateLocationCityField();
+}
+
+// Taluka selected → fetch Villages
+function onTalukaChange() {
+    const stateSelect = document.getElementById('stateSelect');
+    const districtSelect = document.getElementById('districtSelect');
+    const talukaSelect = document.getElementById('talukaSelect');
+    const villageContainer = document.getElementById('villageContainer');
+
+    const state = stateSelect.value;
+    const district = districtSelect ? districtSelect.value : '';
+    const taluka = talukaSelect ? talukaSelect.value : '';
+    const lang = getSelectedLang();
+
+    villageContainer.innerHTML = `<select id="villageSelect" class="form-select" onchange="updateLocationCityField()" required><option value="">${getTranslation('village')}</option></select>`;
+
+    if (!state || !district || !taluka) {
+        updateLocationCityField();
+        return;
+    }
+
+    fetch(`/api/accounts/locations/villages/?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&subdistrict=${encodeURIComponent(taluka)}&lang=${lang}`)
+        .then(r => r.json())
+        .then(data => {
+            const villageSelect = document.getElementById('villageSelect');
+            if (data.villages && data.villages.length > 0) {
+                data.villages.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.en; opt.textContent = v.trans;
+                    villageSelect.appendChild(opt);
+                });
+            } else {
+                villageContainer.innerHTML = `<input type="text" id="villageInput" class="form-control" placeholder="Enter Village" oninput="updateLocationCityField()" required>`;
+            }
+        })
+        .catch(err => console.error(err));
+    updateLocationCityField();
+}
+
+// Update hidden city input
+function updateLocationCityField() {
+    const stateSelect = document.getElementById('stateSelect');
+    const districtSelect = document.getElementById('districtSelect');
+    const talukaSelect = document.getElementById('talukaSelect');
+    const talukaInput = document.getElementById('talukaInput');
+    const villageSelect = document.getElementById('villageSelect');
+    const villageInput = document.getElementById('villageInput');
+    const hiddenInput = document.getElementById('locationCityHiddenInput');
+    if (!stateSelect || !districtSelect || !hiddenInput) return;
+
+    const state = stateSelect.value;
+    const district = districtSelect.value;
+    const talukaVal = talukaSelect ? talukaSelect.value : (talukaInput ? talukaInput.value.trim() : '');
+    const villageVal = villageSelect ? villageSelect.value : (villageInput ? villageInput.value.trim() : '');
+
+    if (!state || !district) {
+        hiddenInput.value = '';
+        return;
+    }
+
+    if (villageVal && talukaVal) {
+        hiddenInput.value = `${villageVal}, ${talukaVal}, ${district}, ${state}`;
+    } else if (talukaVal) {
+        hiddenInput.value = `${talukaVal}, ${district}, ${state}`;
+    } else {
+        hiddenInput.value = `${district}, ${state}`;
+    }
+    lookupCityGPS();
+}
+
+// Get lat/lon coords from resolved input text
 function lookupCityGPS() {
-    const cityInput = document.querySelector('input[name="location_city"]');
+    const hiddenInput = document.getElementById('locationCityHiddenInput');
     const latInput = document.querySelector('input[name="latitude"]');
     const lonInput = document.querySelector('input[name="longitude"]');
     
-    if (!cityInput || !cityInput.value) {
-        return;
-    }
+    if (!hiddenInput || !hiddenInput.value) return;
     
-    const city = cityInput.value;
-    const url = `/api/weather/geocode/?city=${encodeURIComponent(city)}`;
+    const url = `/api/weather/geocode/?city=${encodeURIComponent(hiddenInput.value)}`;
     
     fetch(url)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('City not found');
-            }
+            if (!response.ok) throw new Error('Location not found');
             return response.json();
         })
         .then(data => {
@@ -35,10 +307,9 @@ function lookupCityGPS() {
                 lonInput.dispatchEvent(new Event('input'));
             }
         })
-        .catch(err => {
-            console.error("Geocoding failed:", err);
-        });
+        .catch(err => console.error("Geocoding failed:", err));
 }
+
 </script>
 {% endblock %}
 
@@ -65,7 +336,7 @@ function lookupCityGPS() {
 
     {% if form.errors %}
     <div class="alert alert-danger py-3" role="alert" style="border-radius: 12px; font-weight: 600; font-size: 0.9rem;">
-        <p class="fw-bold mb-1">Please correct the following errors:</p>
+        <p class="fw-bold mb-1">{{ t.profile.form_errors|default:"Please correct the following errors:" }}</p>
         <ul class="mb-0 text-start ps-3">
             {% for field in form %}
                 {% for error in field.errors %}
@@ -126,15 +397,51 @@ function lookupCityGPS() {
             </div>
 
             <div class="row g-3">
-                <div class="col-md-4 form-group m-0">
-                    <label class="form-label">{{ t.profile.location_city }}</label>
-                    <input type="text" name="location_city" class="form-control" value="{{ form.location_city.value|default:'' }}" placeholder="Enter your city" oninput="lookupCityGPSAutomatic()" onchange="lookupCityGPS()">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{% if current_language == 'gu' %}રાજ્ય{% elif current_language == 'hi' %}राज्य{% else %}State{% endif %} *</label>
+                    <select id="stateSelect" class="form-select" onchange="onStateChange()" required>
+                        <option value="">{% if current_language == 'gu' %}રાજ્ય પસંદ કરો{% elif current_language == 'hi' %}राज्य चुनें{% else %}Select State{% endif %}</option>
+                    </select>
                 </div>
-                <div class="col-md-4 form-group m-0">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label">{% if current_language == 'gu' %}જિલ્લો{% elif current_language == 'hi' %}जिला{% else %}District / City{% endif %} *</label>
+                    <select id="districtSelect" class="form-select" onchange="onDistrictChange()" required>
+                        <option value="">{% if current_language == 'gu' %}જિલ્લો પસંદ કરો{% elif current_language == 'hi' %}जिला चुनें{% else %}Select District / City{% endif %}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label" id="talukaLabel">{% if current_language == 'gu' %}તાલુકો{% elif current_language == 'hi' %}तालुका{% else %}Taluka{% endif %} *</label>
+                    <div id="talukaContainer">
+                        <select id="talukaSelect" class="form-select" onchange="onTalukaChange()" required>
+                            <option value="">{% if current_language == 'gu' %}તાલુકો પસંદ કરો{% elif current_language == 'hi' %}तालुका चुनें{% else %}Select Taluka{% endif %}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 form-group m-0">
+                    <label class="form-label" id="villageLabel">{% if current_language == 'gu' %}ગામ{% elif current_language == 'hi' %}गाँव{% else %}Village{% endif %} *</label>
+                    <div id="villageContainer">
+                        <select id="villageSelect" class="form-select" onchange="updateLocationCityField()" required>
+                            <option value="">{% if current_language == 'gu' %}ગામ પસંદ કરો{% elif current_language == 'hi' %}गाँव चुनें{% else %}Select Village{% endif %}</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="location_city" id="locationCityHiddenInput" value="{{ form.location_city.value|default:'' }}">
+                    {% if form.location_city.errors %}
+                    <div class="text-danger small mt-1">{{ form.location_city.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group m-0">
                     <label class="form-label">{{ t.profile.latitude }}</label>
                     <input type="number" step="0.000001" name="latitude" class="form-control" value="{{ form.latitude.value|default:'' }}">
                 </div>
-                <div class="col-md-4 form-group m-0">
+                <div class="col-md-6 form-group m-0">
                     <label class="form-label">{{ t.profile.longitude }}</label>
                     <input type="number" step="0.000001" name="longitude" class="form-control" value="{{ form.longitude.value|default:'' }}">
                 </div>
@@ -180,6 +487,11 @@ function lookupCityGPS() {
                     {% csrf_token %}
                     <input type="hidden" name="preferred_language" value="gu">
                     <button type="submit" class="lang-btn {% if current_language == 'gu' %}active{% endif %}">ગુજરાતી</button>
+                </form>
+                <form action="{% url 'toggle_preference' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="preferred_language" value="mr">
+                    <button type="submit" class="lang-btn {% if current_language == 'mr' %}active{% endif %}">मराठी</button>
                 </form>
             </div>
         </div>

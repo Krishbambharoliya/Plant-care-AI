@@ -1,24 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+
 <div class="d-flex flex-column gap-4 fade-in-up">
     <!-- Top actions bar -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small fw-bold">← Back to Dashboard</a>
+                <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted small fw-bold">
+                    ← {% if current_language == 'gu' %}ડેશબોર્ડ પર પાછા{% elif current_language == 'hi' %}डैशबोर्ड पर वापस{% else %}Back to Dashboard{% endif %}
+                </a>
             </div>
             <h1 class="fw-bold m-0 mt-1" style="font-size: 2rem;">{{ journey.plant_name }}</h1>
-            <p class="text-muted m-0">Crop Variety: <strong>{{ journey.localized_crop_name|default:"General" }}</strong> | Started: {{ journey.start_date|date:"Y-m-d" }}</p>
+            <p class="text-muted m-0">
+                {% if current_language == 'gu' %}પાક વિવિધતા{% elif current_language == 'hi' %}फसल किस्म{% else %}Crop Variety{% endif %}:
+                <strong>{{ journey.localized_crop_name|default:"General" }}</strong> |
+                {% if current_language == 'gu' %}શરૂ થયું{% elif current_language == 'hi' %}शुरू हुआ{% else %}Started{% endif %}:
+                {{ journey.start_date|date:"Y-m-d" }}
+            </p>
         </div>
 
         <div class="d-flex gap-2">
             <a href="{% url 'recovery_pdf' journey.id %}" class="btn btn-outline-success fw-bold d-flex align-items-center gap-1" style="border-radius: 8px;">
-                <span>📄</span> Download Report PDF
+                <span>📄</span>
+                {% if current_language == 'gu' %}રિપોર્ટ PDF ડાઉનલોડ{% elif current_language == 'hi' %}रिपोर्ट PDF डाउनलोड{% else %}Download Report PDF{% endif %}
             </a>
             {% if journey.status != 'recovered' %}
             <a href="{% url 'recovery_checkin' journey.id %}" class="btn-custom-primary text-decoration-none fw-bold d-flex align-items-center gap-1" style="border-radius: 8px;">
-                <span>📸</span> Upload Week {{ checkins.count|add:1 }} Photo
+                <span>📸</span>
+                {% if current_language == 'gu' %}અઠવાડિયું {{ checkins.count|add:1 }} ફોટો અપલોડ{% elif current_language == 'hi' %}सप्ताह {{ checkins.count|add:1 }} फोटो अपलोड{% else %}Upload Week {{ checkins.count|add:1 }} Photo{% endif %}
             </a>
             {% endif %}
         </div>
@@ -34,16 +45,16 @@
                 <div>
                     <h5 class="fw-bold m-0">
                         {% if journey.status == 'recovered' %}
-                            The plant is fully healthy!
+                            {% if current_language == 'gu' %}છોડ સંપૂર્ણ સ્વસ્થ છે!{% elif current_language == 'hi' %}पौधा पूरी तरह स्वस्थ है!{% else %}The plant is fully healthy!{% endif %}
                         {% else %}
-                            Ongoing Recovery Phase
+                            {% if current_language == 'gu' %}ચાલુ રિકવરી તબક્કો{% elif current_language == 'hi' %}चल रहा रिकवरी चरण{% else %}Ongoing Recovery Phase{% endif %}
                         {% endif %}
                     </h5>
                     <p class="text-muted small m-0">
                         {% if journey.status == 'recovered' %}
-                            Congratulations! Your plant is fully recovered and healthy. Review the log history below.
+                            {% if current_language == 'gu' %}અભિનંદન! તમારો છોડ સ્વસ્થ થઈ ગયો છે. નીચે લૉગ ઇતિહાસ જુઓ.{% elif current_language == 'hi' %}बधाई हो! आपका पौधा पूरी तरह स्वस्थ हो गया है। नीचे लॉग इतिहास देखें।{% else %}Congratulations! Your plant is fully recovered and healthy. Review the log history below.{% endif %}
                         {% else %}
-                            Follow the care directions weekly and upload new images to monitor plant health recovery.
+                            {% if current_language == 'gu' %}સાપ્તાહિક સૂચનો પ્રમાણે કાળજી રાખો અને નવી ફોટો અપલોડ કરો.{% elif current_language == 'hi' %}साप्ताहिक निर्देशों का पालन करें और नई फोटो अपलोड करें।{% else %}Follow the care directions weekly and upload new images to monitor plant health recovery.{% endif %}
                         {% endif %}
                     </p>
                 </div>
@@ -53,7 +64,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="mark_recovered">
                 <button type="submit" class="btn btn-success btn-sm fw-bold px-3 py-2" style="border-radius: 8px;">
-                    Mark Fully Healthy & Recovered
+                    {% if current_language == 'gu' %}સંપૂર્ણ સ્વસ્થ ચિહ્નિત કરો{% elif current_language == 'hi' %}पूर्ण स्वस्थ चिह्नित करें{% else %}Mark Fully Healthy &amp; Recovered{% endif %}
                 </button>
             </form>
             {% endif %}
@@ -62,7 +73,9 @@
         {% if checkins.exists %}
         <div class="mt-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small fw-bold text-muted">Recovery Completion Status:</span>
+                <span class="small fw-bold text-muted">
+                    {% if current_language == 'gu' %}રિકવરી પૂર્ણ સ્થિતિ:{% elif current_language == 'hi' %}रिकवरी पूर्णता स्थिति:{% else %}Recovery Completion Status:{% endif %}
+                </span>
                 <span class="small fw-bold text-success">{{ checkins.last.recovery_percentage }}%</span>
             </div>
             <div class="progress" style="height: 12px; border-radius: 6px; background: rgba(0,0,0,0.05);">
@@ -72,35 +85,89 @@
         {% endif %}
     </div>
 
-    <!-- Parameter summary cards for farmer -->
+    <!-- Parameter summary cards -->
     <div class="row g-3">
         <div class="col-6 col-md-3">
             <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px;">
                 <span style="font-size: 1.5rem;">💧</span>
-                <div class="small fw-bold text-muted mt-1">Water Schedule</div>
-                <div class="fw-extrabold text-dark mt-0.5">{{ journey.watering_frequency }}</div>
+                <div class="small fw-bold text-muted mt-1">
+                    {% if current_language == 'gu' %}પાણી સૂચિ{% elif current_language == 'hi' %}सिंचाई सूची{% else %}Water Schedule{% endif %}
+                </div>
+                <div class="fw-extrabold text-dark mt-0.5">
+                    {% if current_language == 'gu' %}
+                        {% if journey.watering_frequency == 'Once a day' %}દિવસમાં એક વાર
+                        {% elif journey.watering_frequency == 'Twice a day' %}દિવસમાં બે વાર
+                        {% elif journey.watering_frequency == 'Every 2 days' %}દર બે દિવસે
+                        {% elif journey.watering_frequency == 'Twice a week' %}અઠવાડિયામાં બે વાર
+                        {% elif journey.watering_frequency == 'Once a week' %}અઠવાડિયામાં એક વાર
+                        {% else %}{{ journey.watering_frequency }}{% endif %}
+                    {% elif current_language == 'hi' %}
+                        {% if journey.watering_frequency == 'Once a day' %}दिन में एक बार
+                        {% elif journey.watering_frequency == 'Twice a day' %}दिन में दो बार
+                        {% elif journey.watering_frequency == 'Every 2 days' %}हर 2 दिन में
+                        {% elif journey.watering_frequency == 'Twice a week' %}सप्ताह में दो बार
+                        {% elif journey.watering_frequency == 'Once a week' %}सप्ताह में एक बार
+                        {% else %}{{ journey.watering_frequency }}{% endif %}
+                    {% else %}{{ journey.watering_frequency }}{% endif %}
+                </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px;">
                 <span style="font-size: 1.5rem;">☀️</span>
-                <div class="small fw-bold text-muted mt-1">Sunlight Need</div>
-                <div class="fw-extrabold text-dark mt-0.5">{{ journey.light_requirement }}</div>
+                <div class="small fw-bold text-muted mt-1">
+                    {% if current_language == 'gu' %}સૂર્યપ્રકાશ જરૂરિયાત{% elif current_language == 'hi' %}धूप की आवश्यकता{% else %}Sunlight Need{% endif %}
+                </div>
+                <div class="fw-extrabold text-dark mt-0.5">
+                    {% if current_language == 'gu' %}
+                        {% if journey.light_requirement == 'Direct Sunlight' %}સીધો સૂર્યપ્રકાશ
+                        {% elif journey.light_requirement == 'Partial Shade' %}આંશિક છાયો
+                        {% elif journey.light_requirement == 'Full Shade' %}સંપૂર્ણ છાયો
+                        {% else %}{{ journey.light_requirement }}{% endif %}
+                    {% elif current_language == 'hi' %}
+                        {% if journey.light_requirement == 'Direct Sunlight' %}सीधी धूप
+                        {% elif journey.light_requirement == 'Partial Shade' %}आंशिक छाया
+                        {% elif journey.light_requirement == 'Full Shade' %}पूर्ण छाया
+                        {% else %}{{ journey.light_requirement }}{% endif %}
+                    {% else %}{{ journey.light_requirement }}{% endif %}
+                </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px;">
                 <span style="font-size: 1.5rem;">⏱</span>
-                <div class="small fw-bold text-muted mt-1">Recovery Goal</div>
-                <div class="fw-extrabold text-dark mt-0.5">{{ journey.estimated_recovery_weeks }} Weeks</div>
+                <div class="small fw-bold text-muted mt-1">
+                    {% if current_language == 'gu' %}રિકવરી લક્ષ્ય{% elif current_language == 'hi' %}रिकवरी लक्ष्य{% else %}Recovery Goal{% endif %}
+                </div>
+                <div class="fw-extrabold text-dark mt-0.5">
+                    {{ journey.estimated_recovery_weeks }} {% if current_language == 'gu' %}અઠ.{% elif current_language == 'hi' %}सप्ताह{% else %}Weeks{% endif %}
+                </div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="glass-panel p-3 text-center" style="border: 1px solid var(--border-card); border-radius: 12px;">
                 <span style="font-size: 1.5rem;">🐛</span>
-                <div class="small fw-bold text-muted mt-1">Latest Pest Index</div>
+                <div class="small fw-bold text-muted mt-1">
+                    {% if current_language == 'gu' %}છેલ્લો જીવાત સ્તર{% elif current_language == 'hi' %}नवीनतम कीट स्तर{% else %}Latest Pest Index{% endif %}
+                </div>
                 <div class="fw-extrabold text-dark mt-0.5">
-                    {% if checkins.last %}{{ checkins.last.pest_activity }}{% else %}None{% endif %}
+                    {% if checkins.last %}
+                        {% if current_language == 'gu' %}
+                            {% if checkins.last.pest_activity == 'None' %}કોઈ નહીં
+                            {% elif checkins.last.pest_activity == 'Low' %}ઓછી
+                            {% elif checkins.last.pest_activity == 'Medium' %}મધ્યમ
+                            {% elif checkins.last.pest_activity == 'High' %}વધારે
+                            {% else %}{{ checkins.last.pest_activity }}{% endif %}
+                        {% elif current_language == 'hi' %}
+                            {% if checkins.last.pest_activity == 'None' %}कोई नहीं
+                            {% elif checkins.last.pest_activity == 'Low' %}कम
+                            {% elif checkins.last.pest_activity == 'Medium' %}मध्यम
+                            {% elif checkins.last.pest_activity == 'High' %}अधिक
+                            {% else %}{{ checkins.last.pest_activity }}{% endif %}
+                        {% else %}{{ checkins.last.pest_activity }}{% endif %}
+                    {% else %}
+                        {% if current_language == 'gu' %}કોઈ નહીં{% elif current_language == 'hi' %}कोई नहीं{% else %}None{% endif %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -112,14 +179,20 @@
         <div class="col-lg-6">
             <div class="glass-panel p-4 h-100" style="border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold m-0">📈 AI Growth & Recovery Comparison</h5>
-                    <span class="badge bg-success bg-opacity-10 text-success fw-bold">Active Monitoring</span>
+                    <h5 class="fw-bold m-0">
+                        📈 {% if current_language == 'gu' %}AI વૃદ્ધિ અને રિકવરી સરખામણી{% elif current_language == 'hi' %}AI वृद्धि और रिकवरी तुलना{% else %}AI Growth &amp; Recovery Comparison{% endif %}
+                    </h5>
+                    <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                        {% if current_language == 'gu' %}સક્રિય નિગરાની{% elif current_language == 'hi' %}सक्रिय निगरानी{% else %}Active Monitoring{% endif %}
+                    </span>
                 </div>
                 
                 {% if checkins.count >= 1 %}
                 <div class="row g-3 text-center align-items-center">
                     <div class="col-5">
-                        <div class="small fw-bold text-muted mb-1">Week 1 Baseline</div>
+                        <div class="small fw-bold text-muted mb-1">
+                            {% if current_language == 'gu' %}અઠ. 1 આધારરેખા{% elif current_language == 'hi' %}सप्ताह 1 आधार{% else %}Week 1 Baseline{% endif %}
+                        </div>
                         <div class="rounded-3 overflow-hidden border" style="height: 120px; background: #f9f9fb;">
                             {% if checkins.first.image %}
                             <img src="{{ checkins.first.image.url }}" alt="Week 1" style="width: 100%; height: 100%; object-fit: cover;">
@@ -130,7 +203,9 @@
                         <div class="fw-bold text-muted" style="font-size: 1.5rem;">↓</div>
                     </div>
                     <div class="col-5">
-                        <div class="small fw-bold text-muted mb-1">Week {{ checkins.last.week_number }} Status</div>
+                        <div class="small fw-bold text-muted mb-1">
+                            {% if current_language == 'gu' %}અઠ. {{ checkins.last.week_number }} સ્થિતિ{% elif current_language == 'hi' %}सप्ताह {{ checkins.last.week_number }} स्थिति{% else %}Week {{ checkins.last.week_number }} Status{% endif %}
+                        </div>
                         <div class="rounded-3 overflow-hidden border" style="height: 120px; background: #f9f9fb;">
                             {% if checkins.last.image %}
                             <img src="{{ checkins.last.image.url }}" alt="Latest" style="width: 100%; height: 100%; object-fit: cover;">
@@ -142,20 +217,23 @@
                 <div class="mt-3 p-3 rounded-3 text-center" style="background: rgba(0,0,0,0.02);">
                     <div class="row g-2 align-items-center">
                         <div class="col-sm-6 text-sm-start">
-                            <span class="small text-muted d-block">Overall Growth Index:</span>
-                            <span class="fw-extrabold text-dark" style="font-size: 1.25rem;">+{{ checkins.last.recovery_percentage }}% Increase</span>
+                            <span class="small text-muted d-block">
+                                {% if current_language == 'gu' %}કુલ વૃદ્ધિ સૂચકાંક:{% elif current_language == 'hi' %}कुल वृद्धि सूचकांक:{% else %}Overall Growth Index:{% endif %}
+                            </span>
+                            <span class="fw-extrabold text-dark" style="font-size: 1.25rem;">
+                                +{{ checkins.last.recovery_percentage }}% {% if current_language == 'gu' %}વૃદ્ધિ{% elif current_language == 'hi' %}वृद्धि{% else %}Increase{% endif %}
+                            </span>
                         </div>
                         <div class="col-sm-6">
-                            <!-- Visual progress -->
                             <div class="progress" style="height: 8px; border-radius: 4px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ checkins.last.recovery_percentage }}%;"></div>
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ checkins.last.recovery_percentage }};"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 {% else %}
                 <div class="text-center py-5 text-muted small">
-                    AI needs at least 1 weekly check-in photo to generate growth comparisons.
+                    {% if current_language == 'gu' %}AI ને ઓછામાં ઓછી 1 સાપ્તાહિક ફોટો જોઈએ.{% elif current_language == 'hi' %}AI को कम से कम 1 साप्ताहिक फोटो चाहिए।{% else %}AI needs at least 1 weekly check-in photo to generate growth comparisons.{% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -164,45 +242,41 @@
         <!-- Plant Lifecycle Milestone Timeline -->
         <div class="col-lg-6">
             <div class="glass-panel p-4 h-100" style="border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
-                <h5 class="fw-bold mb-4">🌱 Plant Lifecycle & Recovery Timeline</h5>
+                <h5 class="fw-bold mb-4">
+                    🌱 {% if current_language == 'gu' %}છોડ જીવન ચક્ર અને રિકવરી સમયરેખા{% elif current_language == 'hi' %}पौधे का जीवन चक्र और रिकवरी समयरेखा{% else %}Plant Lifecycle &amp; Recovery Timeline{% endif %}
+                </h5>
                 
-                <!-- Horizontal timeline design -->
                 <div class="position-relative d-flex justify-content-between align-items-center px-3 mt-3">
-                    <!-- Line behind circles -->
                     <div class="position-absolute start-0 end-0" style="height: 4px; background: var(--border-card); top: 50%; transform: translateY(-50%); z-index: 1;"></div>
-                    <!-- Color fill if recovered -->
                     <div class="position-absolute start-0" style="height: 4px; background: var(--success); top: 50%; transform: translateY(-50%); z-index: 2; width: {% if journey.status == 'recovered' %}100%{% elif checkins.exists %}50%{% else %}15%{% endif %};"></div>
 
-                    <!-- Milestone 1 -->
                     <div class="text-center position-relative" style="z-index: 3;">
                         <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white fw-bold shadow-sm" style="width: 36px; height: 36px;">1</div>
-                        <div class="mt-2 small fw-bold text-dark">Day 1</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Healthy Baseline</div>
+                        <div class="mt-2 small fw-bold text-dark">{% if current_language == 'gu' %}દિ. 1{% elif current_language == 'hi' %}दिन 1{% else %}Day 1{% endif %}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{% if current_language == 'gu' %}સ્વસ્થ આધારરેખા{% elif current_language == 'hi' %}स्वस्थ आधार{% else %}Healthy Baseline{% endif %}</div>
                     </div>
 
-                    <!-- Milestone 2 -->
                     <div class="text-center position-relative" style="z-index: 3;">
                         <div class="rounded-circle d-flex align-items-center justify-content-center {% if checkins.exists %}bg-warning text-white{% else %}bg-secondary text-light{% endif %} fw-bold shadow-sm" style="width: 36px; height: 36px;">15</div>
-                        <div class="mt-2 small fw-bold text-dark">Day 15</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Disease Started</div>
+                        <div class="mt-2 small fw-bold text-dark">{% if current_language == 'gu' %}દિ. 15{% elif current_language == 'hi' %}दिन 15{% else %}Day 15{% endif %}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{% if current_language == 'gu' %}રોગ શરૂ{% elif current_language == 'hi' %}रोग शुरू{% else %}Disease Started{% endif %}</div>
                     </div>
 
-                    <!-- Milestone 3 -->
                     <div class="text-center position-relative" style="z-index: 3;">
                         <div class="rounded-circle d-flex align-items-center justify-content-center {% if journey.status == 'recovered' %}bg-success text-white{% else %}bg-secondary text-light{% endif %} fw-bold shadow-sm" style="width: 36px; height: 36px;">30</div>
-                        <div class="mt-2 small fw-bold text-dark">Day 30</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Recovered Status</div>
+                        <div class="mt-2 small fw-bold text-dark">{% if current_language == 'gu' %}દિ. 30{% elif current_language == 'hi' %}दिन 30{% else %}Day 30{% endif %}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{% if current_language == 'gu' %}સ્વસ્થ સ્થિતિ{% elif current_language == 'hi' %}स्वस्थ अवस्था{% else %}Recovered Status{% endif %}</div>
                     </div>
                 </div>
 
                 <div class="mt-4 p-3 rounded-3 small text-muted" style="background: rgba(0,0,0,0.01);">
-                    <strong>ℹ Timeline Status</strong>: 
+                    <strong>ℹ {% if current_language == 'gu' %}સ્થિતિ{% elif current_language == 'hi' %}स्थिति{% else %}Timeline Status{% endif %}</strong>:
                     {% if journey.status == 'recovered' %}
-                    Your crop has completed its recovery cycle on Day 30 and is back to optimal growth parameters.
+                        {% if current_language == 'gu' %}તમારો પાક ૩૦મા દિવસે તેની સામાન્ય સ્થિતિમાં આવી ગયો છે.{% elif current_language == 'hi' %}आपकी फसल 30वें दिन इष्टतम वृद्धि पर वापस आ गई है।{% else %}Your crop has completed its recovery cycle on Day 30 and is back to optimal growth parameters.{% endif %}
                     {% elif checkins.exists %}
-                    Plant is on Day 15+ recovery stage. Prescribed treatment is showing +{{ checkins.last.recovery_percentage }}% healing index.
+                        {% if current_language == 'gu' %}છોડ ૧૫+ દિવસના રિકવરી તબક્કામાં છે. સૂચવેલ સારવાર +{{ checkins.last.recovery_percentage }}% સુધારા સૂચકાંક દર્શાવે છે.{% elif current_language == 'hi' %}पौधा दिन 15+ रिकवरी चरण में है। उपचार +{{ checkins.last.recovery_percentage }}% उपचार सूचकांक दिखा रहा है।{% else %}Plant is on Day 15+ recovery stage. Prescribed treatment is showing +{{ checkins.last.recovery_percentage }}% healing index.{% endif %}
                     {% else %}
-                    Journey initialized on Day 1. Baseline parameters created. Pending weekly image check-in upload.
+                        {% if current_language == 'gu' %}પ્રવાસ દિવસ ૧ થી શરૂ થયો છે. મૂળભૂત માપદંડો સેટ થયા છે. સાપ્તાહિક ફોટો અપલોડ બાકી છે.{% elif current_language == 'hi' %}यात्रा दिन 1 पर शुरू हुई। आधार मानक बनाए गए। साप्ताहिक फोटो चेक-इन की प्रतीक्षा है।{% else %}Journey initialized on Day 1. Baseline parameters created. Pending weekly image check-in upload.{% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -215,17 +289,23 @@
         <!-- Left Column: Check-ins Timeline -->
         <div class="col-lg-8">
             <div class="glass-panel p-4" style="border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
-                <h5 class="fw-bold mb-4">Recovery Timeline History</h5>
+                <h5 class="fw-bold mb-4">
+                    {% if current_language == 'gu' %}રિકવરી ઇતિહાસ{% elif current_language == 'hi' %}रिकवरी टाइमलाइन इतिहास{% else %}Recovery Timeline History{% endif %}
+                </h5>
                 
                 <div class="position-relative ps-4" style="border-left: 2px solid var(--border-card);">
                     {% for c in checkins %}
                     <div class="mb-5 position-relative">
-                        <!-- Dot indicator -->
                         <div class="position-absolute rounded-circle" style="left: -29px; top: 2px; width: 14px; height: 14px; background: {% if c.is_healthy %}var(--success){% else %}var(--warning){% endif %}; border: 3px solid var(--bg-app);"></div>
                         
                         <div class="glass-panel p-3" style="border: 1px solid var(--border-card); border-radius: 12px; background: rgba(0,0,0,0.01);">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2" style="border-bottom: 1px solid var(--border-card);">
-                                <h6 class="fw-bold m-0" style="font-size: 1.05rem;">Week {{ c.week_number }} Check-in - <span class="text-success">{{ c.recovery_percentage }}% recovered</span></h6>
+                                <h6 class="fw-bold m-0" style="font-size: 1.05rem;">
+                                    {% if current_language == 'gu' %}અઠ.{% elif current_language == 'hi' %}सप्ताह{% else %}Week{% endif %}
+                                    {{ c.week_number }}
+                                    {% if current_language == 'gu' %}ચેક-ઇન{% elif current_language == 'hi' %}चेक-इन{% else %}Check-in{% endif %} -
+                                    <span class="text-success">{{ c.recovery_percentage }}% {% if current_language == 'gu' %}સ્વસ્થ{% elif current_language == 'hi' %}स्वस्थ{% else %}recovered{% endif %}</span>
+                                </h6>
                                 <span class="small text-muted">{{ c.checkin_date|date:"Y-m-d" }}</span>
                             </div>
 
@@ -239,29 +319,44 @@
                                 </div>
                                 <div class="col-sm-8 d-flex flex-column gap-2">
                                     <div>
-                                        <strong class="small text-muted d-block">Reported Symptoms:</strong>
+                                        <strong class="small text-muted d-block">
+                                            {% if current_language == 'gu' %}નોંધાયેલ લક્ષણો:{% elif current_language == 'hi' %}रिपोर्ट किए गए लक्षण:{% else %}Reported Symptoms:{% endif %}
+                                        </strong>
                                         <span style="font-size: 0.95rem;">{{ c.symptoms|default:"No visible symptoms logged." }}</span>
                                     </div>
                                     {% if c.farmer_notes %}
                                     <div>
-                                        <strong class="small text-muted d-block">Farmer Observations & Notes:</strong>
+                                        <strong class="small text-muted d-block">
+                                            {% if current_language == 'gu' %}ખેડૂત નોંધ:{% elif current_language == 'hi' %}किसान की टिप्पणी:{% else %}Farmer Observations &amp; Notes:{% endif %}
+                                        </strong>
                                         <span class="text-muted" style="font-size: 0.9rem; font-style: italic;">"{{ c.farmer_notes }}"</span>
                                     </div>
                                     {% endif %}
                                     <div class="row g-2 mt-1">
                                         <div class="col-auto">
-                                            <span class="badge bg-light text-dark border fw-bold" style="font-size: 0.75rem;">
-                                                🐛 Pest Activity: {{ c.pest_activity }}
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-bold" style="font-size: 0.75rem;">
+                                                🐛 {% if current_language == 'gu' %}જીવાત:{% elif current_language == 'hi' %}कीट:{% else %}Pest Activity:{% endif %}
+                                                {% if current_language == 'gu' %}
+                                                    {% if c.pest_activity == 'None' %}કોઈ નહીં{% elif c.pest_activity == 'Low' %}ઓછી{% elif c.pest_activity == 'Medium' %}મધ્યમ{% elif c.pest_activity == 'High' %}વધારે{% else %}{{ c.pest_activity }}{% endif %}
+                                                {% elif current_language == 'hi' %}
+                                                    {% if c.pest_activity == 'None' %}कोई नहीं{% elif c.pest_activity == 'Low' %}कम{% elif c.pest_activity == 'Medium' %}मध्यम{% elif c.pest_activity == 'High' %}अधिक{% else %}{{ c.pest_activity }}{% endif %}
+                                                {% else %}{{ c.pest_activity }}{% endif %}
                                             </span>
                                         </div>
                                         <div class="col-auto">
                                             <span class="badge {% if c.is_healthy %}bg-success bg-opacity-10 text-success{% else %}bg-warning bg-opacity-10 text-warning{% endif %} fw-bold" style="font-size: 0.75rem;">
-                                                {% if c.is_healthy %}Healthy / Recovered{% else %}Still Recovering{% endif %}
+                                                {% if c.is_healthy %}
+                                                    {% if current_language == 'gu' %}સ્વસ્થ / સ.{% elif current_language == 'hi' %}स्वस्थ / ठीक{% else %}Healthy / Recovered{% endif %}
+                                                {% else %}
+                                                    {% if current_language == 'gu' %}સ્વસ્થ થઈ રહ્યો છે{% elif current_language == 'hi' %}अभी ठीक हो रहा है{% else %}Still Recovering{% endif %}
+                                                {% endif %}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="mt-2 pt-2 border-top">
-                                        <strong class="small text-success d-block">Prescribed Care Directions:</strong>
+                                        <strong class="small text-success d-block">
+                                            {% if current_language == 'gu' %}સૂચિત સંભાળ દિશાઓ:{% elif current_language == 'hi' %}निर्धारित देखभाल निर्देश:{% else %}Prescribed Care Directions:{% endif %}
+                                        </strong>
                                         <div class="text-muted small" style="line-height: 1.5; white-space: pre-line;">{{ c.care_advice }}</div>
                                     </div>
                                 </div>
@@ -270,7 +365,7 @@
                     </div>
                     {% empty %}
                     <div class="text-center py-4 text-muted">
-                        No check-ins logged yet. Click the upload button at the top to upload your first weekly plant image.
+                        {% if current_language == 'gu' %}હજી કોઈ ચેક-ઇન નહીં. ઉપર અપલોડ બટન ક્લિક કરો.{% elif current_language == 'hi' %}अभी कोई चेक-इन नहीं। ऊपर अपलोड बटन पर क्लिक करें।{% else %}No check-ins logged yet. Click the upload button at the top to upload your first weekly plant image.{% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -282,22 +377,28 @@
             
             <!-- Ask details form -->
             <div class="glass-panel p-4" style="border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
-                <h5 class="fw-bold mb-2">🩹 Ask Plant Health Advisor</h5>
-                <p class="text-muted small mb-3">Ask questions on how to protect, fertilize, or cure this crop type</p>
+                <h5 class="fw-bold mb-2">
+                    🩹 {% if current_language == 'gu' %}છોડ સ્વાસ્થ્ય સલાહકાર{% elif current_language == 'hi' %}पौधा स्वास्थ्य सलाहकार{% else %}Ask Plant Health Advisor{% endif %}
+                </h5>
+                <p class="text-muted small mb-3">
+                    {% if current_language == 'gu' %}આ પાક ને સુરક્ષિત, ખાતર, અથવા ઠીક કરવા અંગે પ્રશ્ન પૂછો{% elif current_language == 'hi' %}इस फसल की सुरक्षा, उर्वरक, या इलाज के बारे में प्रश्न पूछें{% else %}Ask questions on how to protect, fertilize, or cure this crop type{% endif %}
+                </p>
                 
                 <form method="post" action="{% url 'recovery_ask' journey.id %}">
                     {% csrf_token %}
                     <div class="form-group mb-3">
-                        <textarea name="question" class="form-control" rows="3" placeholder="e.g. How much fertilizer should I add? How often to water?" required>{{ question|default:'' }}</textarea>
+                        <textarea name="question" class="form-control" rows="3" placeholder="{% if current_language == 'gu' %}દા.ત. કેટલું ખાતર આપવું? પાણી ક્યારે?{% elif current_language == 'hi' %}जैसे: कितना उर्वरक डालें? कब पानी दें?{% else %}e.g. How much fertilizer should I add? How often to water?{% endif %}" required>{{ question|default:'' }}</textarea>
                     </div>
                     <button type="submit" class="btn-custom-primary w-100 fw-bold py-2" style="border-radius: 8px;">
-                        Request Advice Directive
+                        {% if current_language == 'gu' %}સલાહ મેળવો{% elif current_language == 'hi' %}सलाह प्राप्त करें{% else %}Request Advice Directive{% endif %}
                     </button>
                 </form>
 
                 {% if answer %}
                 <div class="mt-3 p-3 rounded-3" style="background: rgba(0,0,0,0.02); border-left: 3px solid var(--primary);">
-                    <strong class="small text-dark d-block mb-1">Advisor Recommendation:</strong>
+                    <strong class="small text-dark d-block mb-1">
+                        {% if current_language == 'gu' %}સલાહકારની ભલામણ:{% elif current_language == 'hi' %}सलाहकार की सिफारिश:{% else %}Advisor Recommendation:{% endif %}
+                    </strong>
                     <p class="small text-muted m-0" style="line-height: 1.5;">{{ answer }}</p>
                 </div>
                 {% endif %}
@@ -305,7 +406,9 @@
 
             <!-- Standard Care Guide parameters -->
             <div class="glass-panel p-4" style="border: 1px solid var(--border-card); border-radius: 16px; background: var(--bg-card);">
-                <h5 class="fw-bold mb-3">General Recover Instructions</h5>
+                <h5 class="fw-bold mb-3">
+                    {% if current_language == 'gu' %}સામાન્ય રિકવરી સૂચનાઓ{% elif current_language == 'hi' %}सामान्य रिकवरी निर्देश{% else %}General Recovery Instructions{% endif %}
+                </h5>
                 <div class="d-flex flex-column gap-3">
                     {% for adv in advices %}
                     <div class="d-flex align-items-start gap-2" style="font-size: 0.9rem;">
@@ -320,4 +423,6 @@
     </div>
 
 </div>
+
+
 {% endblock %}

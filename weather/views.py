@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.http import Http404
 
 from library.models import Crop
 from .services import OpenWeatherClient, calculate_growth_chance, WeatherAPIError
@@ -35,6 +34,17 @@ def _resolve_coordinates(request):
 
 class CurrentWeatherView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        lat, lon = _resolve_coordinates(request)
+        if lat is None or lon is None:
+            return Response({"error": "Latitude and longitude are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            data = OpenWeatherClient.get_current(lat, lon)
+            return Response(data, status=status.HTTP_200_OK)
+        except WeatherAPIError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
     def post(self, request, *args, **kwargs):
         lat, lon = _resolve_coordinates(request)
@@ -137,20 +147,27 @@ class ReverseGeocodeView(APIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Public endpoint that reverse-geocodes GPS coordinates (lat, lon) 
-        into City and State names.
+        Public endpoint that reverse-geocodes GPS coordinates (lat, lon) into
+        village, taluka, city and state names using Nominatim + OpenWeather fallback.
         """
-        # Retrieve query parameters
         lat = request.query_params.get('lat', '').strip()
         lon = request.query_params.get('lon', '').strip()
+        lang = request.query_params.get('lang', 'en').strip()
         if not lat or not lon:
             return JsonResponse({"error": "Latitude and longitude parameters are required"}, status=400)
         
         try:
-            # Parse parameters to float and reverse geocode
-            city, state = OpenWeatherClient.reverse_geocode(float(lat), float(lon))
-            if city:
-                return JsonResponse({"city": city, "state": state or ""}, status=200)
+            result = OpenWeatherClient.reverse_geocode(float(lat), float(lon))
+            # result is a dict: {village, taluka, city, state}
+            if result.get('city') or result.get('village') or result.get('state'):
+                if lang and lang != 'en':
+                    from accounts.views import translate_list
+                    keys = ['village', 'taluka', 'city', 'state']
+                    vals = [result.get(k, '') for k in keys]
+                    translated_vals = translate_list(vals, lang)
+                    for k, val in zip(keys, translated_vals):
+                        result[k] = val
+                return JsonResponse(result, status=200)
             return JsonResponse({"error": "No location found for the given coordinates."}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)

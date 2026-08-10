@@ -138,7 +138,8 @@ def translate_via_gemini(text, target_lang):
     if not api_key:
         return text
     
-    lang_name = "Hindi" if target_lang == 'hi' else "Gujarati"
+    lang_map = {'hi': 'Hindi', 'gu': 'Gujarati', 'mr': 'Marathi'}
+    lang_name = lang_map.get(target_lang, 'Marathi')
     prompt = f"Translate the following plant or crop name into {lang_name}. Return ONLY the translated name in the target script, without any extra text or explanation.\n\nName: {text}"
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
@@ -566,3 +567,46 @@ def check_image_health(image_file, organ='leaf'):
         except Exception:
             pass
         return True
+
+
+def get_translation(request, key, default=''):
+    """
+    Look up a translation key for the current user's language.
+    Falls back to English if the key is not found.
+    
+    Usage:
+        from plantcare.utils import get_translation
+        error = get_translation(request, 'error.otp_invalid')
+    """
+    from django.conf import settings
+    import json
+    # Determine language
+    u = request.user
+    if u.is_authenticated:
+        lang = getattr(u, 'preferred_language', 'en')
+    else:
+        lang = request.session.get('preferred_language', 'en')
+
+    if lang not in ('en', 'hi', 'gu'):
+        lang = 'en'
+
+    # Load JSON
+    path = settings.BASE_DIR / 'translations' / f'{lang}.json'
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            flat = json.load(f)
+        return flat.get(key, default)
+    except Exception:
+        pass
+
+    # Fallback to English
+    if lang != 'en':
+        en_path = settings.BASE_DIR / 'translations' / 'en.json'
+        try:
+            with open(en_path, 'r', encoding='utf-8') as f:
+                flat = json.load(f)
+            return flat.get(key, default)
+        except Exception:
+            pass
+
+    return default

@@ -1,16 +1,16 @@
 import json
 import random
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
+from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.utils import timezone
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
+from plantcare.utils import get_translation
 
 from accounts.forms import FarmerRegistrationForm, FarmerProfileForm
 from accounts.models import EmailOTP
@@ -41,13 +41,11 @@ def login_view(request):
     else:
         form = AuthenticationForm()
         
-    show_chooser = not request.session.get('preferences_selected', False)
-
     return render(request, 'login.html', {
         'form': form,
         'error': error,
         'success_message': success_message,
-        'show_chooser': show_chooser,
+        'show_chooser': False,
     })
 
 def register_view(request):
@@ -106,11 +104,10 @@ def register_view(request):
     else:
         form = FarmerRegistrationForm()
 
-    show_chooser = not request.session.get('preferences_selected', False)
     return render(request, 'register.html', {
         'form': form,
         'error': error,
-        'show_chooser': show_chooser,
+        'show_chooser': False,
     })
 
 
@@ -144,14 +141,14 @@ def verify_email_view(request):
                 user.save()
                 auth_login(request, user, backend='accounts.backends.EmailOrUsernameModelBackend')
             except User.DoesNotExist:
-                error = "Account not found. Please register again."
+                error = get_translation(request, 'error.account_not_found_register', 'Account not found. Please register again.')
                 return render(request, 'verify_email.html', {'email': email, 'error': error})
 
             # Clean up session
             request.session.pop('verification_email', None)
             return redirect('dashboard')
         else:
-            error = "OTP is not valid. Please check and try again."
+            error = get_translation(request, 'error.otp_invalid', 'OTP is not valid. Please check and try again.')
 
     return render(request, 'verify_email.html', {'email': email, 'error': error, 'success': success})
 
@@ -198,7 +195,7 @@ def resend_registration_otp_view(request):
     if error_msg:
         request.session['verify_error'] = error_msg
     else:
-        request.session['verify_success'] = f'A new OTP has been sent to {email}.'
+        request.session['verify_success'] = get_translation(request, 'error.otp_new_sent', f'A new OTP has been sent to {email}.')
 
     return redirect('verify_email')
 
@@ -238,7 +235,7 @@ def password_reset_request_view(request):
                 import logging
                 logging.getLogger(__name__).error('Password reset OTP email failed: %s', str(e))
                 email_sent = False
-                error = f'Could not send verification email to {user.email}. Please check the email address registered on your account or try again later.'
+                error = get_translation(request, 'error.email_send_failed_reset', 'Could not send verification email. Please check the email address registered on your account or try again later.')
 
             if error:
                 return render(request, 'password_reset_request.html', {'error': error})
@@ -247,7 +244,7 @@ def password_reset_request_view(request):
             request.session['reset_username'] = user.username
             return redirect('password_reset_verify')
         else:
-            error = "Account not found. Please enter a valid username or email address."
+            error = get_translation(request, 'error.account_not_found_reset', 'Account not found. Please enter a valid username or email address.')
 
     return render(request, 'password_reset_request.html', {'error': error})
 
@@ -277,18 +274,18 @@ def password_reset_verify_view(request):
         user = User.objects.filter(email__iexact=target_email).first()
 
         if not user:
-            error = "User account not found."
+            error = get_translation(request, 'error.user_not_found', 'User account not found.')
         elif new_password1 != new_password2:
-            error = "New passwords do not match. Please re-enter your new password."
+            error = get_translation(request, 'error.passwords_dont_match', 'New passwords do not match.')
         elif len(new_password1) < 8:
-            error = "New password must be at least 8 characters long."
+            error = get_translation(request, 'error.password_too_short', 'New password must be at least 8 characters long.')
         else:
             authenticated = False
             if auth_mode == "current_password":
                 if user.check_password(current_password):
                     authenticated = True
                 else:
-                    error = "Current password does not match. Please enter your correct current password."
+                    error = get_translation(request, 'error.current_password_wrong', 'Current password does not match.')
             else:
                 # Always use the LATEST unverified reset OTP
                 otp_record = EmailOTP.objects.filter(
@@ -299,7 +296,7 @@ def password_reset_verify_view(request):
                     otp_record.is_verified = True
                     otp_record.save()
                 else:
-                    error = "OTP is not valid. Please check the code and try again."
+                    error = get_translation(request, 'error.otp_invalid_reset', 'OTP is not valid. Please check the code and try again.')
 
             if authenticated:
                 user.set_password(new_password1)
@@ -324,7 +321,7 @@ def password_reset_verify_view(request):
 
                 request.session.pop('reset_email', None)
                 request.session.pop('reset_username', None)
-                request.session['login_success'] = 'Password changed successfully! Please log in with your new password.'
+                request.session['login_success'] = get_translation(request, 'error.password_changed_success', 'Password changed successfully! Please log in with your new password.')
                 return redirect('login')
 
     elif not target_email:
@@ -364,7 +361,7 @@ def find_username_view(request):
                 pass
             success = True
         except User.DoesNotExist:
-            error = "No account found with this email address."
+            error = get_translation(request, 'error.no_account_for_email', 'No account found with this email address.')
 
     return render(request, 'find_username.html', {'success': success, 'error': error})
 
@@ -383,7 +380,10 @@ def toggle_preference_view(request):
         theme = request.POST.get('theme_preference')
         is_auth = request.user.is_authenticated
         
-        if lang in ['en', 'hi', 'gu']:
+        if lang in ['en', 'hi', 'gu', 'mr']:
+            old_lang = request.user.preferred_language if is_auth else request.session.get('preferred_language', 'en')
+            if old_lang != lang and 'chat_history' in request.session:
+                del request.session['chat_history']
             if is_auth: request.user.preferred_language = lang
             else: request.session['preferred_language'] = lang
             
@@ -468,6 +468,22 @@ def dashboard_view(request):
 # ==========================================
 # CROP LIBRARY
 # ==========================================
+_crop_translation_cache = {}
+
+def translate_field(text, target_lang):
+    if not text or not target_lang or target_lang == 'en':
+        return text
+    cache_key = (text, target_lang)
+    if cache_key in _crop_translation_cache:
+        return _crop_translation_cache[cache_key]
+    try:
+        from deep_translator import GoogleTranslator
+        translated = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        _crop_translation_cache[cache_key] = translated
+        return translated
+    except Exception:
+        return text
+
 @login_required
 def crop_library_view(request):
     search_query = request.GET.get('q', '').strip()
@@ -619,6 +635,16 @@ def crop_library_view(request):
         crop.localized_name = get_localized_crop_name(crop.name, lang)
     if selected_crop:
         selected_crop.localized_name = get_localized_crop_name(selected_crop.name, lang)
+        if lang and lang != 'en':
+            selected_crop.soil_type = translate_field(selected_crop.soil_type, lang)
+            selected_crop.description = translate_field(selected_crop.description, lang)
+            for disease in selected_crop.diseases.all():
+                disease.name = translate_field(disease.name, lang)
+                disease.symptoms = translate_field(disease.symptoms, lang)
+                disease.causes = translate_field(disease.causes, lang)
+                disease.treatment = translate_field(disease.treatment, lang)
+                if disease.pesticides_recommended:
+                    disease.pesticides_recommended = translate_field(disease.pesticides_recommended, lang)
 
     context = {
         'crops': crops,
@@ -987,15 +1013,11 @@ def weather_advisor_view(request):
     
     # If a city name is searched, resolve its coordinates first
     if city:
-        from accounts.constants import CITY_TRANSLATIONS
-        resolved_english_city = None
-        city_stripped = city.strip().lower()
-        for eng_city, translations in CITY_TRANSLATIONS.items():
-            if city_stripped == eng_city.lower() or city_stripped in [t.lower() for t in translations]:
-                resolved_english_city = eng_city
-                break
-        
-        search_city = resolved_english_city or city
+        lang = getattr(request.user, 'preferred_language', 'en') if request.user.is_authenticated else 'en'
+        from accounts.views import translate_to_english
+        parts = [p.strip() for p in city.split(',') if p.strip()]
+        translated_parts = [translate_to_english(p, lang) for p in parts]
+        search_city = ", ".join(translated_parts)
         
         # Log weather searches in SearchHistory
         from accounts.models import SearchHistory
@@ -1024,6 +1046,15 @@ def weather_advisor_view(request):
             lon = float(lon)
         except ValueError:
             lat, lon = None, None
+            
+        if lat is not None and lon is not None and not city:
+            try:
+                res_dict = OpenWeatherClient.reverse_geocode(lat, lon)
+                if res_dict:
+                    parts = [res_dict.get('village'), res_dict.get('taluka'), res_dict.get('city'), res_dict.get('state')]
+                    city = ", ".join([p for p in parts if p])
+            except Exception:
+                pass
 
             
     # Priority Fallbacks
@@ -1797,14 +1828,46 @@ def recovery_list_view(request):
 
 @login_required
 def recovery_start_view(request):
+    from datetime import date
+    today_date_str = date.today().strftime('%Y-%m-%d')
+    error = ""
+
     if request.method == "POST":
         plant_name = request.POST.get('plant_name', '').strip()
         crop_type = request.POST.get('crop_type', '').strip()
         watering_frequency = request.POST.get('watering_frequency', 'Once a day').strip()
-        estimated_recovery_weeks = int(request.POST.get('estimated_recovery_weeks', 4))
-        light_requirement = request.POST.get('light_requirement', 'Direct Sunlight').strip()
         
-        if plant_name:
+        try:
+            estimated_recovery_weeks = int(request.POST.get('estimated_recovery_weeks', 4))
+            if estimated_recovery_weeks < 1 or estimated_recovery_weeks > 52:
+                raise ValueError("Estimated recovery weeks must be between 1 and 52.")
+        except ValueError as e:
+            error = str(e)
+            estimated_recovery_weeks = 4
+            
+        light_requirement = request.POST.get('light_requirement', 'Direct Sunlight').strip()
+        start_date_str = request.POST.get('start_date', '').strip()
+        
+        parsed_start_date = None
+        if not error:
+            import re
+            from datetime import datetime
+            if not start_date_str:
+                parsed_start_date = date.today()
+            elif not re.match(r'^\d{4}-\d{2}-\d{2}$', start_date_str):
+                error = "Invalid date format. Please use YYYY-MM-DD format."
+            else:
+                try:
+                    parsed_start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    today = date.today()
+                    if parsed_start_date > today:
+                        error = "Start date cannot be in the future."
+                    elif (today - parsed_start_date).days > 365:
+                        error = "Start date cannot be more than 1 year (365 days) in the past."
+                except ValueError:
+                    error = "Invalid date format. Please use YYYY-MM-DD format."
+                    
+        if not error and plant_name:
             from accounts.models import RecoveryTracker
             RecoveryTracker.objects.create(
                 user=request.user,
@@ -1813,11 +1876,29 @@ def recovery_start_view(request):
                 watering_frequency=watering_frequency,
                 estimated_recovery_weeks=estimated_recovery_weeks,
                 light_requirement=light_requirement,
+                start_date=parsed_start_date,
                 status='ongoing'
             )
             return redirect('recovery_list')
-    return render(request, 'recovery_start.html')
+            
+        # Re-render with inputs on error
+        return render(request, 'recovery_start.html', {
+            'error': error,
+            'today_date_str': today_date_str,
+            'plant_name': plant_name,
+            'crop_type': crop_type,
+            'watering_frequency': watering_frequency,
+            'estimated_recovery_weeks': estimated_recovery_weeks,
+            'light_requirement': light_requirement,
+            'start_date_value': start_date_str,
+        })
 
+    return render(request, 'recovery_start.html', {
+        'today_date_str': today_date_str
+    })
+
+
+_advice_translation_cache = {}
 
 @login_required
 def recovery_detail_view(request, journey_id):
@@ -1847,13 +1928,32 @@ def recovery_detail_view(request, journey_id):
     ]
     
     lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
+    
+    translated_advices = []
+    if lang and lang != 'en':
+        from deep_translator import GoogleTranslator
+        translator = GoogleTranslator(source='en', target=lang)
+        for adv in advices:
+            cache_key = (adv, lang)
+            if cache_key in _advice_translation_cache:
+                translated_advices.append(_advice_translation_cache[cache_key])
+            else:
+                try:
+                    translated = translator.translate(adv)
+                    _advice_translation_cache[cache_key] = translated
+                    translated_advices.append(translated)
+                except Exception:
+                    translated_advices.append(adv)
+    else:
+        translated_advices = advices
+
     from plantcare.utils import get_localized_crop_name
     journey.localized_crop_name = get_localized_crop_name(journey.crop_type or 'General', lang)
     
     return render(request, 'recovery_detail.html', {
         'journey': journey,
         'checkins': checkins,
-        'advices': advices
+        'advices': translated_advices
     })
 
 
@@ -2115,7 +2215,8 @@ def single_crop_pdf_view(request, crop_id):
             self.set_text_color(120, 120, 120)
             self.cell(0, 5, "Detailed botanical soils, organic fertilizers, and part-wise disease treatments", new_x='LMARGIN', new_y='NEXT')
             self.set_draw_color(17, 24, 39)
-            self.line(10, 22, 200, 22)
+            y_pos = self.get_y() + 1
+            self.line(10, y_pos, 200, y_pos)
             self.ln(5)
 
         def footer(self):
@@ -2136,7 +2237,7 @@ def single_crop_pdf_view(request, crop_id):
     pdf.set_text_color(50, 50, 50)
     
     desc = crop.description or "No description."
-    pdf.multi_cell(0, 5, f"Description: {desc}")
+    pdf.multi_cell(0, 5, f"Description: {desc}", new_x='LMARGIN', new_y='NEXT')
     pdf.cell(0, 5, f"Soil Type: {crop.soil_type}", new_x='LMARGIN', new_y='NEXT')
     pdf.cell(0, 5, f"Ideal Temperature: {crop.ideal_temp_min_c}C - {crop.ideal_temp_max_c}C", new_x='LMARGIN', new_y='NEXT')
     pdf.cell(0, 5, f"Ideal Humidity: {crop.ideal_humidity_min}% - {crop.ideal_humidity_max}%", new_x='LMARGIN', new_y='NEXT')
@@ -2165,6 +2266,82 @@ def single_crop_pdf_view(request, crop_id):
     else:
         pdf.cell(0, 5, "  No registered diseases in catalog.", new_x='LMARGIN', new_y='NEXT')
 
+    # Fetch current weather for the user
+    lat = request.user.latitude
+    lon = request.user.longitude
+    city = request.user.location_city
+    weather_info = None
+
+    if (lat is None or lon is None) and city:
+        try:
+            from weather.services import OpenWeatherClient
+            resolved_lat, resolved_lon = OpenWeatherClient.geocode_city(city)
+            if resolved_lat is not None and resolved_lon is not None:
+                lat = resolved_lat
+                lon = resolved_lon
+        except Exception:
+            pass
+
+    if lat is not None and lon is not None:
+        try:
+            from weather.services import OpenWeatherClient
+            weather_info = OpenWeatherClient.get_current(lat, lon)
+        except Exception:
+            pass
+
+    # Add a section at the end for Local Environment & Weather Suitability
+    pdf.ln(5)
+    y_line = pdf.get_y()
+    pdf.set_draw_color(200, 200, 200)
+    pdf.line(10, y_line, 200, y_line)
+    pdf.ln(4)
+
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.set_text_color(17, 24, 39)
+    pdf.cell(0, 8, "Current Local Weather & Suitability Details:", new_x='LMARGIN', new_y='NEXT')
+    
+    pdf.set_font('Helvetica', '', 9)
+    pdf.set_text_color(80, 80, 80)
+    
+    location_str = city or "Not set"
+    if lat is not None and lon is not None:
+        location_str += f" ({lat:.4f}, {lon:.4f})"
+    pdf.cell(0, 5, f"Location: {location_str}", new_x='LMARGIN', new_y='NEXT')
+
+    if weather_info:
+        temp = weather_info.get('temperature_c', 'N/A')
+        humidity = weather_info.get('humidity', 'N/A')
+        wind = weather_info.get('wind_speed_m_s', 'N/A')
+        desc = weather_info.get('description', 'N/A').title()
+        
+        pdf.cell(0, 5, f"Current Temperature: {temp}C", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 5, f"Current Humidity: {humidity}%", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 5, f"Wind Speed: {wind} m/s", new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 5, f"Weather Condition: {desc}", new_x='LMARGIN', new_y='NEXT')
+        
+        # Grow suitability index
+        try:
+            temp_ok = crop.ideal_temp_min_c <= float(temp) <= crop.ideal_temp_max_c
+            humidity_ok = crop.ideal_humidity_min <= float(humidity) <= crop.ideal_humidity_max
+            
+            if temp_ok and humidity_ok:
+                verdict = "Highly suitable environment. Growth indicators are extremely positive."
+                pdf.set_text_color(16, 124, 65) # Green
+            elif temp_ok or humidity_ok:
+                verdict = "Moderately suitable. Monitor soil moisture levels closely."
+                pdf.set_text_color(180, 120, 0) # Orange
+            else:
+                verdict = "Environment stress detected. Not recommended for optimal cultivation."
+                pdf.set_text_color(220, 50, 50) # Red
+                
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.cell(0, 6, f"Growth Suitability Verdict: {verdict}", new_x='LMARGIN', new_y='NEXT')
+        except Exception:
+            pass
+    else:
+        pdf.set_text_color(120, 120, 120)
+        pdf.cell(0, 5, "Weather data currently unavailable. Please configure OpenWeatherMap API and verify your location settings.", new_x='LMARGIN', new_y='NEXT')
+
     buffer = io.BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
@@ -2186,7 +2363,7 @@ def assistant_view(request):
     scan_crop = request.GET.get('crop')
     if scan_crop:
         request.session['assistant_crop'] = scan_crop
-        request.session['assistant_soil_type'] = request.user.soil_type or "Loamy Soil"
+        request.session['assistant_soil_type'] = getattr(request.user, 'soil_type', None) or "Loamy Soil"
         request.session['assistant_stage'] = "Vegetative"
         request.session['assistant_weather'] = "Mild & Cloudy (24°C - 28°C)"
         if 'chat_history' in request.session: del request.session['chat_history']
@@ -2215,7 +2392,7 @@ def assistant_view(request):
                 weather = request.session.get('assistant_weather', 'Normal Weather')
                 
                 # Determine target language for Gemini response
-                lang = request.session.get('preferred_language') or (request.user.preferred_language if request.user.is_authenticated else 'en')
+                lang = request.user.preferred_language if request.user.is_authenticated else request.session.get('preferred_language', 'en')
                 if lang == 'hi':
                     target_lang = "Hindi (हिंदी)"
                     lang_instruction = "CRITICAL REQUIREMENT: You MUST write your entire response (including clarifying questions) strictly in Hindi (हिंदी) language using Devanagari script. Do NOT respond in English."
@@ -2275,7 +2452,12 @@ def assistant_view(request):
                 for model_id in models_to_try:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}"
                     headers = {"Content-Type": "application/json"}
-                    payload = {"contents": contents}
+                    payload = {
+                        "contents": contents,
+                        "systemInstruction": {
+                            "parts": [{"text": system_prompt}]
+                        }
+                    }
                     try:
                         import requests
                         response = requests.post(url, json=payload, headers=headers, timeout=15)
@@ -2488,5 +2670,3 @@ def assistant_view(request):
         'crops_list': crops_list,
     }
     return render(request, 'assistant.html', context)
-
-

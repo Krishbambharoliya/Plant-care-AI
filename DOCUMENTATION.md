@@ -222,32 +222,4 @@ Both Weather Advisor and Plant Health Scan features resolve geolocation accordin
    * *Weather Advisor view*: If no location is resolved, triggers `trigger_browser_geolocation = True` to run browser geolocation in the frontend and redirect with query parameters.
    * *Scan upload view*: Web-based scan uploads automatically populate coordinates based on this fallback list on successful submission.
 
-### D. Dedicated ML FUTUREDATASET Database
-A secondary database file `FUTUREDATASET.db` has been introduced specifically to accumulate high-quality training datasets of agricultural classification inputs and outputs.
-
-**Database Configuration:**
-* Key name: `FUTUREDATASET`
-* File path: `FUTUREDATASET.db`
-* Table name: `FUTUREDATASET`
-
-**Model: `FutureDataset`**
-* `username`: CharField (username of the uploader)
-* `image_name`: CharField (name of crop scan image)
-* `organ`: CharField (leaf, flower, fruit, bark)
-* `identified_species`: CharField (scientific name)
-* `identified_common_name`: CharField (common name)
-* `confidence_score`: FloatField
-* `is_healthy`: BooleanField (health label: 0/1)
-* `disease_identified`: CharField
-* `fertilizer_recommendation`: TextField
-* `latitude` / `longitude`: FloatField (geolocational tag)
-* `created_at`: DateTimeField
-
-**Upload Logging:**
-Whenever any scan is successfully completed via the Web UI (`plantcare/views.py`) or REST API (`scans/views.py`), a replica record of the details and output predictions is automatically stored in the `FUTUREDATASET` database via `FutureDataset.objects.using('FUTUREDATASET').create(...)`.
-
-**Deletion Isolation (Intact Training Data):**
-* The `FutureDataset` model is intentionally decoupled from the core Django user database table. It logs the uploader's `username` as a plain text string instead of using a `ForeignKey`.
-* When a user deletes their account, Django's default CASCADE rules delete the user's login profile and `ScanHistory` records from the default database.
-* However, the scan classification record stored in the `FUTUREDATASET` database remains completely intact, ensuring that valuable training logs are never lost.
 
